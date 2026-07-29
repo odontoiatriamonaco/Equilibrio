@@ -1089,6 +1089,79 @@
   @keyframes sale { from { transform: scale(0.97); opacity: 0; } }
 }
 
+/* --- Righe di gusto (preferenze) ------------------------------------------ */
+
+.riga-gusto {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--bordo);
+}
+
+.riga-gusto:last-child { border-bottom: none; }
+
+.riga-gusto .nome {
+  flex: 1;
+  min-width: 0;
+  line-height: var(--lh-snug);
+}
+
+.riga-gusto[data-allergica='si'] .nome {
+  color: var(--pericolo-testo);
+}
+
+.riga-gusto .sigillo-mini {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  border-radius: var(--r-1);
+  background: var(--sfondo-alt);
+  color: var(--testo-tenue);
+}
+
+.riga-gusto [data-allergia][aria-pressed='true'] {
+  background: var(--pericolo-tenue);
+  color: var(--pericolo-testo);
+}
+
+.gusti {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--r-pill);
+  background: var(--superficie-incavo);
+}
+
+.gusti button {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  color: var(--testo-tenue);
+  transition: background-color var(--d-veloce) var(--e-standard),
+              color var(--d-veloce) var(--e-standard);
+}
+
+.gusti button:hover { color: var(--testo); }
+
+.gusti button[aria-pressed='true'] {
+  background: var(--superficie);
+  box-shadow: var(--ombra-1);
+}
+
+.gusti button[data-gusto-val='amato'][aria-pressed='true'] { color: var(--accento-testo); }
+.gusti button[data-gusto-val='neutro'][aria-pressed='true'] { color: var(--testo); }
+.gusti button[data-gusto-val='escluso'][aria-pressed='true'] { color: var(--pericolo-testo); }
+
+.gusti button[disabled] { opacity: 0.3; pointer-events: none; }
+
+.pericolo-testo { color: var(--pericolo-testo); }
+
 /* --- Stato vuoto ---------------------------------------------------------- */
 
 .vuoto {

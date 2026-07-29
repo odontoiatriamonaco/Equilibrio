@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Preferenze — Equilibrio</title>
+  <meta name="description" content="Scegli le pietanze e gli alimenti che ti piacciono, escludi quelli che non vuoi, segna le allergie.">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
@@ -23,22 +24,84 @@
       <a class="bottone-icona solo-stretto" href="/index.html" aria-label="Indietro">
         <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#indietro"/></svg>
       </a>
-      <h1>Preferenze</h1>
+      <div style="flex:1; min-width:0">
+        <p class="occhiello">I gusti di <span id="nome-profilo">—</span></p>
+        <h1>Preferenze</h1>
+      </div>
+      <span class="pillola pillola-verde" id="stato-salvataggio" aria-live="polite"></span>
     </header>
 
-    <section class="sezione">
-      <div class="scheda">
-        <div class="vuoto">
-          <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#cuore"/></svg>
-          <p>Gusti su alimenti e piatti, allergie e frequenze.<br>Arriva con la Fase 2.</p>
-        </div>
+    <div class="scheda" id="senza-profilo" hidden>
+      <div class="vuoto">
+        <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#utente"/></svg>
+        <p>Prima serve un profilo: le preferenze appartengono a una persona.</p>
+        <a class="bottone" href="/profilo.html">Crea il profilo</a>
       </div>
-    </section>
+    </div>
+
+    <div id="contenuto">
+      <p class="morbido">Tocca il <strong>cuore</strong> per quello che ti piace — verrà proposto
+        più spesso. Tocca la <strong>ics</strong> per quello che non vuoi vedere: sparisce dal
+        menù. Quello che lasci in mezzo entrerà di tanto in tanto.</p>
+
+      <div class="avviso" style="margin-top: var(--sp-4)">
+        <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#info"/></svg>
+        <div>Non serve passarli tutti in rassegna. Segna una decina di piatti che ami e i due
+          o tre alimenti che proprio non ti vanno: al resto ci pensa il generatore.</div>
+      </div>
+
+      <!-- ===== Riepilogo ===== -->
+      <section class="sezione">
+        <div class="scheda scheda-alta" id="riepilogo"></div>
+      </section>
+
+      <!-- ===== Allergie ===== -->
+      <section class="sezione">
+        <header><h2>Allergie e intolleranze</h2></header>
+        <div class="avviso avviso-pericolo">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#blocco"/></svg>
+          <div>Nell'elenco degli <strong>alimenti</strong>, il lucchetto accanto al nome segna
+            un'allergia o un'intolleranza. È un'esclusione dura, diversa da «non mi piace»:
+            quell'alimento non comparirà mai, in nessun piatto, nemmeno come ingrediente
+            secondario. Per un'allergia grave però la verifica resta tua: leggi sempre
+            le etichette.</div>
+        </div>
+      </section>
+
+      <!-- ===== Tetti ===== -->
+      <section class="sezione">
+        <header><h2>Quanto spesso</h2></header>
+        <div class="scheda">
+          <p class="piccolo morbido" style="margin-bottom: var(--sp-2)">Massimo di volte a
+            settimana. Sono tetti, non obiettivi: verdura e legumi non stanno qui perché
+            il generatore li tiene alti per conto suo.</p>
+          <div id="tetti"></div>
+        </div>
+      </section>
+
+      <!-- ===== Gusti ===== -->
+      <section class="sezione">
+        <header><h2>Cosa ti piace</h2></header>
+
+        <div class="scheda pila non-stampare">
+          <div class="segmenti" id="viste" role="tablist" aria-label="Cosa scegliere">
+            <button role="tab" data-vista="piatti" aria-selected="true">Pietanze</button>
+            <button role="tab" data-vista="alimenti" aria-selected="false">Alimenti</button>
+          </div>
+          <div class="campo">
+            <label for="cerca" class="solo-sr">Cerca</label>
+            <input id="cerca" type="search" placeholder="Cerca una pietanza…" autocomplete="off">
+          </div>
+        </div>
+
+        <div id="elenco"></div>
+      </section>
+    </div>
   </main>
 
   <script type="module">
-    import { avvia } from '/js/guscio.js';
-    avvia({ nav: 'altro' });
+    import { inizializza } from '/js/pagina-preferenze.js';
+    inizializza();
   </script>
 </body>
 </html>
