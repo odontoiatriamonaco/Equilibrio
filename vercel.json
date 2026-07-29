@@ -5,7 +5,6 @@
   "framework": "vite",
   "headers": [
     {
-      "comment": "Il service worker non va mai messo in cache dal CDN: se lo fosse, una build nuova resterebbe invisibile sui telefoni gia' installati.",
       "source": "/sw.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
