@@ -109,15 +109,25 @@ describe('tetti settimanali', () => {
 });
 
 describe('riepilogo', () => {
-  it('conta i proponibili e avvisa quando sono troppo pochi', () => {
+  it('senza preferenze conta tutto il ricettario', () => {
     const pieno = riepilogo(vuote(P), piatti);
     expect(pieno.ammessi).toBe(piatti.length);
     expect(pieno.scarso).toBe(false);
+  });
 
-    // Escludere l'olio svuota quasi tutto il ricettario: e' il caso in cui
-    // l'utente va avvisato, non lasciato con un menu' ripetitivo.
-    const povero = riepilogo(imposta(vuote(P), 'alimenti', 'olio-evo', 'escluso'), piatti);
-    expect(povero.ammessi).toBeLessThan(pieno.ammessi);
-    expect(povero.scarso).toBe(true);
+  it('escludere un alimento molto usato riduce i proponibili', () => {
+    const pieno = riepilogo(vuote(P), piatti);
+    const senzaOlio = riepilogo(imposta(vuote(P), 'alimenti', 'olio-evo', 'escluso'), piatti);
+    expect(senzaOlio.ammessi).toBeLessThan(pieno.ammessi);
+  });
+
+  it('avvisa quando restano troppo pochi piatti per variare la settimana', () => {
+    // La soglia va provata per se stessa, non attraverso la dimensione del
+    // ricettario: quella cresce, e il test non deve rompersi ogni volta.
+    const pochi = piatti.slice(0, 10);
+    expect(riepilogo(vuote(P), pochi).scarso).toBe(true);
+
+    const abbastanza = piatti.slice(0, 20);
+    expect(riepilogo(vuote(P), abbastanza).scarso).toBe(false);
   });
 });
