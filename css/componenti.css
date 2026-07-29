@@ -1,0 +1,832 @@
+/* ==========================================================================
+   Equilibrio — componenti
+   ========================================================================== */
+
+/* --- Scheda --------------------------------------------------------------- */
+
+.scheda {
+  background: var(--superficie);
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-3);
+  padding: var(--sp-4);
+  box-shadow: var(--ombra-1);
+}
+
+.scheda-alta {
+  box-shadow: var(--ombra-2);
+  border-radius: var(--r-4);
+  padding: var(--sp-5);
+}
+
+.scheda-piatta {
+  background: var(--sfondo-alt);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.scheda > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+/* --- Bottoni -------------------------------------------------------------- */
+
+.bottone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--tocco-min);
+  padding: var(--sp-2) var(--sp-5);
+  border-radius: var(--r-pill);
+  border: 1px solid transparent;
+  background: var(--accento);
+  color: var(--su-accento);
+  font-size: var(--t-base);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: transform var(--d-veloce) var(--e-standard),
+              filter var(--d-veloce) var(--e-standard),
+              background-color var(--d-veloce) var(--e-standard);
+}
+
+.bottone:hover { filter: brightness(1.08); }
+.bottone:active { transform: scale(0.97); }
+
+.bottone[disabled],
+.bottone[aria-disabled='true'] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.bottone-2 {
+  background: var(--superficie);
+  color: var(--testo);
+  border-color: var(--bordo-forte);
+  box-shadow: var(--ombra-1);
+}
+
+.bottone-fantasma {
+  background: transparent;
+  color: var(--accento-testo);
+  padding-inline: var(--sp-3);
+}
+
+.bottone-fantasma:hover { background: var(--accento-velo); }
+
+.bottone-pericolo {
+  background: var(--pericolo);
+  color: var(--su-pericolo);
+}
+
+.bottone-largo { width: 100%; }
+
+.bottone-icona {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tocco-min);
+  height: var(--tocco-min);
+  border-radius: var(--r-pill);
+  color: var(--testo-morbido);
+  transition: background-color var(--d-veloce) var(--e-standard),
+              color var(--d-veloce) var(--e-standard);
+}
+
+.bottone-icona:hover {
+  background: var(--sfondo-alt);
+  color: var(--testo);
+}
+
+/* --- Pillole e chip ------------------------------------------------------- */
+
+.pillola {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 0.15rem var(--sp-3);
+  border-radius: var(--r-pill);
+  background: var(--sfondo-alt);
+  color: var(--testo-morbido);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: var(--ls-wide);
+  white-space: nowrap;
+}
+
+.pillola-accento { background: var(--accento-tenue); color: var(--accento-testo); }
+.pillola-verde   { background: var(--verde-tenue);   color: var(--verde-testo); }
+.pillola-dato    { background: var(--dato-tenue);    color: var(--dato-testo); }
+.pillola-sgarro  { background: var(--sgarro-tenue);  color: var(--sgarro-testo); }
+.pillola-pericolo{ background: var(--pericolo-tenue);color: var(--pericolo-testo); }
+
+/* Chip di preferenza: amato / neutro / escluso */
+.chip-gusto {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 2.25rem;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--bordo);
+  background: var(--superficie);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  transition: all var(--d-veloce) var(--e-standard);
+}
+
+.chip-gusto[data-gusto='amato'] {
+  border-color: var(--accento);
+  background: var(--accento-velo);
+  color: var(--accento-testo);
+}
+
+.chip-gusto[data-gusto='escluso'] {
+  border-style: dashed;
+  color: var(--testo-tenue);
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+/* --- Controllo segmentato ------------------------------------------------- */
+
+.segmenti {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--superficie-incavo);
+  border-radius: var(--r-pill);
+}
+
+.segmenti button {
+  min-height: 2.25rem;
+  padding-inline: var(--sp-4);
+  border-radius: var(--r-pill);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--testo-morbido);
+  transition: background-color var(--d-veloce) var(--e-standard),
+              color var(--d-veloce) var(--e-standard);
+}
+
+.segmenti button[aria-selected='true'] {
+  background: var(--superficie);
+  color: var(--testo);
+  box-shadow: var(--ombra-1);
+}
+
+/* --- Campi ---------------------------------------------------------------- */
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.campo > label {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--testo-morbido);
+}
+
+.campo input,
+.campo select,
+.campo textarea {
+  min-height: var(--tocco-min);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--bordo-forte);
+  border-radius: var(--r-2);
+  background: var(--superficie);
+  transition: border-color var(--d-veloce) var(--e-standard);
+}
+
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus {
+  border-color: var(--accento);
+}
+
+.campo .aiuto {
+  font-size: var(--t-xs);
+  color: var(--testo-tenue);
+}
+
+/* Interruttore */
+.interruttore {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  cursor: pointer;
+  min-height: var(--tocco-min);
+}
+
+.interruttore input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.interruttore .leva {
+  position: relative;
+  width: 2.75rem;
+  height: 1.6rem;
+  flex: none;
+  border-radius: var(--r-pill);
+  background: var(--bordo-forte);
+  transition: background-color var(--d-media) var(--e-standard);
+}
+
+.interruttore .leva::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: var(--creta-0);
+  box-shadow: var(--ombra-1);
+  transition: transform var(--d-media) var(--e-molla);
+}
+
+.interruttore input:checked + .leva { background: var(--verde); }
+.interruttore input:checked + .leva::after { transform: translateX(1.15rem); }
+.interruttore input:focus-visible + .leva { box-shadow: var(--anello-fuoco); }
+
+/* --- Avvisi --------------------------------------------------------------- */
+
+.avviso {
+  display: flex;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-2);
+  border-left: 3px solid var(--dato);
+  background: var(--dato-tenue);
+  color: var(--testo);
+  font-size: var(--t-sm);
+}
+
+.avviso .icona { color: var(--dato-testo); }
+.avviso-ok      { border-left-color: var(--verde);   background: var(--verde-tenue); }
+.avviso-ok .icona { color: var(--verde-testo); }
+/* Lo sgarro e' ocra: una voce di bilancio, non una colpa. */
+.avviso-sgarro  { border-left-color: var(--sgarro);  background: var(--sgarro-tenue); }
+.avviso-sgarro .icona { color: var(--sgarro-testo); }
+/* Il rosso e' riservato ai soli vincoli di sicurezza. */
+.avviso-pericolo{ border-left-color: var(--pericolo);background: var(--pericolo-tenue); }
+.avviso-pericolo .icona { color: var(--pericolo-testo); }
+
+/* --- Fascia del budget settimanale (componente firma) ---------------------
+   Sette segmenti, uno per giorno. La linea tratteggiata e' il target
+   standard: sopra si vede lo sgarro, sotto si vede il recupero che lo
+   ripaga. L'idea dell'app resa visibile.
+   Variabili per giorno:  --h  altezza della quota (0..1 del massimo)
+                          --target  livello del target standard (0..1)
+   -------------------------------------------------------------------------- */
+
+.fascia-budget {
+  --target: 0.72;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.fb-piano {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--sp-2);
+  height: 8.5rem;
+  align-items: end;
+}
+
+.fb-linea {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--target) * 100%);
+  border-top: 1px dashed var(--bordo-forte);
+  pointer-events: none;
+}
+
+.fb-linea span {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--testo-tenue);
+  background: var(--sfondo);
+  padding-inline: var(--sp-1);
+}
+
+.fb-giorno {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Il "prestito" da ripagare: tratteggio ocra fra la cima della barra
+   e la linea del target, sui giorni alleggeriti. */
+.fb-giorno::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--h) * 100%);
+  height: max(0px, calc((var(--target) - var(--h)) * 100%));
+  border-radius: var(--r-1) var(--r-1) 0 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--sgarro-tenue) 0 4px,
+    transparent 4px 8px
+  );
+  border-top: 1px solid var(--sgarro);
+  opacity: 0;
+  transition: opacity var(--d-lenta) var(--e-standard),
+              bottom var(--d-lenta) var(--e-molla),
+              height var(--d-lenta) var(--e-molla);
+}
+
+.fb-giorno[data-recupero='si']::before { opacity: 1; }
+
+.fb-barra {
+  width: 100%;
+  height: calc(var(--h) * 100%);
+  border-radius: var(--r-1) var(--r-1) 3px 3px;
+  background: linear-gradient(to top, var(--verde-tenue), var(--verde));
+  transition: height var(--d-lenta) var(--e-molla);
+}
+
+.fb-giorno[data-stato='sgarro'] .fb-barra {
+  background: linear-gradient(to top, var(--sgarro-tenue), var(--sgarro));
+}
+
+.fb-giorno[data-stato='recupero'] .fb-barra {
+  background: linear-gradient(to top, var(--verde-tenue), var(--oliva-400));
+}
+
+.fb-giorno[data-stato='rigido'] .fb-barra {
+  background: linear-gradient(to top, var(--dato-tenue), var(--dato));
+}
+
+.fb-giorno[data-oggi='si'] .fb-barra {
+  outline: 2px solid var(--accento);
+  outline-offset: 2px;
+}
+
+.fb-etichette {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--sp-2);
+  text-align: center;
+}
+
+.fb-etichette span {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: var(--ls-wide);
+  color: var(--testo-tenue);
+  text-transform: uppercase;
+}
+
+.fb-etichette span[data-oggi='si'] { color: var(--accento-testo); }
+
+.fb-legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  font-size: var(--t-xs);
+  color: var(--testo-morbido);
+}
+
+.fb-legenda i {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 3px;
+  margin-right: var(--sp-1);
+  vertical-align: -1px;
+}
+
+/* --- Anello del giorno ---------------------------------------------------- */
+
+.anello {
+  --p: 0;
+  --spessore: 9px;
+  position: relative;
+  width: 7.5rem;
+  height: 7.5rem;
+  flex: none;
+  border-radius: 50%;
+  background:
+    conic-gradient(var(--verde) calc(var(--p) * 360deg), var(--superficie-incavo) 0);
+  transition: background var(--d-lenta) var(--e-standard);
+}
+
+.anello[data-stato='sgarro'] {
+  background: conic-gradient(var(--sgarro) calc(var(--p) * 360deg), var(--superficie-incavo) 0);
+}
+
+.anello::after {
+  content: '';
+  position: absolute;
+  inset: var(--spessore);
+  border-radius: 50%;
+  background: var(--superficie);
+}
+
+.anello .anello-testo {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  text-align: center;
+}
+
+/* --- Lista della spesa ---------------------------------------------------- */
+
+.reparto {
+  margin-bottom: var(--sp-5);
+}
+
+.reparto > h3 {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+  margin-bottom: var(--sp-2);
+  background: var(--sfondo);
+  font-family: var(--font-ui);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--testo-tenue);
+  border-bottom: 1px solid var(--bordo);
+}
+
+.voce-spesa {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--tocco-min);
+  padding: var(--sp-2) var(--sp-2);
+  border-radius: var(--r-2);
+  cursor: pointer;
+  transition: background-color var(--d-veloce) var(--e-standard);
+}
+
+.voce-spesa:hover { background: var(--sfondo-alt); }
+
+.voce-spesa input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.voce-spesa .spunta {
+  position: relative;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+  border: 1.75px solid var(--bordo-forte);
+  border-radius: 50%;
+  transition: background-color var(--d-veloce) var(--e-standard),
+              border-color var(--d-veloce) var(--e-standard);
+}
+
+.voce-spesa .spunta::after {
+  content: '';
+  position: absolute;
+  left: 0.42rem;
+  top: 0.2rem;
+  width: 0.35rem;
+  height: 0.68rem;
+  border: solid var(--su-verde);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform var(--d-media) var(--e-molla);
+}
+
+.voce-spesa input:checked + .spunta {
+  background: var(--verde);
+  border-color: var(--verde);
+}
+
+.voce-spesa input:checked + .spunta::after { transform: rotate(45deg) scale(1); }
+.voce-spesa input:focus-visible + .spunta { box-shadow: var(--anello-fuoco); }
+
+.voce-spesa .nome { flex: 1; min-width: 0; }
+.voce-spesa .qta { color: var(--testo-morbido); font-size: var(--t-sm); }
+
+.voce-spesa input:checked ~ .nome,
+.voce-spesa input:checked ~ .qta {
+  color: var(--testo-tenue);
+  text-decoration: line-through;
+}
+
+/* --- Carta del piatto ----------------------------------------------------- */
+
+.carta-piatto {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-3);
+  background: var(--superficie);
+  text-align: left;
+  width: 100%;
+  transition: border-color var(--d-veloce) var(--e-standard),
+              box-shadow var(--d-veloce) var(--e-standard);
+}
+
+.carta-piatto:hover {
+  border-color: var(--bordo-forte);
+  box-shadow: var(--ombra-2);
+}
+
+.carta-piatto .sigillo {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  flex: none;
+  border-radius: var(--r-2);
+  background: var(--accento-velo);
+  color: var(--accento-testo);
+}
+
+.carta-piatto .corpo { flex: 1; min-width: 0; }
+
+.carta-piatto .titolo {
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+}
+
+.carta-piatto .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: 2px;
+  font-size: var(--t-xs);
+  color: var(--testo-tenue);
+}
+
+/* --- Marchio --------------------------------------------------------------- */
+
+.marchio {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--testo);
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: var(--ls-tight);
+}
+
+.marchio svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: none;
+  fill: none;
+  stroke: var(--accento-testo);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* --- Navigazione -----------------------------------------------------------
+   Sotto i 64rem: barra in basso, da telefono.
+   Sopra: colonna laterale fissa. Stessa marcatura, due impaginazioni.
+   -------------------------------------------------------------------------- */
+
+.barra-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  padding: var(--sp-1) var(--sp-2) calc(var(--sp-1) + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--superficie) 88%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border-top: 1px solid var(--bordo);
+}
+
+.barra-nav .marchio,
+.barra-nav .piede { display: none; }
+
+.barra-nav .voci {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+}
+
+.barra-nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: var(--tocco-min);
+  padding-block: var(--sp-1);
+  border-radius: var(--r-2);
+  color: var(--testo-tenue);
+  text-decoration: none;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  transition: color var(--d-veloce) var(--e-standard),
+              background-color var(--d-veloce) var(--e-standard);
+}
+
+.barra-nav a[aria-current='page'] { color: var(--accento-testo); }
+.barra-nav a:hover { color: var(--testo); }
+
+@media (min-width: 64rem) {
+  .barra-nav {
+    position: sticky;
+    top: 0;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-6);
+    padding: var(--sp-6) var(--sp-4);
+    border-top: none;
+    border-right: 1px solid var(--bordo);
+    background: color-mix(in srgb, var(--superficie) 55%, transparent);
+  }
+
+  .barra-nav .marchio {
+    display: flex;
+    padding-inline: var(--sp-2);
+  }
+
+  .barra-nav .voci {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .barra-nav a {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--sp-3);
+    padding: var(--sp-2) var(--sp-3);
+    font-size: var(--t-base);
+    font-weight: 500;
+  }
+
+  .barra-nav a:hover { background: var(--sfondo-alt); }
+
+  .barra-nav a[aria-current='page'] {
+    background: var(--accento-velo);
+    font-weight: 600;
+  }
+
+  .barra-nav .piede {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    margin-top: auto;
+    padding-top: var(--sp-4);
+    border-top: 1px solid var(--bordo);
+  }
+
+  .barra-nav .piede .nota {
+    font-size: var(--t-xs);
+    color: var(--testo-tenue);
+    line-height: 1.3;
+  }
+
+  .solo-stretto { display: none !important; }
+}
+
+/* --- Ospite: il primo incontro con l'app ---------------------------------- */
+
+.ospite {
+  display: grid;
+  gap: var(--sp-6);
+  align-items: center;
+  padding: var(--sp-6);
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-4);
+  background:
+    linear-gradient(150deg,
+      color-mix(in srgb, var(--accento) 7%, var(--superficie)),
+      var(--superficie) 55%);
+  box-shadow: var(--ombra-2);
+}
+
+.ospite h2 {
+  font-size: var(--t-2xl);
+  margin-block: var(--sp-2);
+}
+
+.ospite .figura {
+  order: -1;
+  justify-self: center;
+  width: min(100%, 20rem);
+}
+
+@media (min-width: 42rem) {
+  .ospite {
+    grid-template-columns: 1.15fr 1fr;
+    gap: var(--sp-8);
+    padding: var(--sp-8);
+  }
+  .ospite .figura { order: 0; width: 100%; }
+}
+
+/* Tre riquadri di anteprima: cosa fara' l'app. */
+.trittico {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--sp-3);
+}
+
+.trittico article {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-3);
+  background: var(--superficie);
+  box-shadow: var(--ombra-1);
+}
+
+.trittico .sigillo {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--r-2);
+}
+
+.trittico h3 {
+  font-size: var(--t-md);
+  font-family: var(--font-ui);
+  font-weight: 700;
+}
+
+.trittico p {
+  font-size: var(--t-sm);
+  color: var(--testo-morbido);
+}
+
+/* --- Stato vuoto ---------------------------------------------------------- */
+
+.vuoto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-10) var(--sp-4);
+  text-align: center;
+  color: var(--testo-tenue);
+}
+
+.vuoto .icona-lg { color: var(--bordo-forte); }
+
+/* --- Tabella -------------------------------------------------------------- */
+
+.tabella {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-sm);
+}
+
+.tabella th {
+  text-align: left;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--testo-tenue);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--bordo);
+}
+
+.tabella td {
+  padding-block: var(--sp-2);
+  border-bottom: 1px solid var(--bordo);
+}
+
+.tabella td.num,
+.tabella th.num { text-align: right; }

@@ -1,0 +1,294 @@
+/* ==========================================================================
+   Equilibrio — design tokens
+   Palette mediterranea, non clinica: terracotta, oliva, crema, blu di mare,
+   ocra. Regola semantica ferrea: il ROSSO non indica mai lo sgarro.
+   Lo sgarro e' ocra — una voce di bilancio, non una colpa.
+   Il rosso e' riservato ai soli vincoli di sicurezza (sotto il floor calorico).
+   ========================================================================== */
+
+:root {
+  /* --- Palette grezza --------------------------------------------------- */
+
+  /* Terracotta / pomodoro — accento primario */
+  --terra-50:  #fdf3ef;
+  --terra-100: #fae2d8;
+  --terra-200: #f3c3b0;
+  --terra-300: #e89d80;
+  --terra-400: #da7551;
+  --terra-500: #c4522f;
+  --terra-600: #a54023;
+  --terra-700: #83321c;
+  --terra-800: #5e2415;
+  --terra-900: #3d1810;
+
+  /* Olio d'oliva — conferme, obiettivo raggiunto, verdura */
+  --oliva-50:  #f5f7ee;
+  --oliva-100: #e7edd5;
+  --oliva-200: #cedaab;
+  --oliva-300: #afc17c;
+  --oliva-400: #8fa556;
+  --oliva-500: #718740;
+  --oliva-600: #5a6b33;
+  --oliva-700: #45522a;
+  --oliva-800: #303a1f;
+  --oliva-900: #1e2415;
+
+  /* Blu di mare — dati, grafici, misure */
+  --mare-50:  #eff6fa;
+  --mare-100: #d7e9f2;
+  --mare-200: #aed3e5;
+  --mare-300: #7fb6d1;
+  --mare-400: #5296b7;
+  --mare-500: #35789a;
+  --mare-600: #2a5f7c;
+  --mare-700: #224b62;
+  --mare-800: #1a3849;
+  --mare-900: #122631;
+
+  /* Ocra — lo sgarro, gli avanzi, i residui di confezione */
+  --ocra-50:  #fdf6e8;
+  --ocra-100: #f9e9c4;
+  --ocra-200: #f1d28c;
+  --ocra-300: #e5b54f;
+  --ocra-400: #d19a2c;
+  --ocra-500: #ae7d1e;
+  --ocra-600: #8a6217;
+  --ocra-700: #684912;
+  --ocra-800: #47320d;
+  --ocra-900: #2c1f08;
+
+  /* Creta — neutri caldi (mai grigi freddi: raffreddano il cibo) */
+  --creta-0:   #ffffff;
+  --creta-25:  #fdfbf7;
+  --creta-50:  #fbf7f0;
+  --creta-100: #f4eee3;
+  --creta-200: #e8dfd0;
+  --creta-300: #d4c8b4;
+  --creta-400: #afa294;
+  --creta-500: #857a6d;
+  --creta-600: #635a50;
+  --creta-700: #47403a;
+  --creta-800: #2e2926;
+  --creta-900: #1c1917;
+  --creta-950: #131110;
+
+  /* Allarme — SOLO vincoli di sicurezza */
+  --allarme-400: #d9534a;
+  --allarme-500: #b3261e;
+  --allarme-600: #8f1e17;
+
+  /* --- Tipografia ------------------------------------------------------- */
+  --font-display: 'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+
+  /* Scala fluida: mobile -> desktop senza breakpoint */
+  --t-xs:   0.75rem;
+  --t-sm:   0.8125rem;
+  --t-base: 0.9375rem;
+  --t-md:   1.0625rem;
+  --t-lg:   clamp(1.1875rem, 1.05rem + 0.7vw, 1.375rem);
+  --t-xl:   clamp(1.4375rem, 1.2rem + 1.2vw, 1.75rem);
+  --t-2xl:  clamp(1.75rem, 1.35rem + 2vw, 2.375rem);
+  --t-3xl:  clamp(2.125rem, 1.5rem + 3.1vw, 3.25rem);
+
+  --lh-tight: 1.15;
+  --lh-snug: 1.35;
+  --lh-base: 1.55;
+
+  --ls-tight: -0.02em;
+  --ls-wide: 0.02em;
+  --ls-caps: 0.09em;
+
+  /* --- Spazi (base 4px) -------------------------------------------------- */
+  --sp-1:  0.25rem;
+  --sp-2:  0.5rem;
+  --sp-3:  0.75rem;
+  --sp-4:  1rem;
+  --sp-5:  1.25rem;
+  --sp-6:  1.5rem;
+  --sp-8:  2rem;
+  --sp-10: 2.5rem;
+  --sp-12: 3rem;
+  --sp-16: 4rem;
+
+  /* --- Raggi ------------------------------------------------------------- */
+  --r-1: 6px;
+  --r-2: 10px;
+  --r-3: 14px;
+  --r-4: 20px;
+  --r-pill: 999px;
+
+  /* --- Layout ------------------------------------------------------------ */
+  --larghezza-testo: 38rem;
+  --larghezza-app: 46rem;
+  --barra-h: 4.25rem;             /* altezza barra di navigazione inferiore */
+  --rail-l: 17rem;                /* colonna di navigazione su schermo largo */
+  --tocco-min: 44px;              /* target minimo accessibile */
+
+  /* --- Movimento --------------------------------------------------------- */
+  --d-veloce: 120ms;
+  --d-media: 190ms;
+  --d-lenta: 320ms;
+  --e-standard: cubic-bezier(0.2, 0, 0.1, 1);
+  --e-uscita: cubic-bezier(0.4, 0, 1, 1);
+  --e-molla: cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+/* ==========================================================================
+   Tema chiaro (default)
+   ========================================================================== */
+
+:root,
+:root[data-tema='chiaro'] {
+  color-scheme: light;
+
+  --sfondo: var(--creta-50);
+  --sfondo-alt: var(--creta-100);
+  --superficie: var(--creta-0);
+  --superficie-alt: var(--creta-25);
+  --superficie-incavo: var(--creta-100);
+
+  --bordo: var(--creta-200);
+  --bordo-forte: var(--creta-300);
+
+  --testo: var(--creta-900);
+  --testo-morbido: var(--creta-600);
+  /* Non e' creta-500: quello sta a 3,93:1 sul fondo crema e non passa AA.
+     Misurato: 4,73:1 sullo sfondo, 5,05:1 sulla superficie. */
+  --testo-tenue: #786d60;
+  --testo-su-scuro: var(--creta-50);
+
+  /* Accento: fondo pieno + testo che ci sta sopra */
+  --accento: #b8461f;
+  --su-accento: #ffffff;
+  --accento-testo: #a03a16;          /* accento usato come testo sul fondo */
+  --accento-tenue: var(--terra-100);
+  --accento-velo: var(--terra-50);
+
+  --verde: var(--oliva-600);
+  --su-verde: #ffffff;
+  --verde-testo: var(--oliva-700);
+  --verde-tenue: var(--oliva-100);
+
+  --dato: var(--mare-600);
+  --dato-testo: var(--mare-700);
+  --dato-tenue: var(--mare-100);
+
+  --sgarro: var(--ocra-400);
+  --su-sgarro: var(--ocra-900);
+  --sgarro-testo: var(--ocra-600);
+  --sgarro-tenue: var(--ocra-100);
+
+  --pericolo: var(--allarme-500);
+  --su-pericolo: #ffffff;
+  --pericolo-testo: var(--allarme-600);
+  --pericolo-tenue: #fbe9e7;
+
+  --ombra-1: 0 1px 2px rgba(61, 40, 24, 0.06), 0 1px 1px rgba(61, 40, 24, 0.04);
+  --ombra-2: 0 2px 4px rgba(61, 40, 24, 0.06), 0 4px 12px rgba(61, 40, 24, 0.07);
+  --ombra-3: 0 6px 16px rgba(61, 40, 24, 0.09), 0 16px 40px rgba(61, 40, 24, 0.10);
+  --anello-fuoco: 0 0 0 3px var(--sfondo), 0 0 0 5px var(--accento);
+}
+
+/* ==========================================================================
+   Tema scuro — contrasti RICALCOLATI, non invertiti.
+   ========================================================================== */
+
+:root[data-tema='scuro'] {
+  color-scheme: dark;
+
+  --sfondo: var(--creta-950);
+  --sfondo-alt: #1a1613;
+  --superficie: #1e1a17;
+  --superficie-alt: #251f1b;
+  --superficie-incavo: #14110f;
+
+  --bordo: #342d27;
+  --bordo-forte: #4a413a;
+
+  --testo: #f5efe6;
+  --testo-morbido: #bcb1a4;
+  --testo-tenue: #8e8377;
+  --testo-su-scuro: #f5efe6;
+
+  --accento: #e07a4e;
+  --su-accento: #2a1509;
+  --accento-testo: #f0a184;
+  --accento-tenue: #3a2014;
+  --accento-velo: #26150e;
+
+  --verde: #a8bc72;
+  --su-verde: #1a2010;
+  --verde-testo: #bdcf8c;
+  --verde-tenue: #262d18;
+
+  --dato: #6fb3d4;
+  --dato-testo: #96cbe6;
+  --dato-tenue: #172b36;
+
+  --sgarro: #e0ac52;
+  --su-sgarro: #2a1e08;
+  --sgarro-testo: #edc478;
+  --sgarro-tenue: #322510;
+
+  --pericolo: #e8776c;
+  --su-pericolo: #2b0d0a;
+  --pericolo-testo: #f2a49b;
+  --pericolo-tenue: #331714;
+
+  --ombra-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --ombra-2: 0 2px 6px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.4);
+  --ombra-3: 0 8px 24px rgba(0, 0, 0, 0.6), 0 20px 48px rgba(0, 0, 0, 0.45);
+  --anello-fuoco: 0 0 0 3px var(--sfondo), 0 0 0 5px var(--accento-testo);
+}
+
+/* Se l'utente non ha scelto un tema, segue il sistema. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='chiaro']) {
+    color-scheme: dark;
+
+    --sfondo: var(--creta-950);
+    --sfondo-alt: #1a1613;
+    --superficie: #1e1a17;
+    --superficie-alt: #251f1b;
+    --superficie-incavo: #14110f;
+
+    --bordo: #342d27;
+    --bordo-forte: #4a413a;
+
+    --testo: #f5efe6;
+    --testo-morbido: #bcb1a4;
+    --testo-tenue: #8e8377;
+    --testo-su-scuro: #f5efe6;
+
+    --accento: #e07a4e;
+    --su-accento: #2a1509;
+    --accento-testo: #f0a184;
+    --accento-tenue: #3a2014;
+    --accento-velo: #26150e;
+
+    --verde: #a8bc72;
+    --su-verde: #1a2010;
+    --verde-testo: #bdcf8c;
+    --verde-tenue: #262d18;
+
+    --dato: #6fb3d4;
+    --dato-testo: #96cbe6;
+    --dato-tenue: #172b36;
+
+    --sgarro: #e0ac52;
+    --su-sgarro: #2a1e08;
+    --sgarro-testo: #edc478;
+    --sgarro-tenue: #322510;
+
+    --pericolo: #e8776c;
+    --su-pericolo: #2b0d0a;
+    --pericolo-testo: #f2a49b;
+    --pericolo-tenue: #331714;
+
+    --ombra-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --ombra-2: 0 2px 6px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.4);
+    --ombra-3: 0 8px 24px rgba(0, 0, 0, 0.6), 0 20px 48px rgba(0, 0, 0, 0.45);
+    --anello-fuoco: 0 0 0 3px var(--sfondo), 0 0 0 5px var(--accento-testo);
+  }
+}

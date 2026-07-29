@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.DS_Store
+*.local
+
+# Caratteri: si scaricano a parte, vedi public/assets/fonts/README.md
+public/assets/fonts/*.woff2
+
+# I fascicoli di profilo sono dati sanitari: non devono mai finire nel repo.
+*.equilibrio

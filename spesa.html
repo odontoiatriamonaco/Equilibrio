@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Spesa — Equilibrio</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/componenti.css">
+  <script>
+    try {
+      var t = localStorage.getItem('equilibrio:tema');
+      if (t) document.documentElement.setAttribute('data-tema', t);
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <main class="guscio">
+    <header class="intestazione">
+      <a class="bottone-icona solo-stretto" href="/index.html" aria-label="Indietro">
+        <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#indietro"/></svg>
+      </a>
+      <h1>Spesa</h1>
+    </header>
+
+    <section class="sezione">
+      <div class="scheda">
+        <div class="vuoto">
+          <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#spesa"/></svg>
+          <p>La lista ordinata per reparto, con dispensa e antispreco.<br>Arriva con la Fase 2.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { avvia } from '/js/guscio.js';
+    avvia({ nav: 'spesa' });
+  </script>
+</body>
+</html>

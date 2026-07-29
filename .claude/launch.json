@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "equilibrio",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--port", "9091"],
+      "port": 9091
+    }
+  ]
+}

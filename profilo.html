@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Profilo — Equilibrio</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/componenti.css">
+  <script>
+    try {
+      var t = localStorage.getItem('equilibrio:tema');
+      if (t) document.documentElement.setAttribute('data-tema', t);
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <main class="guscio">
+    <header class="intestazione">
+      <a class="bottone-icona solo-stretto" href="/index.html" aria-label="Indietro">
+        <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#indietro"/></svg>
+      </a>
+      <h1>Profilo</h1>
+    </header>
+
+    <p class="morbido">Questi dati restano su questo dispositivo. Non vengono inviati da
+      nessuna parte e nessuno li vede al posto tuo.</p>
+
+    <form id="modulo" onsubmit="return false">
+
+      <section class="sezione">
+        <header><h2>Chi sei</h2></header>
+        <div class="scheda pila">
+          <div class="campo">
+            <label for="nome">Nome del profilo</label>
+            <input id="nome" type="text" autocomplete="off" placeholder="Carmela">
+          </div>
+          <div class="griglia-2">
+            <div class="campo">
+              <label for="sesso">Sesso</label>
+              <select id="sesso">
+                <option value="donna">Donna</option>
+                <option value="uomo">Uomo</option>
+              </select>
+              <span class="aiuto">Serve alle formule del metabolismo.</span>
+            </div>
+            <div class="campo">
+              <label for="nascita">Data di nascita</label>
+              <input id="nascita" type="date">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sezione">
+        <header><h2>Misure</h2></header>
+        <div class="scheda pila">
+          <div class="griglia-2">
+            <div class="campo">
+              <label for="altezza">Altezza</label>
+              <input id="altezza" type="number" inputmode="decimal" step="0.5" placeholder="165">
+              <span class="aiuto">cm</span>
+            </div>
+            <div class="campo">
+              <label for="peso">Peso</label>
+              <input id="peso" type="number" inputmode="decimal" step="0.1" placeholder="78">
+              <span class="aiuto">kg</span>
+            </div>
+          </div>
+
+          <p class="piccolo morbido">Le tre circonferenze sono facoltative, ma cambiano molto:
+            con quelle la massa grassa si stima dalle misure invece che dal solo peso.</p>
+
+          <div class="griglia-2">
+            <div class="campo">
+              <label for="vita">Vita</label>
+              <input id="vita" type="number" inputmode="decimal" step="0.5" placeholder="92">
+              <span class="aiuto">cm, sopra l'ombelico</span>
+            </div>
+            <div class="campo">
+              <label for="fianchi">Fianchi</label>
+              <input id="fianchi" type="number" inputmode="decimal" step="0.5" placeholder="108">
+              <span class="aiuto">cm, nel punto più largo</span>
+            </div>
+            <div class="campo">
+              <label for="collo">Collo</label>
+              <input id="collo" type="number" inputmode="decimal" step="0.5" placeholder="34">
+              <span class="aiuto">cm, sotto il pomo d'Adamo</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sezione">
+        <header><h2>Giornata tipo</h2></header>
+        <div class="scheda pila">
+          <div class="campo">
+            <label for="attivita">Quanto ti muovi</label>
+            <select id="attivita"></select>
+          </div>
+        </div>
+      </section>
+
+      <section class="sezione">
+        <header><h2>Obiettivo</h2></header>
+        <div class="scheda pila">
+          <div class="campo">
+            <label for="obiettivo">Peso a cui vuoi arrivare</label>
+            <input id="obiettivo" type="number" inputmode="decimal" step="0.5" placeholder="68">
+            <span class="aiuto">kg — lascia vuoto per puntare al mantenimento</span>
+          </div>
+          <div class="campo">
+            <label id="etichetta-ritmi">Con che ritmo</label>
+            <div class="segmenti" id="ritmi" role="tablist" aria-labelledby="etichetta-ritmi"></div>
+            <span class="aiuto">Se il ritmo scelto è troppo aggressivo, lo riduco e te lo dico.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="sezione">
+        <header><h2>Salute</h2></header>
+        <div class="scheda pila">
+          <p class="piccolo morbido">Serve a capire se un piano ipocalorico calcolato da un
+            programma è adatto a te. Resta su questo dispositivo come tutto il resto.</p>
+          <div class="pila" id="bandiere" style="gap:var(--sp-1)"></div>
+        </div>
+      </section>
+
+      <section class="sezione">
+        <header><h2>Riepilogo</h2></header>
+        <div class="scheda scheda-alta" id="riepilogo"></div>
+      </section>
+
+      <button class="bottone bottone-largo" id="salva" type="button">
+        <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#salva"/></svg>
+        Salva il profilo
+      </button>
+      <p class="avviso avviso-ok" id="esito" hidden style="margin-top:var(--sp-3)"></p>
+    </form>
+  </main>
+
+  <script type="module">
+    import { inizializza } from '/js/pagina-profilo.js';
+    inizializza();
+  </script>
+</body>
+</html>

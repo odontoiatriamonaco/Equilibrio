@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Stile — Equilibrio</title>
+  <meta name="description" content="Style guide vivente di Equilibrio: token, componenti e regole semantiche.">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/componenti.css">
+  <script>
+    // Prima del primo pixel, altrimenti si vede il lampo bianco.
+    try {
+      var t = localStorage.getItem('equilibrio:tema');
+      if (t) document.documentElement.setAttribute('data-tema', t);
+    } catch (e) {}
+  </script>
+  <style>
+    .campioni { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: var(--sp-3); }
+    .campione { border: 1px solid var(--bordo); border-radius: var(--r-2); overflow: hidden; background: var(--superficie); }
+    .campione .tinta { height: 3.5rem; display: grid; place-items: center; font-size: var(--t-xs); font-weight: 700; }
+    .campione .nome { padding: var(--sp-2); font-size: var(--t-xs); }
+    .campione code { font-size: 0.6875rem; color: var(--testo-tenue); }
+    .griglia-icone { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr)); gap: var(--sp-2); }
+    .cella-icona { display: flex; flex-direction: column; align-items: center; gap: var(--sp-1);
+                   padding: var(--sp-3) var(--sp-1); border: 1px solid var(--bordo); border-radius: var(--r-2);
+                   background: var(--superficie); font-size: 0.625rem; color: var(--testo-tenue); text-align: center; }
+    .nota { border-left: 3px solid var(--bordo-forte); padding-left: var(--sp-3); color: var(--testo-morbido);
+            font-size: var(--t-sm); }
+    .demo { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; }
+  </style>
+</head>
+<body>
+  <main class="guscio">
+    <header class="intestazione">
+      <h1>Stile</h1>
+      <button class="bottone-icona" id="cambia-tema" aria-label="Cambia tema">
+        <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#luna"/></svg>
+      </button>
+    </header>
+
+    <p class="morbido">La coerenza si vede in un posto solo e si corregge in un posto solo.
+      Ogni componente dell'app nasce qui prima di finire in una pagina.</p>
+
+    <!-- ================= Colore ================= -->
+    <section class="sezione">
+      <header><h2>Colore</h2></header>
+      <p class="nota">Palette mediterranea, non clinica. <strong>Il rosso non indica mai lo sgarro</strong>:
+        lo sgarro è ocra, una voce di bilancio, non una colpa. Il rosso resta ai soli vincoli
+        di sicurezza — sotto il floor calorico.</p>
+
+      <div class="campioni" style="margin-top: var(--sp-4)">
+        <div class="campione"><div class="tinta" style="background:var(--accento);color:var(--su-accento)">Aa</div>
+          <div class="nome">Accento<br><code>--accento</code></div></div>
+        <div class="campione"><div class="tinta" style="background:var(--verde);color:var(--su-verde)">Aa</div>
+          <div class="nome">Verde oliva<br><code>--verde</code></div></div>
+        <div class="campione"><div class="tinta" style="background:var(--dato);color:#fff">Aa</div>
+          <div class="nome">Blu di mare<br><code>--dato</code></div></div>
+        <div class="campione"><div class="tinta" style="background:var(--sgarro);color:var(--su-sgarro)">Aa</div>
+          <div class="nome">Sgarro<br><code>--sgarro</code></div></div>
+        <div class="campione"><div class="tinta" style="background:var(--pericolo);color:var(--su-pericolo)">Aa</div>
+          <div class="nome">Sicurezza<br><code>--pericolo</code></div></div>
+        <div class="campione"><div class="tinta" style="background:var(--superficie);color:var(--testo);border-bottom:1px solid var(--bordo)">Aa</div>
+          <div class="nome">Superficie<br><code>--superficie</code></div></div>
+        <div class="campione"><div class="tinta" style="background:var(--sfondo);color:var(--testo);border-bottom:1px solid var(--bordo)">Aa</div>
+          <div class="nome">Sfondo<br><code>--sfondo</code></div></div>
+        <div class="campione"><div class="tinta" style="background:var(--sfondo-alt);color:var(--testo);border-bottom:1px solid var(--bordo)">Aa</div>
+          <div class="nome">Sfondo alt<br><code>--sfondo-alt</code></div></div>
+      </div>
+    </section>
+
+    <!-- ================= Tipografia ================= -->
+    <section class="sezione">
+      <header><h2>Tipografia</h2></header>
+      <div class="scheda pila">
+        <h1>Pasta e patate con provola</h1>
+        <h2>La settimana di Carmela</h2>
+        <h3>Sabato — pizzeria</h3>
+        <p>Corpo del testo. Serif editoriale per i titoli e per i nomi dei piatti,
+           sans molto leggibile per l'interfaccia.</p>
+        <p class="occhiello">Occhiello / etichetta</p>
+        <p class="piccolo tenue">Testo piccolo e tenue, per le note di servizio.</p>
+      </div>
+
+      <div class="scheda pila" style="margin-top: var(--sp-3)">
+        <p class="occhiello">Cifre tabulari</p>
+        <table class="tabella">
+          <tbody>
+            <tr><td>Pasta di semola</td><td class="num">80 g</td><td class="num">278 kcal</td></tr>
+            <tr><td>Fagioli cannellini</td><td class="num">120 g</td><td class="num">109 kcal</td></tr>
+            <tr><td>Olio extravergine</td><td class="num">10 g</td><td class="num">90 kcal</td></tr>
+          </tbody>
+        </table>
+        <p class="nota">Le cifre che ballano in colonna sono il dettaglio che fa sembrare
+          amatoriale un'app di dati: <code>.num</code> ovunque compaiano grammature e kcal.</p>
+      </div>
+    </section>
+
+    <!-- ================= Fascia del budget ================= -->
+    <section class="sezione">
+      <header><h2>Fascia del budget</h2></header>
+      <p class="nota">Il componente firma. Non è una barra di progresso: sono sette giorni,
+        e il tratteggio ocra è il prestito che si sta ripagando. Provalo.</p>
+
+      <div class="scheda scheda-alta" style="margin-top: var(--sp-4)">
+        <div id="fascia"></div>
+        <div class="demo" style="margin-top: var(--sp-5)">
+          <button class="bottone bottone-2" data-demo="pulita">Settimana pulita</button>
+          <button class="bottone" data-demo="preventivo">Sgarro preventivo — sabato pizzeria</button>
+          <button class="bottone bottone-2" data-demo="registrato">Sgarro registrato oggi</button>
+        </div>
+        <p id="spiega" class="piccolo morbido" style="margin-top: var(--sp-3)"></p>
+      </div>
+    </section>
+
+    <!-- ================= Anello ================= -->
+    <section class="sezione">
+      <header><h2>Anello del giorno</h2></header>
+      <div class="demo">
+        <div class="anello" style="--p:.62">
+          <div class="anello-testo">
+            <span class="dato-grande num">1 060</span>
+            <span class="unita">di 1 700 kcal</span>
+          </div>
+        </div>
+        <div class="anello" data-stato="sgarro" style="--p:1">
+          <div class="anello-testo">
+            <span class="dato-grande num">2 550</span>
+            <span class="unita">sabato, sgarro</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Bottoni ================= -->
+    <section class="sezione">
+      <header><h2>Bottoni</h2></header>
+      <div class="demo">
+        <button class="bottone">Genera la settimana</button>
+        <button class="bottone bottone-2">Rigenera</button>
+        <button class="bottone bottone-fantasma">Annulla</button>
+        <button class="bottone bottone-pericolo">Elimina il profilo</button>
+        <button class="bottone" disabled>Non disponibile</button>
+        <button class="bottone-icona" aria-label="Modifica">
+          <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#matita"/></svg>
+        </button>
+      </div>
+      <div class="demo" style="margin-top: var(--sp-3)">
+        <button class="bottone bottone-largo">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spesa"/></svg>
+          Genera la lista della spesa
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= Pillole e gusti ================= -->
+    <section class="sezione">
+      <header><h2>Pillole e gusti</h2></header>
+      <div class="demo">
+        <span class="pillola">20 min</span>
+        <span class="pillola pillola-accento">Piatto di casa</span>
+        <span class="pillola pillola-verde">Di stagione</span>
+        <span class="pillola pillola-dato">Pesce · 2 volte</span>
+        <span class="pillola pillola-sgarro">Sgarro previsto</span>
+        <span class="pillola pillola-pericolo">Sotto il minimo</span>
+      </div>
+      <div class="demo" style="margin-top: var(--sp-3)">
+        <button class="chip-gusto" data-gusto="amato">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#cuore"/></svg>
+          Scarola
+        </button>
+        <button class="chip-gusto" data-gusto="neutro">Zucchine</button>
+        <button class="chip-gusto" data-gusto="escluso">Radicchio</button>
+      </div>
+    </section>
+
+    <!-- ================= Controlli ================= -->
+    <section class="sezione">
+      <header><h2>Controlli</h2></header>
+      <div class="scheda pila">
+        <div class="griglia-2">
+          <div class="campo">
+            <label for="d-peso">Peso</label>
+            <input id="d-peso" type="number" value="68" inputmode="decimal">
+            <span class="aiuto">kg, con una cifra decimale</span>
+          </div>
+          <div class="campo">
+            <label for="d-att">Attività</label>
+            <select id="d-att">
+              <option>Sedentaria</option>
+              <option selected>Leggera</option>
+              <option>Moderata</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="segmenti" role="tablist" aria-label="Modalità">
+          <button role="tab" aria-selected="true">Porzioni</button>
+          <button role="tab" aria-selected="false">Grammi</button>
+        </div>
+
+        <label class="interruttore">
+          <input type="checkbox" checked>
+          <span class="leva"></span>
+          <span>Proteggi questo profilo con un PIN</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- ================= Avvisi ================= -->
+    <section class="sezione">
+      <header><h2>Avvisi</h2></header>
+      <div class="pila">
+        <div class="avviso">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#info"/></svg>
+          <div>La ricotta si vende da 250 g: ho messo in settimana anche gli <strong>gnocchi alla sorrentina</strong> per finirla.</div>
+        </div>
+        <div class="avviso avviso-ok">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spunta"/></svg>
+          <div>Settimana in equilibrio. Il traguardo resta al <strong>14 settembre</strong>.</div>
+        </div>
+        <div class="avviso avviso-sgarro">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#sgarro"/></svg>
+          <div>Sabato pizzeria: ho alleggerito da lunedì a venerdì di 142 kcal al giorno.
+            <strong>La lista della spesa non cambia.</strong></div>
+        </div>
+        <div class="avviso avviso-pericolo">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#avviso"/></svg>
+          <div>Non posso recuperare tutto senza scendere sotto il minimo di sicurezza.
+            Recupero l'80% e il traguardo si sposta di <strong>2 giorni</strong>.</div>
+        </div>
+      </div>
+      <p class="nota" style="margin-top: var(--sp-3)">Il quarto avviso è rosso perché parla di un
+        <em>vincolo di sicurezza</em>, non dello sgarro. È l'unica occasione in cui il rosso compare.</p>
+    </section>
+
+    <!-- ================= Lista della spesa ================= -->
+    <section class="sezione">
+      <header><h2>Lista della spesa</h2></header>
+      <div class="scheda">
+        <div class="reparto">
+          <h3><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#ortofrutta"/></svg> Ortofrutta</h3>
+          <label class="voce-spesa"><input type="checkbox"><span class="spunta"></span>
+            <span class="nome">Friarielli</span><span class="qta num">600 g</span></label>
+          <label class="voce-spesa"><input type="checkbox" checked><span class="spunta"></span>
+            <span class="nome">Pomodorini del piennolo</span><span class="qta num">500 g</span></label>
+          <label class="voce-spesa"><input type="checkbox"><span class="spunta"></span>
+            <span class="nome">Scarola</span><span class="qta num">2 cespi</span></label>
+        </div>
+        <div class="reparto">
+          <h3><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#latticini"/></svg> Latticini</h3>
+          <label class="voce-spesa"><input type="checkbox"><span class="spunta"></span>
+            <span class="nome">Ricotta di fuscella</span><span class="qta num">250 g</span></label>
+          <label class="voce-spesa"><input type="checkbox"><span class="spunta"></span>
+            <span class="nome">Provola affumicata</span><span class="qta num">200 g</span></label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Carte dei piatti ================= -->
+    <section class="sezione">
+      <header><h2>Carte dei piatti</h2></header>
+      <div class="pila">
+        <button class="carta-piatto">
+          <span class="sigillo"><svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#pasta"/></svg></span>
+          <span class="corpo">
+            <span class="titolo">Pasta e patate con provola</span>
+            <span class="meta"><span>1 porzione · 420 kcal</span><span>35 min</span><span>Piatto di casa</span></span>
+          </span>
+          <svg class="icona icona-sm tenue" aria-hidden="true"><use href="/assets/icons.svg#avanti"/></svg>
+        </button>
+        <button class="carta-piatto">
+          <span class="sigillo"><svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#pesce"/></svg></span>
+          <span class="corpo">
+            <span class="titolo">Alici al forno con pangrattato</span>
+            <span class="meta"><span>1 porzione · 310 kcal</span><span>25 min</span><span>Di stagione</span></span>
+          </span>
+          <svg class="icona icona-sm tenue" aria-hidden="true"><use href="/assets/icons.svg#avanti"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= Stato vuoto ================= -->
+    <section class="sezione">
+      <header><h2>Stato vuoto</h2></header>
+      <div class="scheda">
+        <div class="vuoto">
+          <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#dispensa"/></svg>
+          <p>La dispensa è vuota.<br>Quello che avanza dalla spesa finisce qui.</p>
+          <button class="bottone bottone-2">Aggiungi una scorta</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Icone ================= -->
+    <section class="sezione">
+      <header><h2>Icone</h2></header>
+      <div class="griglia-icone" id="griglia-icone"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { avvia, alternaTema, num } from '/js/guscio.js';
+    import { rendiFascia } from '/js/ui-budget.js';
+
+    avvia({ nav: 'stile' });
+
+    document.getElementById('cambia-tema').addEventListener('click', alternaTema);
+
+    /* --- Demo della fascia del budget --- */
+    const TARGET = 1700;
+    const ETICHETTE = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'];
+    const OGGI = 2; // mercoledì, per la demo
+    const fascia = document.getElementById('fascia');
+    const spiega = document.getElementById('spiega');
+
+    const scenari = {
+      pulita: () => ({
+        giorni: ETICHETTE.map((e, i) => ({ etichetta: e, quota: TARGET, oggi: i === OGGI })),
+        testo: 'Settimana in equilibrio: ogni giorno sul suo target.',
+      }),
+      preventivo: () => {
+        const extra = 850, quanti = 5, taglio = extra / quanti;
+        return {
+          giorni: ETICHETTE.map((e, i) => ({
+            etichetta: e,
+            quota: i === 5 ? TARGET + extra : i < 5 ? TARGET - taglio : TARGET,
+            stato: i === 5 ? 'sgarro' : i < 5 ? 'recupero' : 'normale',
+            oggi: i === OGGI,
+          })),
+          testo: `Pizzeria dichiarata prima: +${num(extra)} kcal sabato, ` +
+                 `−${num(taglio)} kcal al giorno da lunedì a venerdì. ` +
+                 'Carmela arriva alla pizza con il budget già pronto — e la lista della spesa non cambia.',
+        };
+      },
+      registrato: () => {
+        const extra = 640, quanti = 4, taglio = extra / quanti;
+        return {
+          giorni: ETICHETTE.map((e, i) => ({
+            etichetta: e,
+            quota: i === OGGI ? TARGET + extra : i > OGGI ? TARGET - taglio : TARGET,
+            stato: i === OGGI ? 'sgarro' : i > OGGI ? 'recupero' : 'normale',
+            oggi: i === OGGI,
+          })),
+          testo: `Sfogliatella registrata oggi: +${num(extra)} kcal. ` +
+                 `Il recupero riparte dai giorni successivi, −${num(taglio)} kcal ciascuno.`,
+        };
+      },
+    };
+
+    function mostra(nome) {
+      const s = scenari[nome]();
+      rendiFascia(fascia, { giorni: s.giorni, target: TARGET });
+      spiega.textContent = s.testo;
+    }
+
+    document.querySelectorAll('[data-demo]').forEach((b) =>
+      b.addEventListener('click', () => mostra(b.dataset.demo)));
+    mostra('preventivo');
+
+    /* --- Griglia delle icone, letta dallo sprite stesso --- */
+    const griglia = document.getElementById('griglia-icone');
+    fetch('/assets/icons.svg')
+      .then((r) => r.text())
+      .then((testo) => {
+        const doc = new DOMParser().parseFromString(testo, 'image/svg+xml');
+        const nomi = Array.from(doc.querySelectorAll('symbol')).map((s) => s.id);
+        griglia.innerHTML = nomi.map((n) => `
+          <div class="cella-icona">
+            <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#${n}"/></svg>
+            <span>${n}</span>
+          </div>`).join('');
+      });
+  </script>
+</body>
+</html>

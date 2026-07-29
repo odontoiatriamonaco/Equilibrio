@@ -1,0 +1,23 @@
+{
+  "name": "Equilibrio — dieta, spesa e sgarri",
+  "short_name": "Equilibrio",
+  "description": "Piano alimentare settimanale a porzioni, lista della spesa per reparto e gestione dello sgarro con recupero distribuito sulla settimana.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "it",
+  "dir": "ltr",
+  "background_color": "#fbf7f0",
+  "theme_color": "#b8461f",
+  "categories": ["health", "food", "lifestyle"],
+  "icons": [
+    { "src": "/assets/icona-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icona-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icona-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Lista della spesa", "url": "/spesa.html" },
+    { "name": "Piano della settimana", "url": "/piano.html" }
+  ]
+}

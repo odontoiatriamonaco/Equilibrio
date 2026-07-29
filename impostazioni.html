@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Impostazioni — Equilibrio</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/componenti.css">
+  <script>
+    try {
+      var t = localStorage.getItem('equilibrio:tema');
+      if (t) document.documentElement.setAttribute('data-tema', t);
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <main class="guscio">
+    <header class="intestazione">
+      <a class="bottone-icona solo-stretto" href="/index.html" aria-label="Indietro">
+        <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#indietro"/></svg>
+      </a>
+      <h1>Impostazioni</h1>
+    </header>
+
+    <!-- ===== Profili ===== -->
+    <section class="sezione">
+      <header>
+        <h2>Profili</h2>
+        <a class="bottone bottone-fantasma" href="/profilo.html">Nuovo</a>
+      </header>
+      <div class="pila" id="profili"></div>
+      <p class="piccolo tenue" style="margin-top:var(--sp-3)">
+        Ogni profilo ha i suoi dati, separati dagli altri. Eliminarne uno porta via
+        tutto quello che gli appartiene: piano, diario, misure e dispensa.
+      </p>
+    </section>
+
+    <!-- ===== Esporta ===== -->
+    <section class="sezione">
+      <header><h2>Porta via il profilo</h2></header>
+      <div class="scheda pila">
+        <p class="morbido">Un file solo con dentro tutto: profilo, preferenze, piano, diario e
+          dispensa. Serve per il backup, per cambiare telefono e per ritrovarti i tuoi dati altrove.</p>
+
+        <div class="avviso">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#blocco"/></svg>
+          <div>Il file viene <strong>cifrato</strong> con la passphrase che scegli. Senza quella
+            non si apre — nemmeno io posso recuperarlo. Scrivila dove tieni le password,
+            non in un messaggio.</div>
+        </div>
+
+        <div class="griglia-2">
+          <div class="campo">
+            <label for="pass1">Passphrase</label>
+            <input id="pass1" type="password" autocomplete="new-password" minlength="8">
+            <span class="aiuto">almeno 8 caratteri</span>
+          </div>
+          <div class="campo">
+            <label for="pass2">Ripetila</label>
+            <input id="pass2" type="password" autocomplete="new-password" minlength="8">
+          </div>
+        </div>
+
+        <button class="bottone bottone-largo" id="esporta">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#esporta"/></svg>
+          Esporta il profilo attivo
+        </button>
+        <p class="avviso" id="esito-export" hidden></p>
+      </div>
+    </section>
+
+    <!-- ===== Importa ===== -->
+    <section class="sezione">
+      <header><h2>Carica un profilo</h2></header>
+      <div class="scheda pila">
+        <p class="morbido">Il profilo importato si aggiunge agli altri con un nome nuovo:
+          quello che è già su questo dispositivo non viene mai sovrascritto.</p>
+
+        <div class="campo">
+          <label for="file-import">File <code>.equilibrio</code></label>
+          <input id="file-import" type="file" accept=".equilibrio,application/octet-stream">
+        </div>
+        <div class="campo">
+          <label for="pass-import">Passphrase del file</label>
+          <input id="pass-import" type="password" autocomplete="off">
+        </div>
+
+        <button class="bottone bottone-2 bottone-largo" id="importa">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#importa"/></svg>
+          Importa
+        </button>
+        <p class="avviso" id="esito-import" hidden></p>
+      </div>
+    </section>
+
+    <!-- ===== Aspetto ===== -->
+    <section class="sezione">
+      <header><h2>Aspetto</h2></header>
+      <div class="scheda">
+        <div class="campo">
+          <label id="etichetta-tema">Tema</label>
+          <div class="segmenti" id="tema" role="tablist" aria-labelledby="etichetta-tema">
+            <button role="tab" data-tema="auto">Automatico</button>
+            <button role="tab" data-tema="chiaro">Chiaro</button>
+            <button role="tab" data-tema="scuro">Scuro</button>
+          </div>
+          <span class="aiuto">In automatico segue l'impostazione del telefono.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Privacy ===== -->
+    <section class="sezione">
+      <header><h2>Dove stanno i tuoi dati</h2></header>
+      <div class="scheda pila">
+        <p class="morbido">Peso, misure, patologie e diario alimentare <strong>restano su questo
+          dispositivo</strong>: non esiste un account, non c'è una email, non parte nessuna statistica.</p>
+        <p class="morbido">L'unica cosa che potrà uscire da qui è la <strong>lista della spesa</strong>,
+          quando sceglierai di condividerla: un codice temporaneo che porta con sé solo alimenti
+          e quantità — nessun nome, nessun peso, nessuna caloria.</p>
+        <p class="piccolo tenue">Equilibrio è uno strumento di organizzazione familiare. Non è un
+          dispositivo medico e non sostituisce il parere di un nutrizionista o del medico curante.</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { inizializza } from '/js/pagina-impostazioni.js';
+    inizializza();
+  </script>
+</body>
+</html>
