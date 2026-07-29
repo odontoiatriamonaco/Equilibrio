@@ -233,6 +233,15 @@
   <symbol id="foglia" viewBox="0 0 24 24">
     <path d="M5 19c-2-6 1-12 8-13.5C14.8 12 11.5 18 5 19z"/><path d="M5.5 18.5C8 15 10 13 13.5 11"/>
   </symbol>
+  <symbol id="guida" viewBox="0 0 24 24">
+    <path d="M12 6.8C10.4 5.3 8.4 4.5 5.5 4.5A1.5 1.5 0 0 0 4 6v11.5a1.5 1.5 0 0 0 1.5 1.5c2.9 0 4.9.8 6.5 2.3 1.6-1.5 3.6-2.3 6.5-2.3a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5c-2.9 0-4.9.8-6.5 2.3z"/>
+    <path d="M12 6.8V21"/>
+  </symbol>
+  <symbol id="domanda" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8.5"/>
+    <path d="M9.6 9.4a2.5 2.5 0 0 1 4.9.6c0 1.7-2.5 2.1-2.5 3.8"/>
+    <circle cx="12" cy="16.8" r="1" fill="currentColor" stroke="none"/>
+  </symbol>
   <symbol id="salva" viewBox="0 0 24 24">
     <path d="M5 4.5h11L20 8.5v11a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5v-13A2 2 0 0 1 5 4.5z"/>
     <path d="M8 4.5v5h7M8 21v-6h8v6"/>

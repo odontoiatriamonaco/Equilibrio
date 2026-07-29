@@ -34,6 +34,7 @@ export default defineConfig({
         ricette: resolve(__dirname, 'ricette.html'),
         progressi: resolve(__dirname, 'progressi.html'),
         impostazioni: resolve(__dirname, 'impostazioni.html'),
+        guida: resolve(__dirname, 'guida.html'),
         stile: resolve(__dirname, 'stile.html'),
       },
     },

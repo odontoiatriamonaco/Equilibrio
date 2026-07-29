@@ -14,6 +14,7 @@ var GUSCIO = [
   '/ricette.html',
   '/progressi.html',
   '/impostazioni.html',
+  '/guida.html',
   '/manifest.json',
   '/assets/icons.svg'
 ];

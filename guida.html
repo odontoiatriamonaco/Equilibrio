@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Guida — Equilibrio</title>
+  <meta name="description" content="Come funziona Equilibrio: il budget della settimana, il profilo, il menù, la spesa e lo sgarro.">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/componenti.css">
+  <script>
+    try {
+      var t = localStorage.getItem('equilibrio:tema');
+      if (t) document.documentElement.setAttribute('data-tema', t);
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <main class="guscio">
+    <header class="intestazione">
+      <a class="bottone-icona solo-stretto" href="/index.html" aria-label="Indietro">
+        <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#indietro"/></svg>
+      </a>
+      <h1 class="solo-sr">Guida</h1>
+    </header>
+
+    <!-- ===== Copertina ===== -->
+    <section class="copertina">
+      <svg class="segno" aria-hidden="true"><use href="/assets/icons.svg#marchio"/></svg>
+      <p class="occhiello">La guida</p>
+      <h1>Non si conta. Si tiene il conto.</h1>
+      <p>Equilibrio non ti chiede di pesare ogni cosa né di essere brava tutti i giorni.
+        Ti chiede una settimana. Dentro quella settimana ci sta anche la pizza del sabato —
+        basta saperlo prima, e ci pensa lui a far tornare i conti.</p>
+    </section>
+
+    <nav class="indice" aria-label="Capitoli" style="margin-top: var(--sp-4)">
+      <a href="#idea"><b>01</b> L'idea</a>
+      <a href="#profilo"><b>02</b> I tuoi numeri</a>
+      <a href="#menu"><b>03</b> Il menù</a>
+      <a href="#spesa"><b>04</b> La spesa</a>
+      <a href="#sgarro"><b>05</b> Lo sgarro</a>
+      <a href="#limiti"><b>06</b> I limiti</a>
+      <a href="#dati"><b>07</b> I tuoi dati</a>
+      <a href="#domande"><b>08</b> Domande</a>
+    </nav>
+
+    <!-- ===== 01 ===== -->
+    <article class="capitolo" id="idea">
+      <header><span class="cifra">01</span><h2>Una settimana, non sette giorni</h2></header>
+
+      <p>Quasi tutte le app di dieta ti danno un numero al giorno e ti considerano in fallo
+        appena lo superi. È il motivo per cui si smette a febbraio: la vita non è fatta di
+        giorni identici. C'è il pranzo dai suoceri, c'è la cena fuori, c'è il compleanno.</p>
+
+      <p>Qui il conto si tiene <strong>sulla settimana</strong>. Ogni giorno ha la sua quota,
+        ma è la somma dei sette che conta. Se un giorno sfora, gli altri si riequilibrano —
+        di poco, senza che tu debba fare nulla.</p>
+
+      <div class="scheda scheda-alta" style="margin-top: var(--sp-5)">
+        <p class="occhiello" style="margin-bottom: var(--sp-3)">Una settimana in equilibrio</p>
+        <div id="fascia-pulita"></div>
+      </div>
+    </article>
+
+    <!-- ===== 02 ===== -->
+    <article class="capitolo" id="profilo">
+      <header><span class="cifra">02</span><h2>I tuoi numeri, spiegati</h2></header>
+
+      <p>Nella pagina <a href="/profilo.html">Profilo</a> inserisci altezza, peso e — se vuoi —
+        tre circonferenze. Da lì escono i numeri che vedi nel riepilogo. Eccoli in italiano.</p>
+
+      <dl class="glossario">
+        <div>
+          <dt>Indice di massa corporea</dt>
+          <dd>Il peso rapportato all'altezza. È una fotografia grossolana: non distingue
+            il muscolo dal grasso, per questo da solo non basta.</dd>
+        </div>
+        <div>
+          <dt>Giro vita</dt>
+          <dd>Dice dov'è distribuito il grasso, ed è più importante del peso: quello
+            addominale è il più legato ai rischi per la salute.</dd>
+        </div>
+        <div>
+          <dt>Vita su altezza</dt>
+          <dd>Il più semplice dei segnali: la vita dovrebbe misurare meno della metà
+            dell'altezza. Sotto 0,5 va bene.</dd>
+        </div>
+        <div>
+          <dt>Massa grassa</dt>
+          <dd>Una stima, non una misura. Con le tre circonferenze è più affidabile che
+            col solo peso, ma resta una stima: guarda come cambia nel tempo, non il numero secco.</dd>
+        </div>
+        <div>
+          <dt>Metabolismo basale</dt>
+          <dd>Quanto consumi restando immobile a letto tutto il giorno, solo per stare viva.
+            È il pavimento: sotto quello non si scende mai.</dd>
+        </div>
+        <div>
+          <dt>Fabbisogno</dt>
+          <dd>Il basale moltiplicato per quanto ti muovi davvero. È quello che serve
+            per mantenere il peso di adesso.</dd>
+        </div>
+        <div>
+          <dt>La tua quota</dt>
+          <dd>Il fabbisogno meno il margine per dimagrire. È il numero che vedi ogni
+            giorno nell'anello.</dd>
+        </div>
+      </dl>
+
+      <div class="avviso" style="margin-top: var(--sp-5)">
+        <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#info"/></svg>
+        <div>Il riepilogo si aggiorna <strong>mentre scrivi</strong>: puoi provare un obiettivo
+          diverso o un ritmo diverso e vedere subito come cambia la data del traguardo.</div>
+      </div>
+    </article>
+
+    <!-- ===== 03 ===== -->
+    <article class="capitolo" id="menu">
+      <header>
+        <span class="cifra">03</span>
+        <h2>Il menù della settimana</h2>
+        <span class="badge-arrivo">in arrivo</span>
+      </header>
+
+      <p>Equilibrio ti proporrà sette giorni di pasti scegliendo fra i piatti che
+        <strong>tu</strong> hai detto di gradire — compresi quelli che già cucini. Niente
+        alimenti sconosciuti, niente bilancia a ogni boccone.</p>
+
+      <ol class="passi">
+        <li><strong>Dici cosa ti piace</strong>
+          <p>Segni col cuore i piatti che ami, sbarri quelli che non vuoi vedere.
+            Le allergie sono un'esclusione assoluta: non compariranno mai.</p></li>
+        <li><strong>Lui compone la settimana</strong>
+          <p>Rispettando le abitudini mediterranee — pesce due o tre volte, legumi tre o
+            quattro, verdura tutti i giorni — e la stagione: a luglio non ti propone la zucca.</p></li>
+        <li><strong>Scambi quello che non ti va</strong>
+          <p>Non ti va la pasta stasera? Un tocco e diventa riso o pane, nella quantità
+            che vale lo stesso. Nessun conto da rifare.</p></li>
+        <li><strong>Cucini una volta per tutti</strong>
+          <p>Lo stesso piatto va in tavola per la famiglia intera: cambia solo la
+            porzione nel tuo piatto. Cucinare due volte è la prima ragione per cui si smette.</p></li>
+      </ol>
+    </article>
+
+    <!-- ===== 04 ===== -->
+    <article class="capitolo" id="spesa">
+      <header>
+        <span class="cifra">04</span>
+        <h2>La lista della spesa</h2>
+        <span class="badge-arrivo">in arrivo</span>
+      </header>
+
+      <p>Dal menù della settimana esce da sola la lista, <strong>ordinata come gli scaffali</strong>:
+        prima l'ortofrutta, poi il banco pesce, il banco carne, i latticini, la dispensa.
+        Si spunta camminando, e funziona anche senza campo — al supermercato spesso non c'è.</p>
+
+      <p>Due cose che nessuna lista fa di solito. La prima: tiene conto di <strong>come si vende
+        la roba</strong>. Se una ricetta chiede 100 g di ricotta ma la confezione è da 250, mette
+        in settimana un altro piatto che finisce il barattolo, invece di lasciartelo ammuffire.
+        La seconda: sa cosa hai già in <strong>dispensa</strong> e non te lo fa ricomprare.</p>
+
+      <p>E potrai <strong>condividerla</strong>: chi va a fare la spesa la apre con un codice
+        e spunta dal suo telefono, e tu vedi le spunte arrivare. Di quella condivisione escono
+        solo alimenti e quantità — nessun nome, nessun peso, nessuna caloria.</p>
+    </article>
+
+    <!-- ===== 05 ===== -->
+    <article class="capitolo" id="sgarro">
+      <header><span class="cifra">05</span><h2>Lo sgarro</h2></header>
+
+      <p>Questa è la parte che cambia tutto. Lo sgarro qui non è un peccato da confessare:
+        è <strong>una voce di bilancio</strong>. E si può fare in due modi.</p>
+
+      <p><strong>Dopo</strong> — hai mangiato la sfogliatella, la registri con un tocco.
+        Equilibrio ridistribuisce il conto sui giorni che restano.</p>
+
+      <p><strong>Prima</strong>, ed è il modo buono — sabato si va in pizzeria e glielo dici
+        oggi. I giorni precedenti si alleggeriscono un po' ciascuno, e sabato arrivi
+        <strong>con il margine già da parte</strong>. Nessun senso di colpa, perché non c'è
+        niente da rimediare: era previsto.</p>
+
+      <div class="scheda scheda-alta" style="margin-top: var(--sp-5)">
+        <div id="fascia"></div>
+        <div class="riga" style="flex-wrap:wrap; gap:var(--sp-2); margin-top: var(--sp-5)">
+          <button class="bottone bottone-2" data-demo="pulita">Settimana normale</button>
+          <button class="bottone" data-demo="preventivo">Prenota la pizzeria di sabato</button>
+          <button class="bottone bottone-2" data-demo="registrato">Registra una sfogliatella</button>
+        </div>
+        <p id="spiega" class="piccolo morbido" style="margin-top: var(--sp-3)"></p>
+        <p class="piccolo tenue" style="margin-top: var(--sp-2)">
+          Tocca i pulsanti: la fascia qui sopra è quella vera dell'app.</p>
+      </div>
+
+      <div class="avviso avviso-sgarro" style="margin-top: var(--sp-4)">
+        <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#sgarro"/></svg>
+        <div>Una cosa importante: quando riequilibra, Equilibrio <strong>non cambia i piatti</strong>
+          della settimana — ritocca solo le porzioni. Così la <strong>spesa che hai già fatto
+          resta valida</strong>. Sarebbe assurdo mandarti a buttare il carrello del sabato.</div>
+      </div>
+    </article>
+
+    <!-- ===== 06 ===== -->
+    <article class="capitolo" id="limiti">
+      <header><span class="cifra">06</span><h2>I limiti che non si superano</h2></header>
+
+      <p>Un programma che redistribuisce calorie può fare danni, se lo si lascia libero.
+        Qui ci sono dei muri, e non si spostano da nessuna impostazione.</p>
+
+      <ul class="pila" style="margin-top: var(--sp-4)">
+        <li class="avviso avviso-ok">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spunta"/></svg>
+          <div>Nessun giorno scende mai sotto <strong>1200 kcal</strong>, né sotto il tuo
+            metabolismo basale.</div>
+        </li>
+        <li class="avviso avviso-ok">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spunta"/></svg>
+          <div>Il margine per dimagrire non supera il <strong>25%</strong> del fabbisogno,
+            e il calo non va oltre l'<strong>1% del peso a settimana</strong>. Se chiedi un
+            ritmo più aggressivo, lo riduce e te lo dice.</div>
+        </li>
+        <li class="avviso avviso-ok">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spunta"/></svg>
+          <div>Quando alleggerisce un giorno, toglie da pane e condimenti:
+            le <strong>proteine restano intere</strong>. È ciò che protegge il muscolo.</div>
+        </li>
+        <li class="avviso avviso-ok">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spunta"/></svg>
+          <div>Se uno sgarro è troppo grande per essere recuperato entro questi limiti,
+            <strong>non ti fa digiunare</strong>: recupera quello che può e ti dice
+            onestamente di quanti giorni si sposta il traguardo.</div>
+        </li>
+      </ul>
+
+      <div class="avviso avviso-pericolo" style="margin-top: var(--sp-4)">
+        <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#avviso"/></svg>
+        <div>In gravidanza o allattamento, con diabete, problemi di tiroide, in terapia
+          farmacologica o con una storia di disturbi alimentari, <strong>Equilibrio non genera
+          nessun piano</strong> e ti rimanda al medico. Non è prudenza formale: un piano
+          ipocalorico calcolato da un programma, in quelle condizioni, può fare male.</div>
+      </div>
+
+      <p style="margin-top: var(--sp-4)" class="piccolo tenue">Equilibrio è uno strumento di
+        organizzazione familiare. Non è un dispositivo medico e non sostituisce il parere di
+        un nutrizionista o del medico curante.</p>
+    </article>
+
+    <!-- ===== 07 ===== -->
+    <article class="capitolo" id="dati">
+      <header><span class="cifra">07</span><h2>Dove finiscono i tuoi dati</h2></header>
+
+      <p>Da nessuna parte. Peso, misure, salute e diario <strong>restano dentro questo
+        telefono</strong>. Non c'è un account, non c'è una email da dare, non parte nessuna
+        statistica verso nessuno. Nemmeno io li vedo.</p>
+
+      <p>Puoi <strong>portarti via il profilo</strong> in un file solo — per il backup o per
+        cambiare telefono. Quel file è <strong>cifrato</strong> con una parola che scegli tu:
+        senza quella non si apre, e non esiste modo di recuperarlo. Scrivila dove tieni le
+        password, non in un messaggio.</p>
+
+      <p class="piccolo tenue">Il PIN sul profilo è una cortina contro l'occhio distratto di
+        chi prende in mano il tablet, non una cassaforte: quattro cifre non proteggono
+        davvero dei dati. Per quello c'è il codice del telefono.</p>
+    </article>
+
+    <!-- ===== 08 ===== -->
+    <article class="capitolo" id="domande">
+      <header><span class="cifra">08</span><h2>Domande</h2></header>
+
+      <details class="domanda">
+        <summary>Devo pesare tutto?</summary>
+        <div class="risposta">No. Equilibrio ragiona a porzioni — «un primo», «una porzione di
+          pesce» — e le calorie restano un motore interno. La bilancia serve all'inizio per
+          farsi l'occhio, poi sempre meno.</div>
+      </details>
+
+      <details class="domanda">
+        <summary>E se un giorno salto il piano e mangio altro?</summary>
+        <div class="risposta">Non succede niente di grave. Registri quello che hai mangiato,
+          oppure non registri nulla: il conto della settimana si aggiusta da solo. Equilibrio
+          non tiene il registro delle colpe.</div>
+      </details>
+
+      <details class="domanda">
+        <summary>Perché il peso non scende anche se ho fatto tutto giusto?</summary>
+        <div class="risposta">Perché da un giorno all'altro il peso è quasi tutta acqua: sale
+          e scende di un chilo per il sale, il ciclo, il caldo. Per questo la pagina Progressi
+          mostrerà la <strong>linea di tendenza</strong> e non il peso secco — quella dice la verità.</div>
+      </details>
+
+      <details class="domanda">
+        <summary>Serve internet?</summary>
+        <div class="risposta">Solo la prima volta. Dopo, se l'hai aggiunta alla schermata Home,
+          funziona anche in aereo o nel supermercato senza campo.</div>
+      </details>
+
+      <details class="domanda">
+        <summary>Se cambio telefono perdo tutto?</summary>
+        <div class="risposta">No, se prima esporti il profilo dalle Impostazioni: ti ritrovi
+          tutto sul telefono nuovo caricando quel file e la sua passphrase.</div>
+      </details>
+
+      <details class="domanda">
+        <summary>Posso usarla in due?</summary>
+        <div class="risposta">Sì: ogni persona crea il suo profilo, con i suoi dati, separati.
+          Si passa dall'uno all'altro dalle Impostazioni.</div>
+      </details>
+    </article>
+
+    <div class="riga" style="justify-content:center; margin-block: var(--sp-10) var(--sp-6)">
+      <a class="bottone" href="/profilo.html">
+        <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#utente"/></svg>
+        Comincia dai tuoi dati
+      </a>
+    </div>
+  </main>
+
+  <script type="module">
+    import { avvia, num, $ } from '/js/guscio.js';
+    import { rendiFascia } from '/js/ui-budget.js';
+
+    avvia({ nav: 'altro' });
+
+    const TARGET = 1700;
+    const G = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'];
+    const OGGI = 2;
+
+    // Capitolo 01: una settimana tutta in pari.
+    rendiFascia($('#fascia-pulita'), {
+      target: TARGET,
+      legenda: false,
+      giorni: G.map((e, i) => ({ etichetta: e, quota: TARGET, oggi: i === OGGI })),
+    });
+
+    // Capitolo 05: la fascia vera, da toccare.
+    const scenari = {
+      pulita: () => ({
+        giorni: G.map((e, i) => ({ etichetta: e, quota: TARGET, oggi: i === OGGI })),
+        testo: 'Ogni giorno sulla sua quota. Il traguardo resta dov’è.',
+      }),
+      preventivo: () => {
+        const extra = 850, taglio = extra / 5;
+        return {
+          giorni: G.map((e, i) => ({
+            etichetta: e,
+            quota: i === 5 ? TARGET + extra : i < 5 ? TARGET - taglio : TARGET,
+            stato: i === 5 ? 'sgarro' : i < 5 ? 'recupero' : 'normale',
+            oggi: i === OGGI,
+          })),
+          testo: `Pizzeria dichiarata prima: sabato +${num(extra)} kcal, e da lunedì a venerdì `
+               + `−${num(taglio)} kcal al giorno — una fetta di pane in meno, niente di drammatico. `
+               + 'Sabato ci arrivi con il margine già da parte.',
+        };
+      },
+      registrato: () => {
+        const extra = 420, taglio = extra / 4;
+        return {
+          giorni: G.map((e, i) => ({
+            etichetta: e,
+            quota: i === OGGI ? TARGET + extra : i > OGGI ? TARGET - taglio : TARGET,
+            stato: i === OGGI ? 'sgarro' : i > OGGI ? 'recupero' : 'normale',
+            oggi: i === OGGI,
+          })),
+          testo: `Sfogliatella di stamattina: +${num(extra)} kcal. Il recupero parte dai giorni `
+               + `che restano, −${num(taglio)} kcal ciascuno. Nessuno scende sotto il minimo.`,
+        };
+      },
+    };
+
+    function mostra(nome) {
+      const s = scenari[nome]();
+      rendiFascia($('#fascia'), { giorni: s.giorni, target: TARGET });
+      $('#spiega').textContent = s.testo;
+    }
+
+    document.querySelectorAll('[data-demo]')
+      .forEach((b) => b.addEventListener('click', () => mostra(b.dataset.demo)));
+    mostra('preventivo');
+  </script>
+</body>
+</html>

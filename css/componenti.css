@@ -790,6 +790,224 @@
   color: var(--testo-morbido);
 }
 
+/* --- Guida ----------------------------------------------------------------
+   Impaginazione editoriale: cifra grande in ghisa, capitolo accanto.
+   -------------------------------------------------------------------------- */
+
+.copertina {
+  position: relative;
+  overflow: hidden;
+  padding: var(--sp-8) var(--sp-6);
+  border-radius: var(--r-4);
+  border: 1px solid var(--bordo);
+  background:
+    radial-gradient(30rem 20rem at 88% 0%, color-mix(in srgb, var(--verde) 16%, transparent), transparent 70%),
+    linear-gradient(155deg, color-mix(in srgb, var(--accento) 10%, var(--superficie)), var(--superficie) 60%);
+  box-shadow: var(--ombra-2);
+}
+
+.copertina .segno {
+  width: 3.25rem;
+  height: 3.25rem;
+  fill: none;
+  stroke: var(--accento-testo);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  margin-bottom: var(--sp-3);
+}
+
+.copertina h1 {
+  font-size: var(--t-3xl);
+  max-width: 18ch;
+}
+
+.copertina p {
+  max-width: 46ch;
+  margin-top: var(--sp-3);
+  color: var(--testo-morbido);
+  font-size: var(--t-md);
+}
+
+/* Indice */
+.indice {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--sp-1);
+  padding: var(--sp-3);
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-3);
+  background: var(--superficie);
+}
+
+.indice a {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-2);
+  color: var(--testo);
+  text-decoration: none;
+  font-size: var(--t-sm);
+  transition: background-color var(--d-veloce) var(--e-standard);
+}
+
+.indice a:hover { background: var(--sfondo-alt); }
+
+.indice a b {
+  font-family: var(--font-display);
+  color: var(--accento-testo);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Capitolo */
+.capitolo {
+  scroll-margin-top: var(--sp-6);
+  margin-block: var(--sp-12);
+}
+
+.capitolo > header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.capitolo .cifra {
+  font-family: var(--font-display);
+  font-size: var(--t-3xl);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--accento);
+  opacity: 0.28;
+  font-variant-numeric: tabular-nums;
+}
+
+.capitolo h2 { flex: 1; min-width: 0; }
+
+.capitolo p { max-width: 62ch; }
+.capitolo > p + p { margin-top: var(--sp-3); }
+
+.badge-arrivo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 0.1rem var(--sp-2);
+  border: 1px dashed var(--bordo-forte);
+  border-radius: var(--r-pill);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--testo-tenue);
+  white-space: nowrap;
+}
+
+/* Passi numerati */
+.passi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  margin-top: var(--sp-4);
+  counter-reset: passo;
+}
+
+.passi li {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: var(--sp-3);
+  align-items: start;
+}
+
+.passi li::before {
+  counter-increment: passo;
+  content: counter(passo);
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--accento-tenue);
+  color: var(--accento-testo);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.passi strong { display: block; }
+.passi p { color: var(--testo-morbido); font-size: var(--t-sm); margin-top: 2px; }
+
+/* Glossario dei numeri */
+.glossario {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+
+.glossario > div {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr;
+  gap: var(--sp-4);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--bordo);
+}
+
+.glossario dt {
+  font-weight: 700;
+  font-size: var(--t-sm);
+}
+
+.glossario dd {
+  margin: 0;
+  color: var(--testo-morbido);
+  font-size: var(--t-sm);
+}
+
+@media (max-width: 34rem) {
+  .glossario > div { grid-template-columns: 1fr; gap: var(--sp-1); }
+}
+
+/* Domande */
+.domanda {
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-2);
+  background: var(--superficie);
+  overflow: hidden;
+}
+
+.domanda + .domanda { margin-top: var(--sp-2); }
+
+.domanda summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--tocco-min);
+  padding: var(--sp-3) var(--sp-4);
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+.domanda summary::-webkit-details-marker { display: none; }
+
+.domanda summary::after {
+  content: '';
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-left: auto;
+  border-right: 2px solid var(--testo-tenue);
+  border-bottom: 2px solid var(--testo-tenue);
+  transform: rotate(45deg);
+  transition: transform var(--d-media) var(--e-standard);
+}
+
+.domanda[open] summary::after { transform: rotate(-135deg); }
+.domanda[open] summary { color: var(--accento-testo); }
+
+.domanda .risposta {
+  padding: 0 var(--sp-4) var(--sp-4);
+  color: var(--testo-morbido);
+  font-size: var(--t-sm);
+}
+
 /* --- Stato vuoto ---------------------------------------------------------- */
 
 .vuoto {
