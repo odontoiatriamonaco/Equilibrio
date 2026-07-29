@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Oggi — Equilibrio</title>
+  <meta name="description" content="Il piano di oggi, il budget della settimana e lo sgarro.">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/componenti.css">
+  <script>
+    try {
+      var t = localStorage.getItem('equilibrio:tema');
+      if (t) document.documentElement.setAttribute('data-tema', t);
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <main class="guscio">
+    <header class="intestazione">
+      <div style="flex:1; min-width:0">
+        <p class="occhiello" id="data-oggi"></p>
+        <h1>Oggi</h1>
+      </div>
+      <button class="bottone-icona solo-stretto" id="cambia-tema" aria-label="Cambia tema">
+        <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#luna"/></svg>
+      </button>
+      <a class="bottone-icona" href="/impostazioni.html" aria-label="Profilo e impostazioni">
+        <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#utente"/></svg>
+      </a>
+    </header>
+
+    <!-- ===== Primo incontro: mostrato finché non esiste un profilo ===== -->
+    <div id="benvenuto">
+      <section class="ospite">
+        <div>
+          <p class="occhiello">Primi passi</p>
+          <h2>La settimana, la spesa<br>e anche lo sgarro</h2>
+          <p class="morbido">Equilibrio costruisce il menù dei sette giorni con i piatti che
+            ti piacciono, ne ricava la lista della spesa ordinata per reparto, e quando arriva
+            la pizzeria del sabato non ti rimprovera: rifà i conti.</p>
+          <a class="bottone" href="/profilo.html" style="margin-top:var(--sp-5)">
+            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#utente"/></svg>
+            Comincia dai tuoi dati
+          </a>
+          <p class="piccolo tenue" style="margin-top:var(--sp-3)">
+            Bastano due minuti. Tutto resta su questo dispositivo.</p>
+        </div>
+
+        <svg class="figura" viewBox="0 0 320 280" role="img"
+             aria-label="Un piatto apparecchiato con un ramo d'olivo">
+          <ellipse cx="176" cy="146" rx="128" ry="118" fill="var(--accento-velo)"/>
+          <ellipse cx="238" cy="72" rx="52" ry="48" fill="var(--verde-tenue)" opacity=".8"/>
+
+          <!-- tovaglietta -->
+          <rect x="34" y="76" width="256" height="150" rx="26"
+                fill="var(--sfondo-alt)" stroke="var(--bordo)"/>
+
+          <!-- piatto -->
+          <circle cx="176" cy="151" r="76" fill="var(--superficie)" stroke="var(--bordo-forte)" stroke-width="1.5"/>
+          <circle cx="176" cy="151" r="55" fill="none" stroke="var(--bordo)" stroke-width="1.5"/>
+
+          <!-- ramo d'olivo nel piatto -->
+          <g fill="none" stroke="var(--verde)" stroke-width="3" stroke-linecap="round">
+            <path d="M146 182c8-26 26-42 56-50"/>
+            <path d="M170 160c-8-8-8-16 0-22 8 6 8 14 0 22z"/>
+            <path d="M188 146c-9-6-10-14-4-21 9 5 10 13 4 21z"/>
+            <path d="M154 172c-10-3-14-10-11-18 10 3 14 10 11 18z"/>
+          </g>
+          <circle cx="196" cy="132" r="7" fill="var(--verde)"/>
+          <circle cx="163" cy="176" r="6" fill="var(--sgarro)"/>
+
+          <!-- posate -->
+          <g stroke="var(--bordo-forte)" stroke-width="4" stroke-linecap="round" fill="none">
+            <path d="M74 112v78"/>
+            <path d="M62 112v22c0 7 5 12 12 12s12-5 12-12v-22"/>
+            <path d="M266 112c10 0 14 10 14 24s-6 18-14 18v36"/>
+          </g>
+
+          <!-- bicchiere -->
+          <path d="M228 196h30l-4 30a5 5 0 0 1-5 4h-12a5 5 0 0 1-5-4z"
+                fill="var(--dato-tenue)" stroke="var(--dato)" stroke-width="2"/>
+        </svg>
+      </section>
+
+      <section class="sezione">
+        <header><h2>Cosa saprà fare</h2></header>
+        <div class="trittico">
+          <article>
+            <span class="sigillo" style="background:var(--accento-velo); color:var(--accento-testo)">
+              <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#piano"/></svg>
+            </span>
+            <h3>Il menù della settimana</h3>
+            <p>A porzioni, non a grammi. Pasta e patate, genovese, scarola: i piatti che
+              in casa si mangiano davvero, scambiabili con un tocco.</p>
+          </article>
+
+          <article>
+            <span class="sigillo" style="background:var(--verde-tenue); color:var(--verde-testo)">
+              <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spesa"/></svg>
+            </span>
+            <h3>La spesa, per reparto</h3>
+            <p>Ordinata come gli scaffali del supermercato, spuntabile senza rete, e pensata
+              per non far avanzare mezza confezione di ricotta in frigo.</p>
+          </article>
+
+          <article>
+            <span class="sigillo" style="background:var(--sgarro-tenue); color:var(--sgarro-testo)">
+              <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#sgarro"/></svg>
+            </span>
+            <h3>Lo sgarro, prenotabile</h3>
+            <p>Dichiari sabato la pizzeria e i giorni prima si alleggeriscono da soli.
+              Ci arrivi con il margine già pronto, senza sensi di colpa.</p>
+          </article>
+        </div>
+      </section>
+
+      <div class="avviso" style="margin-bottom:var(--sp-8)">
+        <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#info"/></svg>
+        <div>Equilibrio è uno strumento di organizzazione familiare: aiuta a pianificare
+          i pasti e la spesa. Non è un dispositivo medico e non sostituisce il parere di
+          un nutrizionista o del medico curante.</div>
+      </div>
+    </div>
+
+    <!-- ===== Giornata: mostrata quando il profilo esiste (Fase 2 e 3) ===== -->
+    <div id="giornata" hidden>
+      <section class="scheda scheda-alta">
+        <div class="riga" style="gap: var(--sp-5); align-items:center; flex-wrap:wrap">
+          <div class="anello" id="anello-oggi" style="--p:0">
+            <div class="anello-testo">
+              <span class="dato-grande num" id="kcal-oggi">—</span>
+              <span class="unita" id="kcal-target">kcal</span>
+            </div>
+          </div>
+          <div class="pila" style="flex:1; min-width:14rem">
+            <p class="occhiello">La settimana</p>
+            <div id="fascia"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sezione">
+        <header>
+          <h2>I pasti di oggi</h2>
+          <a class="bottone bottone-fantasma" href="/piano.html">Vedi il piano</a>
+        </header>
+        <div class="pila" id="pasti-oggi"></div>
+      </section>
+
+      <button class="bottone bottone-2 bottone-largo" id="apri-sgarro">
+        <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#sgarro"/></svg>
+        Registra o prenota uno sgarro
+      </button>
+    </div>
+  </main>
+
+  <script type="module">
+    import { avvia, alternaTema, $, num } from '/js/guscio.js';
+    import { profiloAttivo } from '/js/store.js';
+    import { riepilogo } from '/js/energia.js';
+    import { rendiFascia } from '/js/ui-budget.js';
+
+    avvia({ nav: 'oggi' });
+    $('#cambia-tema').addEventListener('click', alternaTema);
+
+    const oggi = new Date();
+    $('#data-oggi').textContent = oggi.toLocaleDateString('it-IT', {
+      weekday: 'long', day: 'numeric', month: 'long',
+    });
+
+    // Niente await di primo livello: il target di build non lo supporta.
+    (async () => {
+    const p = await profiloAttivo();
+    if (p?.pesoKg && p?.altezzaCm && p?.dataNascita) {
+      $('#benvenuto').hidden = true;
+      $('#giornata').hidden = false;
+
+      const r = riepilogo(p, oggi);
+      const target = r.fabbisogno.target;
+
+      $('#kcal-oggi').textContent = '0';
+      $('#kcal-target').textContent = `di ${num(target)} kcal`;
+
+      // Settimana ancora tutta da vivere: sette giorni sul loro target.
+      // Il giorno della settimana in Italia parte da lunedì.
+      const indiceOggi = (oggi.getDay() + 6) % 7;
+      rendiFascia($('#fascia'), {
+        target,
+        legenda: false,
+        giorni: ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'].map((e, i) => ({
+          etichetta: e, quota: target, oggi: i === indiceOggi,
+        })),
+      });
+
+      $('#pasti-oggi').innerHTML = `
+        <div class="scheda">
+          <div class="vuoto">
+            <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#piano"/></svg>
+            <p>Il menù della settimana non c'è ancora.<br>
+               Arriva insieme al ricettario e alla lista della spesa.</p>
+          </div>
+        </div>`;
+    }
+    })();
+  </script>
+</body>
+</html>
