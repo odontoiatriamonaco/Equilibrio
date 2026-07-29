@@ -59,8 +59,8 @@ export function icona(nome, classe = 'icona') {
 const VOCI = [
   { id: 'oggi', href: '/index.html', icona: 'oggi', testo: 'Oggi' },
   { id: 'piano', href: '/piano.html', icona: 'piano', testo: 'Piano' },
+  { id: 'pietanze', href: '/ricette.html', icona: 'panetteria', testo: 'Pietanze' },
   { id: 'spesa', href: '/spesa.html', icona: 'spesa', testo: 'Spesa' },
-  { id: 'progressi', href: '/progressi.html', icona: 'progressi', testo: 'Progressi' },
   { id: 'altro', href: '/impostazioni.html', icona: 'altro', testo: 'Altro' },
 ];
 

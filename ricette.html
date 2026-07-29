@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Ricette — Equilibrio</title>
+  <title>Pietanze — Equilibrio</title>
+  <meta name="description" content="Il ricettario: piatti della tradizione campana con i valori calcolati dagli ingredienti.">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
@@ -23,22 +24,115 @@
       <a class="bottone-icona solo-stretto" href="/index.html" aria-label="Indietro">
         <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#indietro"/></svg>
       </a>
-      <h1>Ricette</h1>
+      <div style="flex:1; min-width:0">
+        <p class="occhiello">Tradizione campana</p>
+        <h1>Pietanze</h1>
+      </div>
     </header>
 
-    <section class="sezione">
-      <div class="scheda">
-        <div class="vuoto">
-          <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#panetteria"/></svg>
-          <p>Il ricettario campano, con le dosi scalate ai commensali.<br>Arriva con la Fase 2.</p>
+    <!-- ===== Filtri ===== -->
+    <div class="scheda pila non-stampare" style="margin-bottom: var(--sp-6)">
+      <div class="campo">
+        <label for="cerca" class="solo-sr">Cerca una pietanza o un ingrediente</label>
+        <input id="cerca" type="search" placeholder="Cerca — «friarielli», «pasta e fagioli»…"
+               autocomplete="off" enterkeyhint="search">
+      </div>
+
+      <div class="segmenti" id="tipi" role="tablist" aria-label="Tipo di pietanza"
+           style="overflow-x:auto; max-width:100%">
+        <button role="tab" data-tipo="tutti" aria-selected="true">Tutte</button>
+        <button role="tab" data-tipo="colazione" aria-selected="false">Colazione</button>
+        <button role="tab" data-tipo="spuntino" aria-selected="false">Spuntini</button>
+        <button role="tab" data-tipo="piatto-unico" aria-selected="false">Piatti unici</button>
+        <button role="tab" data-tipo="primo" aria-selected="false">Primi</button>
+        <button role="tab" data-tipo="secondo" aria-selected="false">Secondi</button>
+        <button role="tab" data-tipo="contorno" aria-selected="false">Contorni</button>
+      </div>
+
+      <div class="riga-tra" style="flex-wrap:wrap; gap:var(--sp-4)">
+        <label class="interruttore">
+          <input type="checkbox" id="solo-stagione">
+          <span class="leva"></span>
+          <span>Solo di stagione</span>
+        </label>
+
+        <div class="campo" style="flex:1; min-width:12rem">
+          <label for="tempo">Tempo in cucina — <span id="tempo-valore">qualsiasi</span></label>
+          <input id="tempo" type="range" min="0" max="90" step="15" value="0">
         </div>
       </div>
-    </section>
+    </div>
+
+    <p class="occhiello" id="conteggio"></p>
+    <div id="elenco"></div>
+
+    <div class="avviso" style="margin-block: var(--sp-8)">
+      <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#info"/></svg>
+      <div>Questo è il ricettario di partenza, tutto di tradizione campana. Il pezzo che
+        conta davvero — <strong>i piatti che cucini tu</strong> — si aggiunge dopo: sono quelli
+        che tengono in piedi una dieta nel tempo.</div>
+    </div>
   </main>
 
+  <!-- ===== Scheda del piatto ===== -->
+  <dialog id="scheda" class="dialogo" aria-labelledby="scheda-titolo">
+    <div class="dialogo-riquadro">
+      <header class="dialogo-testa">
+        <span class="sigillo" id="scheda-sigillo"></span>
+        <h2 id="scheda-titolo" style="flex:1; min-width:0"></h2>
+        <button class="bottone-icona" id="chiudi-scheda" aria-label="Chiudi">
+          <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#chiudi"/></svg>
+        </button>
+      </header>
+
+      <div class="dialogo-corpo pila">
+        <div class="riga" style="flex-wrap:wrap; gap:var(--sp-1)" id="scheda-tag"></div>
+
+        <div class="avviso avviso-sgarro" id="scheda-alleggerimento" hidden>
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#foglia"/></svg>
+          <div></div>
+        </div>
+
+        <section>
+          <p class="occhiello">Per una porzione</p>
+          <dl class="glossario" id="scheda-valori" style="margin-top: var(--sp-2)"></dl>
+        </section>
+
+        <section>
+          <div class="riga-tra">
+            <p class="occhiello">Ingredienti</p>
+            <div class="riga" style="gap:var(--sp-1)">
+              <button class="bottone-icona" id="meno-commensali" aria-label="Una porzione in meno">
+                <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#meno"/></svg>
+              </button>
+              <span class="num" style="min-width:1.5rem; text-align:center">
+                <strong id="commensali">1</strong></span>
+              <button class="bottone-icona" id="piu-commensali" aria-label="Una porzione in più">
+                <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#piu"/></svg>
+              </button>
+              <span class="piccolo tenue" id="commensali-parola">porzione</span>
+            </div>
+          </div>
+          <ul id="scheda-ingredienti" style="margin-top: var(--sp-2)"></ul>
+        </section>
+
+        <section id="scheda-procedimento" hidden>
+          <p class="occhiello">Come si fa</p>
+          <ol class="passi"></ol>
+        </section>
+
+        <p class="piccolo tenue" id="scheda-nota" hidden>
+          I valori nutrizionali sono calcolati sommando gli ingredienti, con dati
+          indicativi di tabella non ancora verificati uno per uno. Servono a orientarsi,
+          non a fare bilanci al grammo.
+        </p>
+      </div>
+    </div>
+  </dialog>
+
   <script type="module">
-    import { avvia } from '/js/guscio.js';
-    avvia({ nav: 'piano' });
+    import { inizializza } from '/js/pagina-ricette.js';
+    inizializza();
   </script>
 </body>
 </html>

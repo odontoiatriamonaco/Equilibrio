@@ -1,0 +1,93 @@
+{
+  "reparti": [
+    { "id": "ortofrutta",  "nome": "Ortofrutta",   "icona": "ortofrutta", "ordine": 1 },
+    { "id": "banco-pesce", "nome": "Banco pesce",  "icona": "pesce",      "ordine": 2 },
+    { "id": "banco-carne", "nome": "Banco carne",  "icona": "carne",      "ordine": 3 },
+    { "id": "latticini",   "nome": "Latticini e uova", "icona": "latticini", "ordine": 4 },
+    { "id": "panetteria",  "nome": "Panetteria",   "icona": "panetteria", "ordine": 5 },
+    { "id": "dispensa",    "nome": "Dispensa",     "icona": "dispensa",   "ordine": 6 },
+    { "id": "surgelati",   "nome": "Surgelati",    "icona": "surgelati",  "ordine": 7 },
+    { "id": "bevande",     "nome": "Bevande",      "icona": "bevande",    "ordine": 8 }
+  ],
+
+  "gruppi": [
+    { "id": "carboidrati", "nome": "Pane, pasta e sostituti", "icona": "pasta",
+      "nota": "Si scambiano fra loro a parita' di apporto: pasta 80 g, riso 80 g, pane 100 g, patate 300 g." },
+    { "id": "legumi", "nome": "Legumi", "icona": "legumi",
+      "nota": "Contano sia come primo sia come fonte proteica: un piatto di legumi e cereali sostituisce un secondo." },
+    { "id": "proteine-magre", "nome": "Pesce e carni bianche", "icona": "pesce", "nota": "" },
+    { "id": "proteine-rosse", "nome": "Carni rosse e salumi", "icona": "carne",
+      "nota": "Da tenere basse: carne rossa al massimo una volta a settimana, salumi il meno possibile." },
+    { "id": "latticini", "nome": "Latte, yogurt e formaggi", "icona": "latticini", "nota": "" },
+    { "id": "uova", "nome": "Uova", "icona": "uovo", "nota": "" },
+    { "id": "verdura", "nome": "Verdura", "icona": "verdura",
+      "nota": "A volonta', in ogni pasto. E' cio' che riempie senza pesare sul conto." },
+    { "id": "frutta", "nome": "Frutta", "icona": "ortofrutta", "nota": "" },
+    { "id": "grassi", "nome": "Condimenti", "icona": "olio",
+      "nota": "L'olio extravergine e' il condimento di riferimento, ma resta il piu' calorico: si misura a cucchiai." },
+    { "id": "dolci", "nome": "Dolci e da forno", "icona": "dolce", "nota": "" },
+    { "id": "bevande", "nome": "Bevande", "icona": "bevande", "nota": "" }
+  ],
+
+  "scambi": {
+    "commento": "Quanti grammi di ciascun alimento valgono una porzione standard del gruppo. Servono a scambiare un alimento con un altro senza rifare i conti.",
+    "carboidrati": {
+      "pasta-semola": 80, "riso": 80, "pane": 100, "patate": 300,
+      "pasta-integrale": 80, "orzo-perlato": 80, "farro-perlato": 80,
+      "cous-cous": 70, "fette-biscottate": 50, "polenta-farina": 70
+    },
+    "proteine-magre": {
+      "alici": 150, "merluzzo": 180, "orata": 160, "polpo": 180, "totani": 180,
+      "cozze": 250, "vongole": 250, "tonno-naturale": 120,
+      "petto-pollo": 130, "fesa-tacchino": 130, "coniglio": 140
+    },
+    "legumi": {
+      "fagioli-cannellini-secchi": 60, "ceci-secchi": 60, "lenticchie-secche": 60,
+      "fave-secche": 60, "piselli-surgelati": 200,
+      "fagioli-cannellini-lessi": 150, "ceci-lessi": 150, "lenticchie-lesse": 150
+    },
+    "frutta": {
+      "mela": 150, "pera": 150, "arancia": 200, "albicocche": 150, "pesche": 150,
+      "uva": 120, "fragole": 200, "kiwi": 150, "anguria": 300, "melone": 250
+    }
+  },
+
+  "stagionalita": {
+    "commento": "Mesi (1-12) in cui l'alimento e' di stagione in Campania. Gli alimenti non elencati si considerano disponibili tutto l'anno.",
+    "friarielli": [11, 12, 1, 2, 3],
+    "scarola": [10, 11, 12, 1, 2, 3, 4],
+    "cicoria": [10, 11, 12, 1, 2, 3, 4],
+    "cavolfiore": [10, 11, 12, 1, 2, 3],
+    "verza": [10, 11, 12, 1, 2],
+    "zucca": [9, 10, 11, 12, 1],
+    "carciofi": [11, 12, 1, 2, 3, 4, 5],
+    "melanzane": [6, 7, 8, 9, 10],
+    "zucchine": [4, 5, 6, 7, 8, 9, 10],
+    "peperoni": [6, 7, 8, 9, 10],
+    "pomodorini": [5, 6, 7, 8, 9, 10],
+    "pomodori-pelati": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    "fagiolini": [5, 6, 7, 8, 9],
+    "fave-fresche": [3, 4, 5, 6],
+    "piselli-freschi": [3, 4, 5, 6],
+    "asparagi": [3, 4, 5],
+    "alici": [4, 5, 6, 7, 8, 9, 10],
+    "albicocche": [6, 7],
+    "pesche": [6, 7, 8, 9],
+    "fragole": [4, 5, 6],
+    "anguria": [6, 7, 8],
+    "melone": [6, 7, 8],
+    "uva": [8, 9, 10],
+    "fichi": [8, 9],
+    "arancia": [12, 1, 2, 3, 4],
+    "mandarini": [11, 12, 1, 2],
+    "castagne": [10, 11]
+  },
+
+  "pasti": [
+    { "id": "colazione", "nome": "Colazione", "ordine": 1 },
+    { "id": "spuntino-mattina", "nome": "Spuntino del mattino", "ordine": 2 },
+    { "id": "pranzo", "nome": "Pranzo", "ordine": 3 },
+    { "id": "spuntino-pomeriggio", "nome": "Spuntino del pomeriggio", "ordine": 4 },
+    { "id": "cena", "nome": "Cena", "ordine": 5 }
+  ]
+}

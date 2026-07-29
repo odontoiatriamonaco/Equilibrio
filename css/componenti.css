@@ -1008,6 +1008,87 @@
   font-size: var(--t-sm);
 }
 
+/* --- Dialogo ---------------------------------------------------------------
+   Da telefono sale dal basso e occupa quasi tutto lo schermo; da desktop e'
+   un riquadro centrato. Stessa marcatura.
+   -------------------------------------------------------------------------- */
+
+.dialogo {
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dialogo::backdrop {
+  background: rgba(28, 25, 23, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.dialogo-riquadro {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 92dvh;
+  border-radius: var(--r-4) var(--r-4) 0 0;
+  background: var(--superficie);
+  box-shadow: var(--ombra-3);
+  animation: sale var(--d-lenta) var(--e-molla) both;
+}
+
+@keyframes sale {
+  from { transform: translateY(4%); opacity: 0; }
+}
+
+.dialogo-testa {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border-bottom: 1px solid var(--bordo);
+  background: var(--superficie);
+}
+
+.dialogo-testa h2 { font-size: var(--t-lg); }
+
+.dialogo-testa .sigillo {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  border-radius: var(--r-2);
+  background: var(--accento-velo);
+  color: var(--accento-testo);
+}
+
+.dialogo-corpo {
+  padding: var(--sp-4) var(--sp-4) var(--sp-8);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 42rem) {
+  .dialogo-riquadro {
+    position: relative;
+    margin: auto;
+    max-width: 34rem;
+    max-height: 86dvh;
+    border-radius: var(--r-4);
+    border: 1px solid var(--bordo);
+  }
+  .dialogo { display: grid; place-items: center; }
+  .dialogo:not([open]) { display: none; }
+  @keyframes sale { from { transform: scale(0.97); opacity: 0; } }
+}
+
 /* --- Stato vuoto ---------------------------------------------------------- */
 
 .vuoto {

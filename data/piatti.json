@@ -1,0 +1,152 @@
+{
+  "versione": 1,
+  "nota": "Ricettario di partenza, tradizione campana. Le quantità degli ingredienti sono PER PORZIONE, in grammi: i valori nutrizionali non sono scritti qui, si calcolano dagli alimenti (js/alimenti.js). `alleggerimento` dice in una riga come la versione tradizionale è stata modificata — così non sembra una sostituzione furtiva. `origine`: \"tradizione\" per i piatti che ho aggiunto io, \"casa\" per quelli che si cucinano davvero in famiglia.",
+
+  "piatti": [
+    { "id": "caffe-latte-fette", "nome": "Latte, fette biscottate e miele", "tipo": "colazione", "slot": ["colazione"], "tempo": 5, "origine": "tradizione",
+      "ingredienti": [{ "a": "latte-ps", "g": 200 }, { "a": "fette-biscottate", "g": 30 }, { "a": "miele", "g": 15 }, { "a": "caffe", "g": 30 }],
+      "procedimento": ["Scalda il latte e allungalo con il caffè.", "Spalma il miele sulle fette."] },
+
+    { "id": "yogurt-frutta-noci", "nome": "Yogurt greco con frutta e noci", "tipo": "colazione", "slot": ["colazione", "spuntino-pomeriggio"], "tempo": 5, "origine": "tradizione",
+      "ingredienti": [{ "a": "yogurt-greco-magro", "g": 150 }, { "a": "mela", "g": 120 }, { "a": "noci", "g": 15 }, { "a": "miele", "g": 10 }],
+      "alleggerimento": "Yogurt greco al posto di quello alla frutta: stessa cremosità, il doppio delle proteine e metà degli zuccheri." },
+
+    { "id": "pane-ricotta-miele", "nome": "Pane, ricotta e miele", "tipo": "colazione", "slot": ["colazione"], "tempo": 5, "origine": "tradizione",
+      "ingredienti": [{ "a": "pane", "g": 60 }, { "a": "ricotta", "g": 80 }, { "a": "miele", "g": 10 }, { "a": "caffe", "g": 30 }] },
+
+    { "id": "spremuta-fette", "nome": "Spremuta d'arancia e fette biscottate", "tipo": "colazione", "slot": ["colazione"], "tempo": 5, "stagione": [12, 1, 2, 3, 4], "origine": "tradizione",
+      "ingredienti": [{ "a": "arancia", "g": 300 }, { "a": "fette-biscottate", "g": 40 }, { "a": "miele", "g": 10 }] },
+
+    { "id": "frutta-stagione", "nome": "Frutta di stagione", "tipo": "spuntino", "slot": ["spuntino-mattina", "spuntino-pomeriggio"], "tempo": 2, "origine": "tradizione",
+      "ingredienti": [{ "a": "mela", "g": 150 }] },
+
+    { "id": "mandorle-frutta", "nome": "Frutta secca e un frutto", "tipo": "spuntino", "slot": ["spuntino-mattina", "spuntino-pomeriggio"], "tempo": 2, "origine": "tradizione",
+      "ingredienti": [{ "a": "mandorle", "g": 20 }, { "a": "pera", "g": 150 }],
+      "alleggerimento": "Venti grammi di mandorle sono una manciata scarsa: sazia più di uno spuntino confezionato e non fa risalire la fame dopo un'ora." },
+
+    { "id": "yogurt-semplice", "nome": "Yogurt bianco", "tipo": "spuntino", "slot": ["spuntino-mattina", "spuntino-pomeriggio"], "tempo": 1, "origine": "tradizione",
+      "ingredienti": [{ "a": "yogurt-bianco", "g": 125 }] },
+
+    { "id": "pane-pomodoro", "nome": "Pane e pomodorini", "tipo": "spuntino", "slot": ["spuntino-pomeriggio"], "tempo": 5, "stagione": [5, 6, 7, 8, 9, 10], "origine": "tradizione",
+      "ingredienti": [{ "a": "pane", "g": 50 }, { "a": "pomodorini", "g": 120 }, { "a": "olio-evo", "g": 5 }, { "a": "basilico", "g": 3 }] },
+
+    { "id": "pasta-patate-provola", "nome": "Pasta e patate con provola", "tipo": "piatto-unico", "slot": ["pranzo", "cena"], "tempo": 40, "avanzabile": true, "origine": "tradizione",
+      "ingredienti": [{ "a": "pasta-semola", "g": 60 }, { "a": "patate", "g": 200 }, { "a": "provola", "g": 25 }, { "a": "cipolla", "g": 30 }, { "a": "sedano", "g": 20 }, { "a": "carota", "g": 20 }, { "a": "pomodori-pelati", "g": 40 }, { "a": "olio-evo", "g": 8 }, { "a": "parmigiano", "g": 5 }],
+      "alleggerimento": "La provola scende a 25 g e va aggiunta a fuoco spento: fila lo stesso, ma pesa la metà.",
+      "procedimento": ["Fai un soffritto lento di cipolla, sedano e carota nell'olio.", "Unisci le patate a cubetti e i pelati, copri d'acqua e cuoci 20 minuti.", "Butta la pasta nella stessa pentola e porta a cottura mescolando.", "Spegni, aggiungi la provola a dadini e lascia riposare due minuti coperto."] },
+
+    { "id": "pasta-fagioli", "nome": "Pasta e fagioli", "tipo": "piatto-unico", "slot": ["pranzo", "cena"], "tempo": 45, "avanzabile": true, "origine": "tradizione",
+      "ingredienti": [{ "a": "pasta-semola", "g": 60 }, { "a": "fagioli-cannellini-secchi", "g": 60 }, { "a": "pomodori-pelati", "g": 60 }, { "a": "cipolla", "g": 30 }, { "a": "sedano", "g": 20 }, { "a": "aglio", "g": 3 }, { "a": "olio-evo", "g": 10 }, { "a": "prezzemolo", "g": 5 }],
+      "alleggerimento": "Niente cotenna né guanciale: il gusto lo dà il soffritto lento e un filo d'olio a crudo alla fine.",
+      "procedimento": ["Ammolla i fagioli la sera prima e lessali con sedano e aglio.", "Prepara un soffritto di cipolla, unisci i pelati e i fagioli con la loro acqua.", "Cuoci la pasta direttamente nel sugo, aggiungendo acqua calda se asciuga.", "Fuori dal fuoco, olio a crudo e prezzemolo."] },
+
+    { "id": "pasta-ceci", "nome": "Pasta e ceci", "tipo": "piatto-unico", "slot": ["pranzo", "cena"], "tempo": 40, "avanzabile": true, "origine": "tradizione",
+      "ingredienti": [{ "a": "pasta-semola", "g": 60 }, { "a": "ceci-secchi", "g": 60 }, { "a": "aglio", "g": 4 }, { "a": "pomodori-pelati", "g": 40 }, { "a": "olio-evo", "g": 10 }, { "a": "prezzemolo", "g": 5 }],
+      "procedimento": ["Ammolla i ceci e lessali.", "Rosola l'aglio nell'olio, unisci i pelati e metà dei ceci frullati.", "Aggiungi i ceci interi e la pasta, cuoci mescolando."] },
+
+    { "id": "pasta-lenticchie", "nome": "Pasta e lenticchie", "tipo": "piatto-unico", "slot": ["pranzo", "cena"], "tempo": 35, "avanzabile": true, "origine": "tradizione",
+      "ingredienti": [{ "a": "pasta-semola", "g": 60 }, { "a": "lenticchie-secche", "g": 60 }, { "a": "cipolla", "g": 30 }, { "a": "carota", "g": 30 }, { "a": "sedano", "g": 20 }, { "a": "passata-pomodoro", "g": 60 }, { "a": "olio-evo", "g": 10 }] },
+
+    { "id": "pasta-fave", "nome": "Pasta e fave", "tipo": "piatto-unico", "slot": ["pranzo", "cena"], "tempo": 35, "stagione": [3, 4, 5, 6], "origine": "tradizione",
+      "ingredienti": [{ "a": "pasta-semola", "g": 60 }, { "a": "fave-fresche", "g": 250 }, { "a": "cipolla", "g": 40 }, { "a": "olio-evo", "g": 10 }, { "a": "pecorino", "g": 8 }] },
+
+    { "id": "genovese", "nome": "Genovese", "tipo": "primo", "slot": ["pranzo", "cena"], "tempo": 180, "difficolta": "impegnativa", "avanzabile": true, "origine": "tradizione",
+      "ingredienti": [{ "a": "pasta-semola", "g": 80 }, { "a": "cipolla", "g": 350 }, { "a": "manzo-magro", "g": 70 }, { "a": "carota", "g": 30 }, { "a": "sedano", "g": 25 }, { "a": "olio-evo", "g": 10 }, { "a": "parmigiano", "g": 10 }],
+      "alleggerimento": "Taglio magro al posto del gambetto e cottura lunga senza aggiungere grasso: la dolcezza la fanno le cipolle, non il condimento.",
+      "procedimento": ["Metti carne e cipolle affettate in pentola con pochissimo olio.", "Cuoci a fuoco bassissimo, coperto, per almeno due ore e mezza.", "Scoperchia e lascia asciugare finché il sugo non diventa biondo.", "Condisci la pasta e una spolverata di parmigiano."] },
+
+    { "id": "pasta-friarielli-salsiccia", "nome": "Pasta con friarielli e salsiccia", "tipo": "piatto-unico", "slot": ["pranzo", "cena"], "tempo": 30, "stagione": [11, 12, 1, 2, 3], "origine": "tradizione",
+      "ingredienti": [{ "a": "pasta-semola", "g": 70 }, { "a": "friarielli", "g": 250 }, { "a": "salsiccia", "g": 50 }, { "a": "aglio", "g": 4 }, { "a": "olio-evo", "g": 8 }],
+      "alleggerimento": "Cinquanta grammi di salsiccia invece di cento: sbriciolata e rosolata bene, il sapore arriva ovunque lo stesso." },
+
+    { "id": "spaghetti-vongole", "nome": "Spaghetti con le vongole", "tipo": "primo", "slot": ["pranzo", "cena"], "tempo": 30, "origine": "tradizione",
+      "ingredienti": [{ "a": "pasta-semola", "g": 80 }, { "a": "vongole", "g": 300 }, { "a": "aglio", "g": 5 }, { "a": "olio-evo", "g": 10 }, { "a": "prezzemolo", "g": 8 }] },
+
+    { "id": "pasta-pomodorini", "nome": "Pasta ai pomodorini e basilico", "tipo": "primo", "slot": ["pranzo", "cena"], "tempo": 20, "stagione": [5, 6, 7, 8, 9, 10], "origine": "tradizione",
+      "ingredienti": [{ "a": "pasta-semola", "g": 80 }, { "a": "pomodorini", "g": 250 }, { "a": "aglio", "g": 4 }, { "a": "olio-evo", "g": 10 }, { "a": "basilico", "g": 5 }, { "a": "parmigiano", "g": 8 }] },
+
+    { "id": "pasta-zucchine", "nome": "Pasta con le zucchine", "tipo": "primo", "slot": ["pranzo", "cena"], "tempo": 25, "stagione": [4, 5, 6, 7, 8, 9, 10], "origine": "tradizione",
+      "ingredienti": [{ "a": "pasta-semola", "g": 80 }, { "a": "zucchine", "g": 250 }, { "a": "olio-evo", "g": 10 }, { "a": "basilico", "g": 4 }, { "a": "provola", "g": 20 }],
+      "alleggerimento": "Zucchine saltate in padella invece che fritte: si fa la stessa crema con un quarto dell'olio." },
+
+    { "id": "risotto-zucca", "nome": "Risotto alla zucca", "tipo": "primo", "slot": ["pranzo", "cena"], "tempo": 35, "stagione": [9, 10, 11, 12, 1], "origine": "tradizione",
+      "ingredienti": [{ "a": "riso", "g": 80 }, { "a": "zucca", "g": 250 }, { "a": "cipolla", "g": 30 }, { "a": "olio-evo", "g": 8 }, { "a": "parmigiano", "g": 10 }],
+      "alleggerimento": "La mantecatura è di parmigiano e acqua di cottura, senza burro." },
+
+    { "id": "minestra-maritata", "nome": "Minestra maritata", "tipo": "piatto-unico", "slot": ["pranzo", "cena"], "tempo": 90, "stagione": [11, 12, 1, 2, 3], "avanzabile": true, "origine": "tradizione",
+      "ingredienti": [{ "a": "scarola", "g": 200 }, { "a": "verza", "g": 150 }, { "a": "cicoria", "g": 150 }, { "a": "petto-pollo", "g": 100 }, { "a": "carota", "g": 40 }, { "a": "sedano", "g": 30 }, { "a": "pane", "g": 40 }, { "a": "pecorino", "g": 10 }, { "a": "olio-evo", "g": 8 }],
+      "alleggerimento": "Il brodo si fa con carne bianca invece che con le parti grasse del maiale: resta saporito ma si può mangiare anche il giorno dopo senza pentirsene." },
+
+    { "id": "zuppa-cicoria-fagioli", "nome": "Zuppa di cicoria e fagioli", "tipo": "piatto-unico", "slot": ["pranzo", "cena"], "tempo": 45, "stagione": [10, 11, 12, 1, 2, 3, 4], "avanzabile": true, "origine": "tradizione",
+      "ingredienti": [{ "a": "cicoria", "g": 300 }, { "a": "fagioli-cannellini-secchi", "g": 60 }, { "a": "aglio", "g": 5 }, { "a": "olio-evo", "g": 12 }, { "a": "pane", "g": 50 }] },
+
+    { "id": "alici-al-forno", "nome": "Alici al forno con pangrattato", "tipo": "secondo", "slot": ["pranzo", "cena"], "tempo": 25, "stagione": [4, 5, 6, 7, 8, 9, 10], "origine": "tradizione",
+      "ingredienti": [{ "a": "alici", "g": 180 }, { "a": "pangrattato", "g": 20 }, { "a": "aglio", "g": 4 }, { "a": "prezzemolo", "g": 8 }, { "a": "olio-evo", "g": 10 }, { "a": "limone", "g": 20 }],
+      "alleggerimento": "In forno invece che fritte: la crosticina resta, l'olio scende da cinquanta grammi a dieci.",
+      "procedimento": ["Pulisci le alici e aprile a libro.", "Disponile a raggiera in una teglia, condisci con pangrattato, aglio e prezzemolo.", "Un filo d'olio e in forno a 200 °C per 12 minuti.", "Limone all'uscita."] },
+
+    { "id": "baccala-umido", "nome": "Baccalà in umido con olive", "tipo": "secondo", "slot": ["pranzo", "cena"], "tempo": 40, "avanzabile": true, "origine": "tradizione",
+      "ingredienti": [{ "a": "baccala", "g": 180 }, { "a": "pomodori-pelati", "g": 150 }, { "a": "olive-nere", "g": 20 }, { "a": "cipolla", "g": 40 }, { "a": "olio-evo", "g": 10 }, { "a": "prezzemolo", "g": 5 }],
+      "alleggerimento": "Il baccalà va in umido senza passare prima in farina e padella." },
+
+    { "id": "polpo-patate", "nome": "Polpo e patate", "tipo": "piatto-unico", "slot": ["pranzo", "cena"], "tempo": 60, "avanzabile": true, "origine": "tradizione",
+      "ingredienti": [{ "a": "polpo", "g": 250 }, { "a": "patate", "g": 200 }, { "a": "prezzemolo", "g": 8 }, { "a": "aglio", "g": 4 }, { "a": "olio-evo", "g": 12 }, { "a": "limone", "g": 20 }] },
+
+    { "id": "pesce-acqua-pazza", "nome": "Pesce all'acqua pazza", "tipo": "secondo", "slot": ["pranzo", "cena"], "tempo": 30, "origine": "tradizione",
+      "ingredienti": [{ "a": "orata", "g": 200 }, { "a": "pomodorini", "g": 150 }, { "a": "aglio", "g": 4 }, { "a": "prezzemolo", "g": 6 }, { "a": "olio-evo", "g": 10 }],
+      "procedimento": ["Rosola aglio e pomodorini in padella.", "Adagia il pesce, copri a metà d'acqua e cuoci coperto 15 minuti.", "Prezzemolo alla fine."] },
+
+    { "id": "totani-patate", "nome": "Totani e patate", "tipo": "piatto-unico", "slot": ["pranzo", "cena"], "tempo": 50, "avanzabile": true, "origine": "tradizione",
+      "ingredienti": [{ "a": "totani", "g": 220 }, { "a": "patate", "g": 200 }, { "a": "pomodorini", "g": 100 }, { "a": "aglio", "g": 4 }, { "a": "olio-evo", "g": 10 }, { "a": "prezzemolo", "g": 6 }] },
+
+    { "id": "cozze-impepata", "nome": "Impepata di cozze", "tipo": "secondo", "slot": ["cena"], "tempo": 20, "origine": "tradizione",
+      "ingredienti": [{ "a": "cozze", "g": 400 }, { "a": "limone", "g": 25 }, { "a": "prezzemolo", "g": 8 }, { "a": "olio-evo", "g": 8 }, { "a": "pane", "g": 40 }] },
+
+    { "id": "pollo-limone", "nome": "Pollo al limone in padella", "tipo": "secondo", "slot": ["pranzo", "cena"], "tempo": 20, "origine": "tradizione",
+      "ingredienti": [{ "a": "petto-pollo", "g": 150 }, { "a": "limone", "g": 30 }, { "a": "olio-evo", "g": 8 }, { "a": "prezzemolo", "g": 5 }] },
+
+    { "id": "coniglio-forno", "nome": "Coniglio al forno con pomodorini", "tipo": "secondo", "slot": ["pranzo", "cena"], "tempo": 70, "avanzabile": true, "origine": "tradizione",
+      "ingredienti": [{ "a": "coniglio", "g": 180 }, { "a": "pomodorini", "g": 150 }, { "a": "aglio", "g": 5 }, { "a": "olio-evo", "g": 10 }, { "a": "olive-nere", "g": 15 }] },
+
+    { "id": "frittata-zucchine", "nome": "Frittata di zucchine al forno", "tipo": "secondo", "slot": ["cena"], "tempo": 30, "stagione": [4, 5, 6, 7, 8, 9, 10], "origine": "tradizione",
+      "ingredienti": [{ "a": "uova", "g": 120 }, { "a": "zucchine", "g": 200 }, { "a": "parmigiano", "g": 10 }, { "a": "olio-evo", "g": 6 }, { "a": "basilico", "g": 4 }],
+      "alleggerimento": "Cotta in forno in teglia antiaderente: non assorbe l'olio della padella." },
+
+    { "id": "caprese", "nome": "Mozzarella, pomodoro e basilico", "tipo": "secondo", "slot": ["pranzo", "cena"], "tempo": 5, "stagione": [5, 6, 7, 8, 9], "origine": "tradizione",
+      "ingredienti": [{ "a": "mozzarella", "g": 100 }, { "a": "pomodorini", "g": 200 }, { "a": "basilico", "g": 5 }, { "a": "olio-evo", "g": 8 }, { "a": "pane", "g": 50 }] },
+
+    { "id": "tonno-fagioli", "nome": "Tonno, fagioli e cipolla", "tipo": "piatto-unico", "slot": ["pranzo", "cena"], "tempo": 10, "origine": "tradizione",
+      "ingredienti": [{ "a": "tonno-naturale", "g": 120 }, { "a": "fagioli-cannellini-lessi", "g": 150 }, { "a": "cipolla", "g": 40 }, { "a": "olio-evo", "g": 8 }, { "a": "prezzemolo", "g": 5 }],
+      "alleggerimento": "Tonno al naturale sgocciolato: si condisce dopo, con olio buono e misurato." },
+
+    { "id": "scarola-mbuttunata", "nome": "Scarola 'mbuttunata", "tipo": "contorno", "slot": ["pranzo", "cena"], "tempo": 35, "stagione": [10, 11, 12, 1, 2, 3, 4], "origine": "tradizione",
+      "ingredienti": [{ "a": "scarola", "g": 300 }, { "a": "olive-nere", "g": 25 }, { "a": "noci", "g": 10 }, { "a": "aglio", "g": 4 }, { "a": "olio-evo", "g": 10 }],
+      "alleggerimento": "Ripieno di olive e noci senza pinoli e uvetta in eccesso, e cottura in padella coperta invece che in olio abbondante." },
+
+    { "id": "friarielli-ripassati", "nome": "Friarielli ripassati", "tipo": "contorno", "slot": ["pranzo", "cena"], "tempo": 20, "stagione": [11, 12, 1, 2, 3], "origine": "tradizione",
+      "ingredienti": [{ "a": "friarielli", "g": 300 }, { "a": "aglio", "g": 5 }, { "a": "olio-evo", "g": 10 }] },
+
+    { "id": "parmigiana-forno", "nome": "Parmigiana di melanzane al forno", "tipo": "piatto-unico", "slot": ["pranzo", "cena"], "tempo": 75, "stagione": [6, 7, 8, 9, 10], "avanzabile": true, "origine": "tradizione",
+      "ingredienti": [{ "a": "melanzane", "g": 300 }, { "a": "passata-pomodoro", "g": 150 }, { "a": "mozzarella", "g": 60 }, { "a": "parmigiano", "g": 15 }, { "a": "basilico", "g": 5 }, { "a": "olio-evo", "g": 12 }],
+      "alleggerimento": "Melanzane grigliate o infornate invece che fritte. È la differenza fra circa 700 kcal a porzione e poco più di 300: la parmigiana fritta assorbe olio come una spugna.",
+      "procedimento": ["Affetta le melanzane e infornale a 200 °C su carta forno finché non sono morbide.", "Alterna con passata, mozzarella scolata e basilico.", "Parmigiano in superficie e forno 30 minuti.", "Lasciala riposare mezz'ora prima di tagliarla."] },
+
+    { "id": "insalata-rinforzo", "nome": "Insalata di rinforzo", "tipo": "contorno", "slot": ["pranzo", "cena"], "tempo": 25, "stagione": [11, 12, 1, 2], "origine": "tradizione",
+      "ingredienti": [{ "a": "cavolfiore", "g": 300 }, { "a": "olive-nere", "g": 25 }, { "a": "carota", "g": 50 }, { "a": "olio-evo", "g": 10 }] },
+
+    { "id": "peperoni-padella", "nome": "Peperoni in padella", "tipo": "contorno", "slot": ["pranzo", "cena"], "tempo": 25, "stagione": [6, 7, 8, 9, 10], "origine": "tradizione",
+      "ingredienti": [{ "a": "peperoni", "g": 300 }, { "a": "cipolla", "g": 50 }, { "a": "olio-evo", "g": 10 }, { "a": "basilico", "g": 4 }] },
+
+    { "id": "fagiolini-aglio-olio", "nome": "Fagiolini all'aglio e olio", "tipo": "contorno", "slot": ["pranzo", "cena"], "tempo": 20, "stagione": [5, 6, 7, 8, 9], "origine": "tradizione",
+      "ingredienti": [{ "a": "fagiolini", "g": 300 }, { "a": "aglio", "g": 4 }, { "a": "olio-evo", "g": 10 }] },
+
+    { "id": "zucca-al-forno", "nome": "Zucca al forno", "tipo": "contorno", "slot": ["pranzo", "cena"], "tempo": 35, "stagione": [9, 10, 11, 12, 1], "origine": "tradizione",
+      "ingredienti": [{ "a": "zucca", "g": 300 }, { "a": "olio-evo", "g": 8 }, { "a": "prezzemolo", "g": 4 }] },
+
+    { "id": "insalata-mista", "nome": "Insalata mista", "tipo": "contorno", "slot": ["pranzo", "cena"], "tempo": 5, "origine": "tradizione",
+      "ingredienti": [{ "a": "insalata", "g": 120 }, { "a": "pomodorini", "g": 100 }, { "a": "carota", "g": 50 }, { "a": "olio-evo", "g": 8 }] },
+
+    { "id": "broccoli-limone", "nome": "Broccoli al limone", "tipo": "contorno", "slot": ["pranzo", "cena"], "tempo": 20, "stagione": [10, 11, 12, 1, 2, 3], "origine": "tradizione",
+      "ingredienti": [{ "a": "broccoli", "g": 300 }, { "a": "limone", "g": 25 }, { "a": "olio-evo", "g": 10 }] }
+  ]
+}

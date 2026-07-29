@@ -220,8 +220,9 @@ schermata Home". Da lì funziona anche senza rete.
 | ✅ | Guscio, design system, tema chiaro/scuro, PWA |
 | ✅ | Profilo, antropometria, fabbisogno, vincoli di sicurezza |
 | ✅ | Archivio multi-profilo, export/import cifrato |
-| ⏳ | Nucleo alimenti e gruppi di scambio |
-| ⏳ | Ricettario campano, generatore della settimana, lista della spesa |
+| ✅ | Guida |
+| ✅ | Nucleo alimenti, gruppi di scambio, sezione Pietanze |
+| ⏳ | Generatore della settimana e lista della spesa |
 | ⏳ | Motore dello sgarro, retroattivo e preventivo |
 | ⏳ | Antispreco e dispensa, modalità famiglia, peso di tendenza, TDEE adattivo |
 | ⏳ | Condivisione della lista della spesa |
