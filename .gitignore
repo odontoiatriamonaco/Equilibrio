@@ -8,3 +8,7 @@ public/assets/fonts/*.woff2
 
 # I fascicoli di profilo sono dati sanitari: non devono mai finire nel repo.
 *.equilibrio
+
+# Mai nel repository: sono dati sanitari di pazienti.
+Report Implantari/
+*.pdf

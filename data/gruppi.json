@@ -80,7 +80,17 @@
     "fichi": [8, 9],
     "arancia": [12, 1, 2, 3, 4],
     "mandarini": [11, 12, 1, 2],
-    "castagne": [10, 11]
+    "castagne": [10, 11],
+    "radicchio": [10, 11, 12, 1, 2],
+    "porri": [10, 11, 12, 1, 2, 3],
+    "cetriolo": [5, 6, 7, 8, 9],
+    "cavolini-bruxelles": [11, 12, 1, 2],
+    "cavolo-nero": [11, 12, 1, 2],
+    "ciliegie": [5, 6],
+    "nespole": [4, 5],
+    "cachi": [10, 11],
+    "prugne": [7, 8, 9],
+    "friggitelli": [6, 7, 8, 9, 10]
   },
 
   "pasti": [
