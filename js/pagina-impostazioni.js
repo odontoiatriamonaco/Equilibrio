@@ -9,9 +9,110 @@ import {
   cifra, decifra, nomeFile, scarica, leggiDaFile,
   PassphraseErrata, FormatoNonValido, AVVISO_PASSPHRASE,
 } from './profilo-file.js';
+import { pietanzeDiCasa, ripristinaRicettario, eliminaPietanza } from './piatti-utente.js';
+import { caricaPreferenze, azzeraPreferenze } from './preferenze.js';
 
 let attivo = null;
 let inAttesaDiConferma = null;
+
+/* --- Ripristino ------------------------------------------------------------
+   Due azioni distruttive e irreversibili: entrambe chiedono conferma con la
+   seconda pressione, e dicono prima quanto stanno per portare via.
+   -------------------------------------------------------------------------- */
+
+async function rendiRipristino() {
+  const p = attivo;
+  const sezione = $('#conta-pietanze').closest('.sezione');
+
+  if (!p) {
+    sezione.hidden = true;
+    return;
+  }
+  sezione.hidden = false;
+
+  const mie = await pietanzeDiCasa(p.id);
+  const pref = await caricaPreferenze(p.id);
+  const quantiGusti = Object.keys(pref.piatti).length + Object.keys(pref.alimenti).length;
+  const quanteAllergie = pref.allergie.length;
+
+  $('#conta-pietanze').textContent = mie.length
+    ? `${mie.length} ${mie.length === 1 ? 'pietanza tua' : 'pietanze tue'}. `
+      + 'Cancellandole tornano le 153 originali.'
+    : 'Nessuna modifica: il ricettario è già quello di serie.';
+  $('#ripristina-ricettario').disabled = !mie.length;
+
+  const pezzi = [];
+  if (quantiGusti) pezzi.push(`${quantiGusti} fra amati ed esclusi`);
+  if (quanteAllergie) pezzi.push(`${quanteAllergie} ${quanteAllergie === 1 ? 'allergia' : 'allergie'}`);
+  $('#conta-preferenze').textContent = pezzi.length
+    ? `${pezzi.join(', ')}. Tornano i tetti mediterranei di partenza.`
+    : 'Nessuna preferenza impostata.';
+  $('#azzera-preferenze').disabled = !pezzi.length;
+
+  $('#elenco-mie').hidden = !mie.length;
+  $('#mie-pietanze').innerHTML = mie.map((x) => `
+    <div class="riga-tra" style="padding-block:var(--sp-2); border-bottom:1px solid var(--bordo)">
+      <span>${x.nome}
+        ${x.derivatoDa ? '<br><span class="piccolo tenue">variante di una pietanza di serie</span>'
+    : '<br><span class="piccolo tenue">pietanza nuova</span>'}
+      </span>
+      <button class="bottone-icona" data-togli-pietanza="${x.id}" aria-label="Elimina ${x.nome}">
+        <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#cestino"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+/** Conferma in due passaggi sullo stesso pulsante, con annullamento automatico. */
+function chiediConferma(bottone, chiave, testo, azione) {
+  if (inAttesaDiConferma !== chiave) {
+    inAttesaDiConferma = chiave;
+    const etichetta = bottone.textContent;
+    bottone.classList.add('bottone-pericolo');
+    bottone.textContent = testo;
+    setTimeout(() => {
+      if (inAttesaDiConferma !== chiave) return;
+      inAttesaDiConferma = null;
+      bottone.classList.remove('bottone-pericolo');
+      bottone.textContent = etichetta;
+    }, 6000);
+    return;
+  }
+  inAttesaDiConferma = null;
+  azione();
+}
+
+function collegaRipristino() {
+  $('#ripristina-ricettario').addEventListener('click', (e) => {
+    chiediConferma(e.target, 'ricettario', 'Confermi? Non si torna indietro', async () => {
+      const quante = await ripristinaRicettario(attivo.id);
+      await rendiRipristino();
+      annuncia(`${quante} ${quante === 1 ? 'pietanza cancellata' : 'pietanze cancellate'}. `
+        + 'Il ricettario è tornato quello di serie.');
+    });
+  });
+
+  $('#azzera-preferenze').addEventListener('click', (e) => {
+    chiediConferma(e.target, 'preferenze', 'Confermi? Non si torna indietro', async () => {
+      await azzeraPreferenze(attivo.id);
+      await rendiRipristino();
+      annuncia('Gusti e allergie azzerati. Tutte le pietanze sono di nuovo proponibili.');
+    });
+  });
+
+  $('#mie-pietanze').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-togli-pietanza]');
+    if (!b) return;
+    await eliminaPietanza(attivo.id, b.dataset.togliPietanza);
+    await rendiRipristino();
+    annuncia('Pietanza cancellata: se era una variante, è tornata quella di serie.');
+  });
+}
+
+function annuncia(testo) {
+  const n = $('#esito-ripristino');
+  n.hidden = false;
+  n.textContent = testo;
+}
 
 /* --- Profili --------------------------------------------------------------- */
 
@@ -52,6 +153,7 @@ async function gestisciProfili(e) {
   if (usa) {
     await impostaProfiloAttivo(usa.dataset.usa);
     await rendiProfili();
+    await rendiRipristino();
     return;
   }
 
@@ -71,6 +173,7 @@ async function gestisciProfili(e) {
   inAttesaDiConferma = null;
   await eliminaProfilo(id);
   await rendiProfili();
+  await rendiRipristino();
 }
 
 /* --- Export ---------------------------------------------------------------- */
@@ -151,8 +254,10 @@ export async function inizializza() {
   avvia({ nav: 'altro' });
   montaTema();
   await rendiProfili();
+  await rendiRipristino();
 
   $('#profili').addEventListener('click', gestisciProfili);
   $('#esporta').addEventListener('click', esporta);
   $('#importa').addEventListener('click', importa);
+  collegaRipristino();
 }

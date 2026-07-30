@@ -68,6 +68,18 @@ export async function eliminaPietanza(profiloId, piattoId) {
   await caricaRicettario(profiloId);
 }
 
+/**
+ * Cancella TUTTE le pietanze di casa e riporta il ricettario come appena
+ * installato. Irreversibile: chi la chiama deve aver chiesto conferma.
+ * @returns {Promise<number>} quante ne sono state cancellate
+ */
+export async function ripristinaRicettario(profiloId) {
+  const mie = await pietanzeDiCasa(profiloId);
+  for (const p of mie) await elimina('piatti', chiave(profiloId, p.id));
+  await caricaRicettario(profiloId);
+  return mie.length;
+}
+
 /* --- Costruzione ----------------------------------------------------------- */
 
 /** Copia modificabile di un piatto di serie: e' il «modifica» della scheda. */

@@ -54,6 +54,20 @@ export async function salvaPreferenze(pref) {
   return scrivi('preferenze', pref);
 }
 
+/**
+ * Riporta i gusti come appena creato il profilo: niente amati, niente esclusi,
+ * niente allergie, tetti ai valori mediterranei di partenza.
+ * Irreversibile: chi la chiama deve aver chiesto conferma.
+ */
+export async function azzeraPreferenze(profiloId) {
+  const prima = await caricaPreferenze(profiloId);
+  const quante = Object.keys(prima.piatti).length
+    + Object.keys(prima.alimenti).length
+    + prima.allergie.length;
+  await scrivi('preferenze', vuote(profiloId));
+  return quante;
+}
+
 /* --- Letture --------------------------------------------------------------- */
 
 export function gustoPiatto(pref, id) {

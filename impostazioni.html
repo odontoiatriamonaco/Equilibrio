@@ -124,6 +124,47 @@
       </div>
     </section>
 
+    <!-- ===== Ripristino ===== -->
+    <section class="sezione">
+      <header><h2>Rimettere le cose come stavano</h2></header>
+
+      <div class="scheda pila">
+        <p class="morbido">Il database degli alimenti non si modifica mai: quei 142 valori
+          arrivano con l'app e restano quelli. Quello che <strong>tu</strong> puoi aver
+          cambiato è due cose, e si azzerano separatamente.</p>
+
+        <div class="avviso">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#info"/></svg>
+          <div>Se prima esporti il profilo, le tue pietanze e i tuoi gusti restano
+            dentro quel file: puoi azzerare qui e ritrovarli reimportandolo.</div>
+        </div>
+
+        <div class="riga-tra" style="align-items:flex-start; gap:var(--sp-4); padding-top:var(--sp-2)">
+          <div>
+            <strong>Il ricettario</strong>
+            <p class="piccolo morbido" id="conta-pietanze"></p>
+          </div>
+          <button class="bottone bottone-2" id="ripristina-ricettario">Ripristina</button>
+        </div>
+
+        <div class="riga-tra" style="align-items:flex-start; gap:var(--sp-4);
+                    border-top:1px solid var(--bordo); padding-top:var(--sp-4)">
+          <div>
+            <strong>I gusti</strong>
+            <p class="piccolo morbido" id="conta-preferenze"></p>
+          </div>
+          <button class="bottone bottone-2" id="azzera-preferenze">Azzera</button>
+        </div>
+
+        <p class="avviso avviso-ok" id="esito-ripristino" hidden></p>
+
+        <details class="domanda" id="elenco-mie" hidden>
+          <summary>Le mie pietanze, una per una</summary>
+          <div class="risposta" id="mie-pietanze"></div>
+        </details>
+      </div>
+    </section>
+
     <!-- ===== Aspetto ===== -->
     <section class="sezione">
       <header><h2>Aspetto</h2></header>

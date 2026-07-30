@@ -7,8 +7,12 @@ import {
   comeVariante, nuovaPietanza, aggiungiIngrediente, cambiaQuantita,
   togliIngrediente, valida, avvertimenti, differenze,
   salvaPietanza, eliminaPietanza, pietanzeDiCasa, caricaRicettario,
-  incoerenze, nomeSenza, cambiaProcedimento,
+  incoerenze, nomeSenza, cambiaProcedimento, ripristinaRicettario,
 } from '../js/piatti-utente.js';
+import {
+  vuote, imposta, alternaAllergia, impostaTetto, salvaPreferenze,
+  caricaPreferenze, azzeraPreferenze, TETTI_PREDEFINITI,
+} from '../js/preferenze.js';
 
 const P = 'p_test';
 const originale = piattiDiSerie.find((p) => p.id === 'pasta-patate-provola');
@@ -235,5 +239,56 @@ describe('coerenza fra ingredienti, nome e procedimento', () => {
     const v = cambiaProcedimento(comeVariante(colazione), ['  Scalda il latte.  ', '', '  ']);
     expect(v.procedimento).toEqual(['Scalda il latte.']);
     expect(cambiaProcedimento(v, ['', '']).procedimento).toBeUndefined();
+  });
+});
+
+describe('ripristino', () => {
+  it('cancella tutte le pietanze di casa e riporta il ricettario di serie', async () => {
+    await salvaPietanza(P, comeVariante(originale, { nome: 'La mia' }));
+    await salvaPietanza(P, {
+      ...nuovaPietanza(), nome: 'Zuppa nuova', ingredienti: [{ a: 'riso', g: 60 }],
+    });
+    expect(await pietanzeDiCasa(P)).toHaveLength(2);
+    expect(piatto(originale.id)).toBeNull();
+
+    const quante = await ripristinaRicettario(P);
+    expect(quante).toBe(2);
+    expect(await pietanzeDiCasa(P)).toHaveLength(0);
+    expect(piatti.length).toBe(piattiDiSerie.length);
+    expect(piatto(originale.id)?.nome).toBe(originale.nome);
+  });
+
+  it('su un ricettario già di serie non fa niente e lo dice', async () => {
+    expect(await ripristinaRicettario(P)).toBe(0);
+  });
+
+  it('non tocca le pietanze di un altro profilo', async () => {
+    await salvaPietanza(P, comeVariante(originale, { nome: 'Di Carmela' }));
+    await salvaPietanza('p_altro', comeVariante(originale, { nome: 'Di Maurizio' }));
+
+    await ripristinaRicettario(P);
+    expect(await pietanzeDiCasa(P)).toHaveLength(0);
+    expect(await pietanzeDiCasa('p_altro')).toHaveLength(1);
+
+    await ripristinaRicettario('p_altro');
+  });
+});
+
+describe('azzeramento delle preferenze', () => {
+  it('riporta gusti, allergie e tetti allo stato iniziale', async () => {
+    let pref = imposta(vuote(P), 'piatti', 'genovese', 'escluso');
+    pref = imposta(pref, 'alimenti', 'friarielli', 'amato');
+    pref = alternaAllergia(pref, 'uova');
+    pref = impostaTetto(pref, 'pesce', 1);
+    await salvaPreferenze(pref);
+
+    const quante = await azzeraPreferenze(P);
+    expect(quante).toBe(3); // un piatto, un alimento, un'allergia
+
+    const dopo = await caricaPreferenze(P);
+    expect(dopo.piatti).toEqual({});
+    expect(dopo.alimenti).toEqual({});
+    expect(dopo.allergie).toEqual([]);
+    expect(dopo.tetti).toEqual(TETTI_PREDEFINITI);
   });
 });
