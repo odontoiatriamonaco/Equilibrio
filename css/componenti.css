@@ -920,6 +920,8 @@
 .passi li::before {
   counter-increment: passo;
   content: counter(passo);
+  grid-column: 1;
+  grid-row: 1;
   display: grid;
   place-items: center;
   width: 2rem;
@@ -931,6 +933,11 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+/* Tutto il contenuto sta nella seconda colonna. Senza questo, il terzo
+   elemento della riga (il paragrafo) finisce sotto il numero, in una colonna
+   larga 2rem: il testo si incolonna a una lettera per riga. */
+.passi li > * { grid-column: 2; }
 
 .passi strong { display: block; }
 .passi p { color: var(--testo-morbido); font-size: var(--t-sm); margin-top: 2px; }
