@@ -7,6 +7,10 @@ import { caricaSettimana, caricaDiario, salvaDiario } from './dati.js';
 import { kcalGiorno, indiceOggi, iso } from './planner.js';
 import { nomeVoce, valoriVoce, iconaPiatto, vociOggetto, TIPI } from './alimenti.js';
 import { rendiFascia } from './ui-budget.js';
+import {
+  cercaBarcode, valoriUtilizzabili, kcalPer, scansiona, scansioneDisponibile,
+  ATTRIBUZIONE,
+} from './off-client.js';
 
 const NOMI_PASTO = {
   colazione: 'Colazione',
@@ -46,6 +50,7 @@ export async function inizializza() {
   const i = settimana ? indiceOggi(settimana, oggi) : -1;
   giorno = i >= 0 ? settimana.giorni[i] : null;
 
+  collegaProdotto();
   disegna(i);
 }
 
@@ -55,6 +60,7 @@ function disegna(indice) {
   disegnaFascia(indice, target);
   disegnaAnello(target);
   disegnaPasti();
+  disegnaExtra();
   disegnaAcqua();
 }
 
@@ -76,15 +82,17 @@ function disegnaFascia(indice, target) {
 }
 
 function kcalConsumate() {
-  if (!giorno) return 0;
-  const fatte = new Set(diario.consumato || []);
   let somma = 0;
-  for (const [pasto, voci] of Object.entries(giorno.pasti)) {
-    voci.forEach((v, i) => {
-      if (fatte.has(`${pasto}|${i}`)) somma += valoriVoce(v).kcal;
-    });
+  if (giorno) {
+    const fatte = new Set(diario.consumato || []);
+    for (const [pasto, voci] of Object.entries(giorno.pasti)) {
+      voci.forEach((v, i) => {
+        if (fatte.has(`${pasto}|${i}`)) somma += valoriVoce(v).kcal;
+      });
+    }
   }
   for (const s of diario.sgarri || []) somma += s.kcal || 0;
+  for (const e of diario.extra || []) somma += e.kcal || 0;
   return Math.round(somma);
 }
 
@@ -151,6 +159,135 @@ function disegnaPasti() {
       await salvaDiario(diario);
       disegnaAnello(giorno?.quota ?? energia.fabbisogno.target);
     }));
+}
+
+/* --- Prodotti confezionati -------------------------------------------------- */
+
+let prodottoAperto = null;
+
+function collegaProdotto() {
+  $('#apri-prodotto').addEventListener('click', () => {
+    $('#esito-prodotto').hidden = true;
+    $('#prodotto-trovato').hidden = true;
+    $('#attribuzione-off').textContent = ATTRIBUZIONE;
+    $('#scansiona').hidden = !scansioneDisponibile();
+    $('#dialogo-prodotto').showModal();
+  });
+
+  $('#chiudi-prodotto').addEventListener('click', () => $('#dialogo-prodotto').close());
+  $('#cerca-prodotto').addEventListener('click', () => cerca($('#barcode').value));
+  $('#barcode').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') cerca($('#barcode').value);
+  });
+  $('#prodotto-grammi').addEventListener('input', aggiornaKcalProdotto);
+  $('#aggiungi-prodotto').addEventListener('click', aggiungiProdotto);
+
+  $('#scansiona').addEventListener('click', async () => {
+    const video = $('#video-barcode');
+    video.hidden = false;
+    try {
+      const codice = await scansiona(video);
+      video.hidden = true;
+      $('#barcode').value = codice;
+      await cerca(codice);
+    } catch {
+      video.hidden = true;
+      avvisa('Non riesco a leggere il codice: scrivilo a mano.', 'avviso');
+    }
+  });
+}
+
+async function cerca(barcode) {
+  avvisa('Cerco…', 'avviso');
+  const esito = await cercaBarcode(barcode);
+
+  if (!esito.trovato) {
+    $('#prodotto-trovato').hidden = true;
+    avvisa(esito.messaggio, 'avviso avviso-pericolo');
+    return;
+  }
+
+  if (!valoriUtilizzabili(esito.prodotto)) {
+    $('#prodotto-trovato').hidden = true;
+    avvisa('Il prodotto c\'è ma non ha le calorie registrate: non posso contarlo. '
+      + 'Meglio saperlo che sommare uno zero.', 'avviso avviso-pericolo');
+    return;
+  }
+
+  prodottoAperto = esito.prodotto;
+  const p = prodottoAperto;
+  $('#esito-prodotto').hidden = !esito.daCache;
+  if (esito.daCache) avvisa('Senza rete: valori presi dall\'ultima lettura.', 'avviso');
+
+  $('#prodotto-marca').textContent = p.marca || 'Prodotto confezionato';
+  $('#prodotto-nome').textContent = p.nome;
+  $('#prodotto-valori').textContent = `Per 100 g: ${num(p.per100g.kcal)} kcal`
+    + (p.per100g.pro != null ? ` · P ${num(p.per100g.pro, 1)} g` : '')
+    + (p.per100g.car != null ? ` · C ${num(p.per100g.car, 1)} g` : '')
+    + (p.per100g.gra != null ? ` · G ${num(p.per100g.gra, 1)} g` : '')
+    + (p.nutriScore ? ` · Nutri-Score ${p.nutriScore.toUpperCase()}` : '');
+  $('#prodotto-trovato').hidden = false;
+  aggiornaKcalProdotto();
+}
+
+function aggiornaKcalProdotto() {
+  const g = Number($('#prodotto-grammi').value) || 0;
+  const k = kcalPer(prodottoAperto, g);
+  $('#prodotto-kcal').textContent = k ? `· ${num(k)} kcal` : '';
+}
+
+async function aggiungiProdotto() {
+  const grammi = Number($('#prodotto-grammi').value) || 0;
+  const kcal = kcalPer(prodottoAperto, grammi);
+  if (!kcal) return;
+
+  diario.extra = [...(diario.extra || []), {
+    nome: prodottoAperto.nome,
+    marca: prodottoAperto.marca,
+    barcode: prodottoAperto.barcode,
+    grammi,
+    kcal,
+  }];
+  diario.kcalTotali = kcalConsumate();
+  await salvaDiario(diario);
+
+  $('#dialogo-prodotto').close();
+  disegnaExtra();
+  disegnaAnello(giorno?.quota ?? energia.fabbisogno.target);
+}
+
+function disegnaExtra() {
+  const extra = diario.extra || [];
+  $('#sezione-extra').hidden = !extra.length;
+  if (!extra.length) return;
+
+  $('#extra-elenco').innerHTML = extra.map((e, i) => `
+    <div class="riga-tra" style="padding-block: var(--sp-2); border-bottom:1px solid var(--bordo)">
+      <span>${e.nome}
+        <br><span class="piccolo tenue">${e.marca ? `${e.marca} · ` : ''}${num(e.grammi)} g</span>
+      </span>
+      <span class="riga" style="gap: var(--sp-2)">
+        <span class="num morbido">${num(e.kcal)} kcal</span>
+        <button class="bottone-icona" data-togli-extra="${i}" aria-label="Togli">
+          ${icona('cestino', 'icona icona-sm')}
+        </button>
+      </span>
+    </div>`).join('');
+
+  $$('#extra-elenco [data-togli-extra]').forEach((b) => b.addEventListener('click', async () => {
+    diario.extra = (diario.extra || []).filter((_, i) => i !== Number(b.dataset.togliExtra));
+    diario.kcalTotali = kcalConsumate();
+    await salvaDiario(diario);
+    disegnaExtra();
+    disegnaAnello(giorno?.quota ?? energia.fabbisogno.target);
+  }));
+}
+
+function avvisa(testo, classe) {
+  const n = $('#esito-prodotto');
+  n.hidden = false;
+  n.className = classe;
+  n.textContent = testo;
 }
 
 function disegnaAcqua() {

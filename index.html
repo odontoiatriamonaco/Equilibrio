@@ -173,11 +173,20 @@
         </div>
       </section>
 
+      <section class="sezione" id="sezione-extra" hidden>
+        <header><h2>Aggiunto a mano</h2></header>
+        <div class="scheda" id="extra-elenco"></div>
+      </section>
+
       <div class="riga" style="flex-wrap:wrap; margin-bottom: var(--sp-8)">
         <a class="bottone bottone-2" href="/piano.html">
           <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#sgarro"/></svg>
           Registra o prenota uno sgarro
         </a>
+        <button class="bottone bottone-2" id="apri-prodotto">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#barcode"/></svg>
+          Aggiungi un prodotto
+        </button>
         <a class="bottone bottone-2" href="/progressi.html">
           <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#bilancia"/></svg>
           Segna la pesata
@@ -185,6 +194,62 @@
       </div>
     </div>
   </main>
+
+  <!-- Prodotto confezionato -->
+  <dialog id="dialogo-prodotto" class="dialogo" aria-labelledby="titolo-prodotto">
+    <div class="dialogo-riquadro">
+      <header class="dialogo-testa">
+        <span class="sigillo"><svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#barcode"/></svg></span>
+        <h2 id="titolo-prodotto" style="flex:1; min-width:0">Aggiungi un prodotto</h2>
+        <button class="bottone-icona" id="chiudi-prodotto" aria-label="Chiudi">
+          <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#chiudi"/></svg>
+        </button>
+      </header>
+
+      <div class="dialogo-corpo pila">
+        <p class="piccolo morbido">Per lo yogurt di marca, i biscotti, il pane in cassetta:
+          quello che il ricettario non conosce.</p>
+
+        <video id="video-barcode" playsinline muted hidden
+               style="width:100%; border-radius:var(--r-2); background:#000; aspect-ratio:4/3"></video>
+
+        <button class="bottone bottone-2 bottone-largo" id="scansiona" hidden>
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#barcode"/></svg>
+          Inquadra il codice a barre
+        </button>
+
+        <div class="campo">
+          <label for="barcode">Codice a barre</label>
+          <input id="barcode" type="text" inputmode="numeric" autocomplete="off"
+                 placeholder="8001234567890">
+          <span class="aiuto">le cifre sotto le righe, sulla confezione</span>
+        </div>
+
+        <button class="bottone bottone-largo" id="cerca-prodotto">Cerca</button>
+        <p class="avviso" id="esito-prodotto" hidden></p>
+
+        <div class="scheda scheda-piatta" id="prodotto-trovato" hidden>
+          <p class="occhiello" id="prodotto-marca"></p>
+          <h3 id="prodotto-nome" style="margin-block: var(--sp-1) var(--sp-2)"></h3>
+          <p class="piccolo morbido" id="prodotto-valori"></p>
+
+          <div class="riga" style="gap: var(--sp-3); flex-wrap:wrap; margin-top: var(--sp-4)">
+            <div class="campo" style="flex:1; min-width:7rem">
+              <label for="prodotto-grammi">Quanto ne hai mangiato</label>
+              <input id="prodotto-grammi" type="number" inputmode="numeric" step="5" value="100">
+              <span class="aiuto">g</span>
+            </div>
+            <button class="bottone" id="aggiungi-prodotto" style="align-self:flex-end">
+              <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#piu"/></svg>
+              Aggiungi <span id="prodotto-kcal"></span>
+            </button>
+          </div>
+        </div>
+
+        <p class="piccolo tenue" id="attribuzione-off"></p>
+      </div>
+    </div>
+  </dialog>
 
   <script type="module">
     import { inizializza } from '/js/pagina-oggi.js';

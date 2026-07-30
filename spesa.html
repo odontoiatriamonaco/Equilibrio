@@ -94,6 +94,41 @@
       </section>
 
       <section class="sezione non-stampare">
+        <header><h2>Chi fa la spesa</h2></header>
+        <div class="scheda pila">
+          <p class="morbido">Puoi passare la lista a chi va al supermercato: prende un codice
+            di sei cifre, la apre dal suo telefono e spunta camminando. Le spunte tornano
+            indietro.</p>
+
+          <div class="avviso">
+            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#blocco"/></svg>
+            <div>Di qui escono <strong>solo alimenti e quantità</strong>: nessun nome, nessun
+              peso, nessuna caloria. Il codice scade da sé dopo due giorni.</div>
+          </div>
+
+          <div class="riga" style="flex-wrap:wrap">
+            <button class="bottone" id="pubblica">
+              <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#condividi"/></svg>
+              Ottieni un codice
+            </button>
+            <button class="bottone bottone-2" id="apri-codice">
+              <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#importa"/></svg>
+              Apri con un codice
+            </button>
+          </div>
+
+          <div class="scheda scheda-piatta" id="riquadro-codice" hidden>
+            <p class="occhiello">Codice della lista</p>
+            <p class="dato-grande num" id="codice-lista" style="letter-spacing:.12em"></p>
+            <p class="piccolo tenue">Dettalo a chi fa la spesa: lo inserisce in
+              «Apri con un codice». Scade fra due giorni.</p>
+          </div>
+
+          <p class="avviso" id="esito-condivisione" hidden></p>
+        </div>
+      </section>
+
+      <section class="sezione non-stampare">
         <header>
           <h2>Dispensa</h2>
           <button class="bottone bottone-fantasma" id="in-dispensa">
@@ -105,6 +140,30 @@
       </section>
     </div>
   </main>
+
+  <!-- Lista aperta con un codice -->
+  <dialog id="dialogo-remota" class="dialogo" aria-labelledby="titolo-remota">
+    <div class="dialogo-riquadro">
+      <header class="dialogo-testa">
+        <span class="sigillo"><svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#spesa"/></svg></span>
+        <h2 id="titolo-remota" style="flex:1; min-width:0">Apri una lista</h2>
+        <button class="bottone-icona" id="chiudi-remota" aria-label="Chiudi">
+          <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#chiudi"/></svg>
+        </button>
+      </header>
+      <div class="dialogo-corpo pila">
+        <div class="campo">
+          <label for="codice-inserito">Codice di sei cifre</label>
+          <input id="codice-inserito" type="text" inputmode="numeric" maxlength="6"
+                 autocomplete="off" placeholder="123456"
+                 style="font-size:var(--t-xl); letter-spacing:.2em; text-align:center">
+        </div>
+        <button class="bottone bottone-largo" id="carica-remota">Apri la lista</button>
+        <p class="avviso" id="esito-remota" hidden></p>
+        <div id="remota-elenco"></div>
+      </div>
+    </div>
+  </dialog>
 
   <script type="module">
     import { inizializza } from '/js/pagina-spesa.js';

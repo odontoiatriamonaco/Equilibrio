@@ -58,22 +58,26 @@ quindi l'uso offline si prova dal sito su Vercel, non da `localhost`.
 
 ### Pagine
 
-Aperto il server, le pagine che funzionano davvero oggi sono:
-
-- `/` — la home
-- `/profilo.html` — misure, obiettivo e riepilogo che si ricalcola mentre scrivi
-- `/impostazioni.html` — profili, export cifrato, tema
-- `/stile.html` — la **style guide vivente**: tutti i componenti in una pagina,
-  con la fascia del budget interattiva. È la pagina che spiega meglio l'idea.
-
-`piano`, `spesa`, `ricette` e `progressi` sono segnaposto dichiarati.
+| Pagina | Cosa fa |
+|---|---|
+| `/` | Oggi: i pasti del giorno da spuntare, l'anello delle calorie, la fascia della settimana, l'acqua, i prodotti confezionati |
+| `/piano.html` | la settimana, gli scambi, il dialogo dello sgarro con anteprima dal vivo |
+| `/spesa.html` | lista per reparto, antispreco, dispensa, condivisione con un codice |
+| `/ricette.html` | le 153 pietanze, con ricerca e filtri |
+| `/preferenze.html` | gusti, allergie, tetti settimanali |
+| `/progressi.html` | peso di tendenza e fabbisogno ricavato dai dati veri |
+| `/profilo.html` | misure, obiettivo, questionario di sicurezza |
+| `/impostazioni.html` | profili, export cifrato, tema |
+| `/guida.html` | la guida in otto capitoli |
+| `/stile.html` | style guide vivente: tutti i componenti in una pagina |
 
 ---
 
 ## Com'è fatto
 
 MPA in JavaScript senza framework, costruita con Vite, PWA installabile,
-**tutto lato client**. Nessun account, nessun backend, nessuna telemetria.
+**tutto lato client**. Nessun account, nessuna telemetria. L'unica funzione
+serverless e' quella che condivide la lista della spesa, ed e' facoltativa.
 
 ```
 index.html … stile.html   una pagina per schermata
@@ -84,7 +88,17 @@ js/guscio.js              tema, navigazione, icone, service worker
 js/energia.js             BMI, WHtR, massa grassa, BMR, TDEE, vincoli di sicurezza
 js/store.js               IndexedDB partizionato per profilo
 js/profilo-file.js        export/import del profilo in file cifrato
+js/planner.js             generatore della settimana a vincoli, calibrazione porzioni
+js/sgarro.js              redistribuzione dello sgarro, retroattiva e preventiva
+js/spesa.js               aggregazione, dispensa, formati di vendita, condivisione
+js/packaging.js           residui delle confezioni e proposte antispreco
+js/scambi.js              alternative fra alimenti e fra piatti
+js/preferenze.js          gusti, allergie, tetti, peso di un piatto nella scelta
+js/alimenti.js            valori dei piatti calcolati dagli ingredienti
+js/off-client.js          barcode via Open Food Facts, con cache
+js/grafico-peso.js        grafico del peso di tendenza, SVG senza librerie
 js/ui-budget.js           la fascia del budget settimanale
+api/lista-pubblica.js     condivisione della sola lista della spesa (Vercel KV)
 public/assets/icons.svg   sprite delle icone su misura
 scripts/genera-icone.mjs  rigenera le icone PWA dal marchio
 tests/                    Vitest sui moduli puri
@@ -149,7 +163,7 @@ sanitari e non devono mai finire nel repository.
 Non esiste un CREA scaricabile in JSON — le tabelle si consultano ma non hanno né
 API né dump, e in UE la tabella è protetta come banca dati. Quindi tre livelli:
 
-1. **Nucleo curato** in `data/alimenti.json`: ~200 materie prime italiane, con
+1. **Nucleo curato** in `data/alimenti.json`: 142 materie prime italiane, con
    `fonte`/`fonteId` su ogni record (codice CREA o id FoodData Central) per
    tracciabilità e correzioni in blocco. Funziona offline, è il cuore.
 2. **Open Food Facts** a runtime per i prodotti confezionati, via barcode, con
@@ -159,7 +173,7 @@ API né dump, e in UE la tabella è protetta come banca dati. Quindi tre livelli
 
 Ricettario di tradizione **campana**, su due binari: i piatti che in casa si
 cucinano davvero (priorità assoluta: nessuna dieta regge se impone piatti
-sconosciuti) e circa ottanta della tradizione per coprire i buchi. Ogni piatto
+sconosciuti) e quelli della tradizione per coprire i buchi: in tutto 153 pietanze. Ogni piatto
 porta un campo `alleggerimento` che spiega in una riga come è stata modificata la
 versione tradizionale — parmigiana al forno anziché fritta, e così via.
 
@@ -222,7 +236,8 @@ schermata Home". Da lì funziona anche senza rete.
 | ✅ | Archivio multi-profilo, export/import cifrato |
 | ✅ | Guida |
 | ✅ | Nucleo alimenti, gruppi di scambio, sezione Pietanze |
-| ⏳ | Generatore della settimana e lista della spesa |
-| ⏳ | Motore dello sgarro, retroattivo e preventivo |
-| ⏳ | Antispreco e dispensa, modalità famiglia, peso di tendenza, TDEE adattivo |
-| ⏳ | Condivisione della lista della spesa |
+| ✅ | Generatore della settimana, scambi e lista della spesa |
+| ✅ | Motore dello sgarro, retroattivo e preventivo |
+| ✅ | Antispreco e dispensa, porzioni per commensali, peso di tendenza, TDEE adattivo |
+| ✅ | Condivisione della lista con un codice (serve l’integrazione KV su Vercel) |
+| ✅ | Barcode dei prodotti confezionati via Open Food Facts |

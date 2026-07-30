@@ -7,7 +7,9 @@ import { costruisciLista, quantitaLeggibile, comeTesto, residuiInDispensa } from
 import { suggerimentiAntispreco } from './packaging.js';
 import { caricaPreferenze } from './preferenze.js';
 import { alimento, gruppi } from './alimenti.js';
+import { pubblica, scarica, mandaSpunta } from './lista-condivisa.js';
 
+let codiceLista = null;
 let profilo = null;
 let settimana = null;
 let lista = null;
@@ -29,6 +31,11 @@ export async function inizializza() {
 
   const salvata = await caricaSpesa(profilo.id, settimana.inizio);
   spunte = new Map((salvata?.voci || []).map((v) => [v.alimentoId, v]));
+  codiceLista = salvata?.codice || null;
+  if (codiceLista) {
+    $('#riquadro-codice').hidden = false;
+    $('#codice-lista').textContent = codiceLista;
+  }
 
   $('#commensali').value = String(settimana.commensali || profilo.commensali || 1);
   $('#commensali').addEventListener('change', ricostruisci);
@@ -41,7 +48,105 @@ export async function inizializza() {
     disegna();
   });
 
+  $('#pubblica').addEventListener('click', pubblicaLista);
+  $('#apri-codice').addEventListener('click', () => $('#dialogo-remota').showModal());
+  $('#chiudi-remota').addEventListener('click', () => $('#dialogo-remota').close());
+  $('#carica-remota').addEventListener('click', caricaRemota);
+
   ricostruisci();
+}
+
+/* --- Condivisione col codice ----------------------------------------------- */
+
+async function pubblicaLista() {
+  const esito = await pubblica(lista, spunte);
+  const nota = $('#esito-condivisione');
+
+  if (!esito.ok) {
+    nota.hidden = false;
+    nota.className = 'avviso avviso-pericolo';
+    nota.textContent = esito.messaggio;
+    return;
+  }
+
+  codiceLista = esito.codice;
+  await salvaSpesa(profilo.id, settimana.inizio, [...spunte.values()], codiceLista);
+  $('#riquadro-codice').hidden = false;
+  $('#codice-lista').textContent = codiceLista;
+  nota.hidden = true;
+}
+
+async function caricaRemota() {
+  const codice = String($('#codice-inserito').value).replace(/\D/g, '');
+  const nota = $('#esito-remota');
+
+  if (codice.length !== 6) {
+    nota.hidden = false;
+    nota.className = 'avviso avviso-pericolo';
+    nota.textContent = 'Il codice è di sei cifre.';
+    return;
+  }
+
+  const esito = await scarica(codice);
+  if (!esito.ok) {
+    nota.hidden = false;
+    nota.className = 'avviso avviso-pericolo';
+    nota.textContent = esito.messaggio;
+    $('#remota-elenco').innerHTML = '';
+    return;
+  }
+
+  nota.hidden = true;
+  disegnaRemota(codice, esito.voci);
+}
+
+function disegnaRemota(codice, voci) {
+  const perReparto = new Map();
+  for (const v of voci) {
+    if (!perReparto.has(v.reparto)) perReparto.set(v.reparto, []);
+    perReparto.get(v.reparto).push(v);
+  }
+
+  const ordine = new Map(gruppi.reparti.map((r) => [r.id, r]));
+  const sezioni = [...perReparto.entries()]
+    .sort((a, b) => (ordine.get(a[0])?.ordine || 99) - (ordine.get(b[0])?.ordine || 99));
+
+  $('#remota-elenco').innerHTML = sezioni.map(([rep, elenco]) => `
+    <section class="reparto">
+      <h3>${icona(ordine.get(rep)?.icona || 'spesa', 'icona icona-sm')} ${ordine.get(rep)?.nome || rep}</h3>
+      ${elenco.map((v) => `
+        <label class="voce-spesa">
+          <input type="checkbox" data-remota="${v.alimentoId}" ${v.spuntato ? 'checked' : ''}>
+          <span class="spunta"></span>
+          <span class="nome">${v.nome}</span>
+          <span class="qta num">${v.quantita}</span>
+        </label>`).join('')}
+    </section>`).join('');
+
+  const stato = new Map(voci.map((v) => [v.alimentoId, v]));
+
+  $$('#remota-elenco [data-remota]').forEach((c) => c.addEventListener('change', async () => {
+    const id = c.dataset.remota;
+    const voce = {
+      ...stato.get(id),
+      spuntato: c.checked,
+      spuntatoIl: new Date().toISOString(),
+    };
+    stato.set(id, voce);
+
+    // Si manda subito la singola voce: al supermercato la rete va e viene, e
+    // una spunta trattenuta e' una spunta persa. Il server fonde per voce,
+    // quindi mandarne una sola non cancella il lavoro dell'altro.
+    const esito = await mandaSpunta(codice, voce);
+    const nota = $('#esito-remota');
+    if (esito.ok) {
+      nota.hidden = true;
+    } else {
+      nota.hidden = false;
+      nota.className = 'avviso';
+      nota.textContent = 'Spunta segnata qui, ma non ancora inviata: riprovo alla prossima.';
+    }
+  }));
 }
 
 function mostraSolo(sel) {
