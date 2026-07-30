@@ -2,6 +2,7 @@
 
 import { avvia, icona, $, $$, num } from './guscio.js';
 import { profiloAttivo } from './store.js';
+import { caricaRicettario } from './piatti-utente.js';
 import { riepilogo as riepilogoEnergia } from './energia.js';
 import { caricaPreferenze } from './preferenze.js';
 import { caricaSettimana, salvaSettimana } from './dati.js';
@@ -9,7 +10,7 @@ import {
   generaSettimana, kcalGiorno, valoriGiorno, inizioSettimana, iso,
   indiceOggi, GIORNI,
 } from './planner.js';
-import { nomeVoce, valoriVoce, iconaPiatto, vociOggetto, piatti, TIPI } from './alimenti.js';
+import { nomeVoce, valoriVoce, iconaPiatto, vociOggetto, piatto, TIPI } from './alimenti.js';
 import { alternativePiatto, scambiaPiatto } from './scambi.js';
 import {
   calcolaRecupero, applicaRecupero, racconta, slittamentoTraguardo,
@@ -42,6 +43,7 @@ export async function inizializza() {
   }
 
   energia = riepilogoEnergia(profilo);
+  await caricaRicettario(profilo.id);
   pref = await caricaPreferenze(profilo.id);
   settimana = await caricaSettimana(profilo.id);
 
@@ -210,7 +212,7 @@ function apriScambio(giorno, pasto, indice) {
   $('#scambio-elenco').innerHTML = alternative.length
     ? alternative.map((a) => `
         <button class="carta-piatto" data-nuovo="${a.id}">
-          <span class="sigillo">${icona(iconaPiatto(piatti.find((p) => p.id === a.id)))}</span>
+          <span class="sigillo">${icona(iconaPiatto(piatto(a.id) || {}))}</span>
           <span class="corpo">
             <span class="titolo">${a.nome}</span>
             <span class="meta">

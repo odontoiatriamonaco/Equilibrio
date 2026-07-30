@@ -10,8 +10,40 @@ import datiGruppi from '../data/gruppi.json';
 const INDICE = new Map(datiAlimenti.alimenti.map((a) => [a.id, a]));
 
 export const alimenti = datiAlimenti.alimenti;
-export const piatti = datiPiatti.piatti;
 export const gruppi = datiGruppi;
+
+/** Il ricettario di serie: non si tocca, arriva con gli aggiornamenti dell'app. */
+export const piattiDiSerie = datiPiatti.piatti;
+
+/**
+ * Il ricettario in uso: quello di serie piu' le pietanze di casa, con le
+ * varianti che coprono l'originale da cui nascono.
+ *
+ * E' `let` di proposito: i moduli che fanno `import { piatti }` vedono il
+ * legame vivo, quindi registrare le pietanze dell'utente aggiorna tutti —
+ * generatore, scambi, spesa — senza passare il ricettario di mano in mano.
+ */
+export let piatti = datiPiatti.piatti;
+
+let INDICE_PIATTI = new Map(piatti.map((p) => [p.id, p]));
+
+/**
+ * Innesta le pietanze di un profilo nel ricettario.
+ * Va chiamata all'avvio di ogni pagina, prima di leggere `piatti`.
+ */
+export function registraPiattiUtente(deiUtente = []) {
+  const coperti = new Set(deiUtente.map((p) => p.derivatoDa).filter(Boolean));
+  piatti = [
+    ...piattiDiSerie.filter((p) => !coperti.has(p.id)),
+    ...deiUtente,
+  ];
+  INDICE_PIATTI = new Map(piatti.map((p) => [p.id, p]));
+  return piatti;
+}
+
+export function piatto(id) {
+  return INDICE_PIATTI.get(id) || null;
+}
 
 export function alimento(id) {
   return INDICE.get(id) || null;
@@ -76,16 +108,16 @@ export function valoriVoce(voce, commensali = 1) {
     }
     return out;
   }
-  const piatto = piatti.find((x) => x.id === voce.id);
-  if (!piatto) return { ...VUOTO, mancanti: [voce.id] };
-  return valoriPiatto(piatto, p * commensali);
+  const trovato = INDICE_PIATTI.get(voce.id);
+  if (!trovato) return { ...VUOTO, mancanti: [voce.id] };
+  return valoriPiatto(trovato, p * commensali);
 }
 
 /** Il piatto o l'alimento a cui punta una voce del piano. */
 export function vociOggetto(voce) {
   return voce.tipo === 'alimento'
     ? INDICE.get(voce.id) || null
-    : piatti.find((x) => x.id === voce.id) || null;
+    : INDICE_PIATTI.get(voce.id) || null;
 }
 
 export function nomeVoce(voce) {

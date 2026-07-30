@@ -1,20 +1,27 @@
 /* Equilibrio — pagina Pietanze: sfoglia il ricettario, apri la scheda,
-   scala le dosi sui commensali. */
+   scala le dosi sui commensali, modifica gli ingredienti. */
 
 import { avvia, icona, $, $$, num } from './guscio.js';
+import { profiloAttivo } from './store.js';
 import {
-  piatti, valoriPiatto, ingredientiScalati, diStagione,
+  piatti, piatto, valoriPiatto, ingredientiScalati, diStagione,
   etichette, iconaPiatto, alimento, TIPI,
 } from './alimenti.js';
+import { caricaRicettario } from './piatti-utente.js';
+import { apriEditor, collegaEditor } from './editor-pietanza.js';
 
 const MESE = new Date().getMonth() + 1;
 
-const filtri = { testo: '', tipo: 'tutti', stagione: false, tempo: 0 };
+const filtri = { testo: '', tipo: 'tutti', stagione: false, casa: false, tempo: 0 };
 let commensali = 1;
 let aperto = null;
+let profilo = null;
 
-export function inizializza() {
+export async function inizializza() {
   avvia({ nav: 'pietanze' });
+
+  profilo = await profiloAttivo();
+  await caricaRicettario(profilo?.id);
 
   $('#cerca').addEventListener('input', (e) => {
     filtri.testo = e.target.value.trim().toLowerCase();
@@ -29,6 +36,11 @@ export function inizializza() {
 
   $('#solo-stagione').addEventListener('change', (e) => {
     filtri.stagione = e.target.checked;
+    disegna();
+  });
+
+  $('#solo-casa').addEventListener('change', (e) => {
+    filtri.casa = e.target.checked;
     disegna();
   });
 
@@ -47,13 +59,53 @@ export function inizializza() {
   $('#meno-commensali').addEventListener('click', () => cambiaCommensali(-1));
   $('#piu-commensali').addEventListener('click', () => cambiaCommensali(1));
 
+  collegaEditor();
+  $('#modifica-piatto').addEventListener('click', modifica);
+  $('#nuova-pietanza').addEventListener('click', creaNuova);
+
   disegna();
 }
+
+/* --- Modifica -------------------------------------------------------------- */
+
+function senzaProfilo() {
+  $('#esito-modifica').hidden = false;
+  $('#esito-modifica').textContent = 'Le pietanze di casa appartengono a un profilo: '
+    + 'creane uno e potrai salvare le tue versioni.';
+}
+
+function modifica() {
+  if (!profilo) return senzaProfilo();
+  $('#scheda').close();
+  apriEditor({
+    profilo: profilo.id,
+    piatto: aperto,
+    quandoSalva: (salvata) => {
+      disegna();
+      if (salvata) apri(salvata.id);
+    },
+  });
+}
+
+function creaNuova() {
+  if (!profilo) return senzaProfilo();
+  apriEditor({
+    profilo: profilo.id,
+    nuova: true,
+    quandoSalva: (salvata) => {
+      disegna();
+      if (salvata) apri(salvata.id);
+    },
+  });
+}
+
+/* --- Elenco ---------------------------------------------------------------- */
 
 function selezionati() {
   return piatti.filter((p) => {
     if (filtri.tipo !== 'tutti' && p.tipo !== filtri.tipo) return false;
     if (filtri.stagione && !diStagione(p, MESE)) return false;
+    if (filtri.casa && p.origine !== 'casa') return false;
     if (filtri.tempo && (p.tempo || 0) > filtri.tempo) return false;
     if (filtri.testo) {
       const cerca = [p.nome, ...(p.ingredienti || []).map((i) => alimento(i.a)?.nome || '')]
@@ -67,10 +119,10 @@ function selezionati() {
 function disegna() {
   const elenco = selezionati();
   const dove = $('#elenco');
+  const diCasa = piatti.filter((p) => p.origine === 'casa').length;
 
-  $('#conteggio').textContent = elenco.length === 1
-    ? '1 pietanza'
-    : `${elenco.length} pietanze`;
+  $('#conteggio').textContent = (elenco.length === 1 ? '1 pietanza' : `${elenco.length} pietanze`)
+    + (diCasa ? ` · ${diCasa} ${diCasa === 1 ? 'tua' : 'tue'}` : '');
 
   if (!elenco.length) {
     dove.innerHTML = `
@@ -81,8 +133,8 @@ function disegna() {
     return;
   }
 
-  // Raggruppate per tipo: sfogliare un elenco piatto di quaranta voci e' peggio
-  // che scorrere quattro gruppi brevi.
+  // Raggruppate per tipo: sfogliare un elenco piatto di centocinquanta voci e'
+  // peggio che scorrere sei gruppi brevi.
   const perTipo = new Map();
   for (const p of elenco) {
     if (!perTipo.has(p.tipo)) perTipo.set(p.tipo, []);
@@ -121,13 +173,16 @@ function carta(p) {
     </button>`;
 }
 
+/* --- Scheda ---------------------------------------------------------------- */
+
 function cambiaCommensali(d) {
   commensali = Math.min(8, Math.max(1, commensali + d));
   rendiScheda();
 }
 
 function apri(id) {
-  aperto = piatti.find((p) => p.id === id);
+  aperto = piatto(id);
+  if (!aperto) return;
   commensali = 1;
   rendiScheda();
   $('#scheda').showModal();
@@ -145,6 +200,10 @@ function rendiScheda() {
   $('#scheda-tag').innerHTML = etichette(p, MESE)
     .map((e) => `<span class="pillola ${e.tono}">${e.testo}</span>`).join('');
 
+  $('#modifica-piatto').innerHTML = p.origine === 'casa'
+    ? `${icona('matita', 'icona icona-sm')} Modifica la tua versione`
+    : `${icona('matita', 'icona icona-sm')} Modifica gli ingredienti`;
+
   $('#commensali').textContent = commensali;
   $('#commensali-parola').textContent = commensali === 1 ? 'porzione' : 'porzioni';
 
@@ -158,7 +217,7 @@ function rendiScheda() {
 
   $('#scheda-ingredienti').innerHTML = ing.map((i) => `
     <li class="riga-tra" style="padding-block:var(--sp-2); border-bottom:1px solid var(--bordo)">
-      <span>${i.alimento?.nome || `<em class="pericolo">${i.a} — alimento mancante</em>`}</span>
+      <span>${i.alimento?.nome || `<em class="pericolo-testo">${i.a} — alimento mancante</em>`}</span>
       <span class="num morbido">${num(i.grammi)} g</span>
     </li>`).join('');
 

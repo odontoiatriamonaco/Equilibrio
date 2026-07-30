@@ -4,6 +4,7 @@
 
 import { avvia, icona, $, $$, num } from './guscio.js';
 import { profiloAttivo } from './store.js';
+import { caricaRicettario } from './piatti-utente.js';
 import { piatti, alimenti, gruppi, iconaPiatto, TIPI } from './alimenti.js';
 import {
   caricaPreferenze, salvaPreferenze, gustoPiatto, gustoAlimento, eAllergene,
@@ -27,6 +28,7 @@ export async function inizializza() {
     return;
   }
 
+  await caricaRicettario(profilo.id);
   pref = await caricaPreferenze(profilo.id);
   $('#nome-profilo').textContent = profilo.nome || 'il tuo profilo';
 

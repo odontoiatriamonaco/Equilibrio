@@ -63,7 +63,7 @@ quindi l'uso offline si prova dal sito su Vercel, non da `localhost`.
 | `/` | Oggi: i pasti del giorno da spuntare, l'anello delle calorie, la fascia della settimana, l'acqua, i prodotti confezionati |
 | `/piano.html` | la settimana, gli scambi, il dialogo dello sgarro con anteprima dal vivo |
 | `/spesa.html` | lista per reparto, antispreco, dispensa, condivisione con un codice |
-| `/ricette.html` | le 153 pietanze, con ricerca e filtri |
+| `/ricette.html` | le 153 pietanze, con ricerca, filtri e l’editor degli ingredienti |
 | `/preferenze.html` | gusti, allergie, tetti settimanali |
 | `/progressi.html` | peso di tendenza e fabbisogno ricavato dai dati veri |
 | `/profilo.html` | misure, obiettivo, questionario di sicurezza |
@@ -95,6 +95,8 @@ js/packaging.js           residui delle confezioni e proposte antispreco
 js/scambi.js              alternative fra alimenti e fra piatti
 js/preferenze.js          gusti, allergie, tetti, peso di un piatto nella scelta
 js/alimenti.js            valori dei piatti calcolati dagli ingredienti
+js/piatti-utente.js       le pietanze di casa: varianti e piatti nuovi
+js/editor-pietanza.js     editor degli ingredienti
 js/off-client.js          barcode via Open Food Facts, con cache
 js/grafico-peso.js        grafico del peso di tendenza, SVG senza librerie
 js/ui-budget.js           la fascia del budget settimanale
@@ -119,6 +121,20 @@ passaggio è tutto in CSS.
   che ballano in colonna sono il dettaglio che fa sembrare amatoriale un'app di dati.
 - **Contrasti ricalcolati per il tema scuro**, non invertiti.
 - Nuovi componenti: prima in `stile.html`, poi nelle pagine.
+
+### Le pietanze di casa
+
+Il ricettario di serie in `data/piatti.json` **non si modifica mai**. Modificare una
+pietanza crea una versione propria del profilo, salvata su IndexedDB: porta
+`derivatoDa` e **copre** l'originale nel ricettario in uso, così non si vedono due
+pasta e patate. Cancellandola, l'originale torna. Un aggiornamento dell'app non può
+portare via le ricette di casa — e quelle ricette pesano il doppio nella scelta del
+menù, perché è di cose che si sanno già cucinare che è fatta una dieta che regge.
+
+L'innesto avviene con `registraPiattiUtente()` in `js/alimenti.js`, che riassegna il
+legame esportato `piatti`. I moduli che lo importano vedono il legame vivo, quindi
+generatore, scambi e spesa si aggiornano senza passarsi il ricettario di mano in
+mano. Ogni pagina chiama `caricaRicettario(profiloId)` all'avvio, prima di leggerlo.
 
 ### I vincoli di sicurezza nel motore
 
@@ -176,6 +192,20 @@ cucinano davvero (priorità assoluta: nessuna dieta regge se impone piatti
 sconosciuti) e quelli della tradizione per coprire i buchi: in tutto 153 pietanze. Ogni piatto
 porta un campo `alleggerimento` che spiega in una riga come è stata modificata la
 versione tradizionale — parmigiana al forno anziché fritta, e così via.
+
+### Le pietanze di casa
+
+Il ricettario di serie in  **non si modifica mai**: modificare una
+pietanza crea una versione propria del profilo, salvata su IndexedDB. La variante
+porta  e **copre** l'originale nel ricettario in uso, cosi' non si vedono
+due pasta e patate; cancellandola, l'originale torna. Un aggiornamento dell'app non
+puo' portare via le ricette di casa, e le ricette di casa pesano il doppio nella
+scelta del menu'.
+
+L'innesto avviene con  in , che riassegna
+il legame esportato : i moduli che lo importano vedono il legame vivo, quindi
+generatore, scambi e spesa si aggiornano senza passarsi il ricettario di mano in mano.
+Ogni pagina chiama  all'avvio.
 
 ---
 

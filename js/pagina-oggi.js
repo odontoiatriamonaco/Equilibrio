@@ -2,6 +2,7 @@
 
 import { avvia, alternaTema, icona, $, $$, num } from './guscio.js';
 import { profiloAttivo } from './store.js';
+import { caricaRicettario } from './piatti-utente.js';
 import { riepilogo as riepilogoEnergia } from './energia.js';
 import { caricaSettimana, caricaDiario, salvaDiario } from './dati.js';
 import { kcalGiorno, indiceOggi, iso } from './planner.js';
@@ -43,6 +44,7 @@ export async function inizializza() {
   $('#benvenuto').hidden = true;
   $('#giornata').hidden = false;
 
+  await caricaRicettario(profilo.id);
   energia = riepilogoEnergia(profilo, oggi);
   settimana = await caricaSettimana(profilo.id, oggi);
   diario = await caricaDiario(profilo.id, oggi);

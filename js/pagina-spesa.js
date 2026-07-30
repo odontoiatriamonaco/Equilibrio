@@ -2,6 +2,7 @@
 
 import { avvia, icona, $, $$, num } from './guscio.js';
 import { profiloAttivo } from './store.js';
+import { caricaRicettario } from './piatti-utente.js';
 import { caricaSettimana, caricaDispensa, salvaScorta, caricaSpesa, salvaSpesa } from './dati.js';
 import { costruisciLista, quantitaLeggibile, comeTesto, residuiInDispensa } from './spesa.js';
 import { suggerimentiAntispreco } from './packaging.js';
@@ -26,6 +27,7 @@ export async function inizializza() {
   settimana = await caricaSettimana(profilo.id);
   if (!settimana) return mostraSolo('#senza-piano');
 
+  await caricaRicettario(profilo.id);
   pref = await caricaPreferenze(profilo.id);
   dispensa = await caricaDispensa(profilo.id);
 

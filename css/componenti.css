@@ -1384,6 +1384,34 @@
   color: var(--dato-testo);
 }
 
+/* --- Riga di un ingrediente nell'editor ------------------------------------ */
+
+.riga-ingrediente {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding-block: var(--sp-2);
+  border-bottom: 1px solid var(--bordo);
+}
+
+.riga-ingrediente .nome {
+  flex: 1;
+  min-width: 0;
+  line-height: var(--lh-snug);
+}
+
+.qta-ingrediente {
+  width: 4.5rem;
+  min-height: 2.5rem;
+  padding: var(--sp-1) var(--sp-2);
+  text-align: right;
+  border: 1px solid var(--bordo-forte);
+  border-radius: var(--r-1);
+  background: var(--superficie);
+}
+
+.qta-ingrediente:focus { border-color: var(--accento); }
+
 /* --- Stato vuoto ---------------------------------------------------------- */
 
 .vuoto {

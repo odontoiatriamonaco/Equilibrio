@@ -28,6 +28,9 @@
         <p class="occhiello">Tradizione campana</p>
         <h1>Pietanze</h1>
       </div>
+      <button class="bottone-icona" id="nuova-pietanza" aria-label="Nuova pietanza">
+        <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#piu"/></svg>
+      </button>
       <a class="bottone-icona" href="/preferenze.html" aria-label="Preferenze">
         <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#cuore"/></svg>
       </a>
@@ -69,6 +72,12 @@
           <span>Solo di stagione</span>
         </label>
 
+        <label class="interruttore">
+          <input type="checkbox" id="solo-casa">
+          <span class="leva"></span>
+          <span>Solo le mie</span>
+        </label>
+
         <div class="campo" style="flex:1; min-width:12rem">
           <label for="tempo">Tempo in cucina — <span id="tempo-valore">qualsiasi</span></label>
           <input id="tempo" type="range" min="0" max="90" step="15" value="0">
@@ -76,6 +85,7 @@
       </div>
     </div>
 
+    <p class="avviso avviso-pericolo non-stampare" id="esito-modifica" hidden style="margin-bottom:var(--sp-4)"></p>
     <p class="occhiello" id="conteggio"></p>
     <div id="elenco"></div>
 
@@ -134,11 +144,81 @@
           <ol class="passi"></ol>
         </section>
 
+        <button class="bottone bottone-2 bottone-largo" id="modifica-piatto">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#matita"/></svg>
+          Modifica gli ingredienti
+        </button>
+
         <p class="piccolo tenue" id="scheda-nota" hidden>
           I valori nutrizionali sono calcolati sommando gli ingredienti, con dati
           indicativi di tabella non ancora verificati uno per uno. Servono a orientarsi,
           non a fare bilanci al grammo.
         </p>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ===== Editor della pietanza ===== -->
+  <dialog id="editor" class="dialogo" aria-labelledby="editor-titolo">
+    <div class="dialogo-riquadro">
+      <header class="dialogo-testa">
+        <span class="sigillo"><svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#matita"/></svg></span>
+        <h2 id="editor-titolo" style="flex:1; min-width:0"></h2>
+        <button class="bottone-icona" id="editor-chiudi" aria-label="Chiudi">
+          <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#chiudi"/></svg>
+        </button>
+      </header>
+
+      <div class="dialogo-corpo pila">
+        <div class="scheda scheda-piatta pila" id="editor-valori" style="gap:var(--sp-1)"></div>
+        <div id="editor-note"></div>
+
+        <div class="campo">
+          <label for="editor-nome">Come si chiama</label>
+          <input id="editor-nome" type="text" autocomplete="off" placeholder="Pasta e patate come la faccio io">
+        </div>
+
+        <div class="griglia-2">
+          <div class="campo">
+            <label for="editor-tipo">Che tipo di pietanza</label>
+            <select id="editor-tipo"></select>
+          </div>
+          <div class="campo">
+            <label for="editor-tempo">Minuti in cucina</label>
+            <input id="editor-tempo" type="number" inputmode="numeric" min="0" max="300" step="5">
+          </div>
+        </div>
+
+        <section>
+          <p class="occhiello">Ingredienti, per una porzione</p>
+          <div id="editor-ingredienti"></div>
+        </section>
+
+        <section>
+          <p class="occhiello">Aggiungi un ingrediente</p>
+          <div class="riga" style="gap:var(--sp-2); margin-block:var(--sp-2)">
+            <div class="campo" style="flex:1; min-width:8rem">
+              <label for="editor-cerca" class="solo-sr">Cerca un alimento</label>
+              <input id="editor-cerca" type="search" placeholder="Cerca — «provola», «ceci»…" autocomplete="off">
+            </div>
+            <div class="campo" style="min-width:8rem">
+              <label for="editor-gruppo" class="solo-sr">Gruppo</label>
+              <select id="editor-gruppo"></select>
+            </div>
+          </div>
+          <div class="riga" style="flex-wrap:wrap; gap:var(--sp-2)" id="editor-candidati"></div>
+        </section>
+
+        <p class="avviso avviso-pericolo" id="editor-errore" hidden></p>
+
+        <button class="bottone bottone-largo" id="editor-salva">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#salva"/></svg>
+          Salva tra le mie pietanze
+        </button>
+        <button class="bottone bottone-pericolo bottone-largo" id="editor-elimina" hidden>
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#cestino"/></svg>
+          Elimina questa pietanza
+        </button>
       </div>
     </div>
   </dialog>
