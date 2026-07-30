@@ -93,6 +93,16 @@
     "friggitelli": [6, 7, 8, 9, 10]
   },
 
+  "categorieTetti": {
+    "commento": "A quale tetto settimanale appartiene ogni alimento. Serve al generatore per non superare i massimi impostati nelle preferenze.",
+    "pesce": ["alici", "merluzzo", "orata", "polpo", "totani", "cozze", "vongole", "tonno-naturale", "baccala", "gamberi", "sgombro", "seppie", "salmone", "salmone-affumicato", "platessa", "spigola", "pesce-spada"],
+    "carne-bianca": ["petto-pollo", "fesa-tacchino", "coniglio"],
+    "carne-rossa": ["manzo-magro", "vitello", "agnello", "lonza-maiale", "salsiccia"],
+    "salumi": ["prosciutto-crudo", "prosciutto-cotto", "bresaola"],
+    "uova": ["uova"],
+    "formaggi": ["mozzarella", "mozzarella-bufala", "provola", "ricotta", "ricotta-salata", "burrata", "formaggio-fresco"]
+  },
+
   "pasti": [
     { "id": "colazione", "nome": "Colazione", "ordine": 1 },
     { "id": "spuntino-mattina", "nome": "Spuntino del mattino", "ordine": 2 },

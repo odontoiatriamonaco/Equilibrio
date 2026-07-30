@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Piano — Equilibrio</title>
+  <meta name="description" content="La settimana a porzioni, con gli scambi e la gestione dello sgarro.">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
@@ -23,22 +24,144 @@
       <a class="bottone-icona solo-stretto" href="/index.html" aria-label="Indietro">
         <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#indietro"/></svg>
       </a>
-      <h1>Piano</h1>
+      <div style="flex:1; min-width:0">
+        <p class="occhiello">Sette giorni</p>
+        <h1>Piano</h1>
+      </div>
+      <a class="bottone-icona" href="/spesa.html" aria-label="Lista della spesa">
+        <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#spesa"/></svg>
+      </a>
     </header>
 
-    <section class="sezione">
-      <div class="scheda">
+    <div class="scheda" id="senza-profilo" hidden>
+      <div class="vuoto">
+        <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#utente"/></svg>
+        <p>Per costruire la settimana servono prima i tuoi dati.</p>
+        <a class="bottone" href="/profilo.html">Crea il profilo</a>
+      </div>
+    </div>
+
+    <div id="contenuto">
+      <div class="scheda scheda-alta" id="vuoto" hidden>
         <div class="vuoto">
           <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#piano"/></svg>
-          <p>La settimana a porzioni, gli scambi e lo sgarro.<br>Arriva con la Fase 2.</p>
+          <p>Nessuna settimana ancora.<br>La costruisco sui tuoi gusti e su quello che è di stagione.</p>
+          <button class="bottone" id="genera">
+            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#rigenera"/></svg>
+            Genera la settimana
+          </button>
+          <a class="bottone bottone-fantasma" href="/preferenze.html">Prima scelgo cosa mi piace</a>
         </div>
       </div>
-    </section>
+
+      <div class="scheda scheda-alta" id="riquadro-fascia">
+        <div id="fascia"></div>
+      </div>
+
+      <div class="avviso avviso-sgarro" id="nota-recupero" hidden style="margin-top: var(--sp-4)">
+        <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#sgarro"/></svg>
+        <div></div>
+      </div>
+
+      <div class="riga non-stampare" id="barra-azioni" style="flex-wrap:wrap; margin-block: var(--sp-5)">
+        <button class="bottone" id="apri-sgarro">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#sgarro"/></svg>
+          Registra o prenota uno sgarro
+        </button>
+        <button class="bottone bottone-2" id="rigenera">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#rigenera"/></svg>
+          Rigenera
+        </button>
+        <a class="bottone bottone-2" href="/spesa.html">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spesa"/></svg>
+          Lista della spesa
+        </a>
+      </div>
+
+      <div class="pila" id="settimana"></div>
+    </div>
   </main>
 
+  <!-- Scambio di un piatto -->
+  <dialog id="scambio" class="dialogo" aria-labelledby="scambio-titolo">
+    <div class="dialogo-riquadro">
+      <header class="dialogo-testa">
+        <span class="sigillo"><svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#scambia"/></svg></span>
+        <h2 id="scambio-titolo" style="flex:1; min-width:0"></h2>
+        <button class="bottone-icona" id="chiudi-scambio" aria-label="Chiudi">
+          <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#chiudi"/></svg>
+        </button>
+      </header>
+      <div class="dialogo-corpo">
+        <p class="piccolo morbido" style="margin-bottom: var(--sp-3)">
+          Le porzioni si adattano da sole, così il conto del giorno non cambia.</p>
+        <div class="pila" id="scambio-elenco"></div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Sgarro -->
+  <dialog id="dialogo-sgarro" class="dialogo" aria-labelledby="titolo-sgarro">
+    <div class="dialogo-riquadro">
+      <header class="dialogo-testa">
+        <span class="sigillo"><svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#sgarro"/></svg></span>
+        <h2 id="titolo-sgarro" style="flex:1; min-width:0">Lo sgarro</h2>
+        <button class="bottone-icona" id="chiudi-sgarro" aria-label="Chiudi">
+          <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#chiudi"/></svg>
+        </button>
+      </header>
+
+      <div class="dialogo-corpo pila">
+        <div class="campo">
+          <label for="sgarro-catalogo">Che cos'è</label>
+          <select id="sgarro-catalogo"></select>
+        </div>
+
+        <div class="griglia-2">
+          <div class="campo">
+            <label for="sgarro-kcal">Calorie</label>
+            <input id="sgarro-kcal" type="number" inputmode="numeric" min="0" step="10" placeholder="850">
+            <span class="aiuto">puoi correggerle a mano</span>
+          </div>
+          <div class="campo">
+            <label for="sgarro-giorno">Quando</label>
+            <select id="sgarro-giorno"></select>
+          </div>
+        </div>
+
+        <fieldset style="border:none; padding:0">
+          <legend class="occhiello" style="margin-bottom: var(--sp-2)">Come lo sistemo</legend>
+          <label class="riga" style="align-items:flex-start; gap:var(--sp-3); margin-bottom:var(--sp-3)">
+            <input type="radio" name="modo" value="prima" checked style="margin-top:6px">
+            <span><strong>Lo prenoto</strong><br>
+              <span class="piccolo morbido">Alleggerisco i giorni <em>prima</em>: ci arrivi con il margine già da parte.</span></span>
+          </label>
+          <label class="riga" style="align-items:flex-start; gap:var(--sp-3)">
+            <input type="radio" name="modo" value="dopo" style="margin-top:6px">
+            <span><strong>L'ho già fatto</strong><br>
+              <span class="piccolo morbido">Recupero sui giorni che restano.</span></span>
+          </label>
+        </fieldset>
+
+        <div class="scheda scheda-piatta" id="sgarro-anteprima"></div>
+
+        <div class="avviso">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#info"/></svg>
+          <div>I piatti della settimana <strong>non cambiano</strong>: si ritoccano solo le
+            porzioni. La spesa che hai già fatto resta valida.</div>
+        </div>
+
+        <button class="bottone bottone-largo" id="conferma-sgarro" disabled>
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spunta"/></svg>
+          Applica alla settimana
+        </button>
+      </div>
+    </div>
+  </dialog>
+
   <script type="module">
-    import { avvia } from '/js/guscio.js';
-    avvia({ nav: 'piano' });
+    import { inizializza } from '/js/pagina-piano.js';
+    inizializza();
   </script>
 </body>
 </html>

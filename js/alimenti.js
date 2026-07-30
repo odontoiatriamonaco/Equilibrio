@@ -59,6 +59,39 @@ function arrotonda(v, decimali) {
   return Math.round(v * p) / p;
 }
 
+/**
+ * Valori di una voce del piano, che puo' essere un piatto o un alimento
+ * singolo (il pane della cena, la frutta dello spuntino).
+ * @param {{tipo:'piatto'|'alimento', id:string, porzioni:number}} voce
+ */
+export function valoriVoce(voce, commensali = 1) {
+  const p = voce.porzioni ?? 1;
+  if (voce.tipo === 'alimento') {
+    const a = INDICE.get(voce.id);
+    if (!a) return { ...VUOTO, mancanti: [voce.id] };
+    const fattore = (a.porzione * p * commensali) / 100;
+    const out = { mancanti: [] };
+    for (const k of Object.keys(VUOTO)) {
+      out[k] = arrotonda((a.per100g[k] || 0) * fattore, k === 'kcal' || k === 'sod' ? 0 : 1);
+    }
+    return out;
+  }
+  const piatto = piatti.find((x) => x.id === voce.id);
+  if (!piatto) return { ...VUOTO, mancanti: [voce.id] };
+  return valoriPiatto(piatto, p * commensali);
+}
+
+/** Il piatto o l'alimento a cui punta una voce del piano. */
+export function vociOggetto(voce) {
+  return voce.tipo === 'alimento'
+    ? INDICE.get(voce.id) || null
+    : piatti.find((x) => x.id === voce.id) || null;
+}
+
+export function nomeVoce(voce) {
+  return vociOggetto(voce)?.nome || voce.id;
+}
+
 /** Ingredienti con le quantita' gia' moltiplicate per i commensali. */
 export function ingredientiScalati(piatto, porzioni = 1) {
   return (piatto.ingredienti || []).map((ing) => ({

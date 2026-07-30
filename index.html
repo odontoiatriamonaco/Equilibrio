@@ -135,7 +135,7 @@
       </div>
     </div>
 
-    <!-- ===== Giornata: mostrata quando il profilo esiste (Fase 2 e 3) ===== -->
+    <!-- ===== Giornata: mostrata quando il profilo esiste ===== -->
     <div id="giornata" hidden>
       <section class="scheda scheda-alta">
         <div class="riga" style="gap: var(--sp-5); align-items:center; flex-wrap:wrap">
@@ -145,8 +145,11 @@
               <span class="unita" id="kcal-target">kcal</span>
             </div>
           </div>
-          <div class="pila" style="flex:1; min-width:14rem">
-            <p class="occhiello">La settimana</p>
+          <div class="pila" id="riquadro-settimana" style="flex:1; min-width:14rem">
+            <div class="riga-tra">
+              <p class="occhiello">La settimana</p>
+              <p class="piccolo morbido" id="resta"></p>
+            </div>
             <div id="fascia"></div>
           </div>
         </div>
@@ -160,61 +163,32 @@
         <div class="pila" id="pasti-oggi"></div>
       </section>
 
-      <button class="bottone bottone-2 bottone-largo" id="apri-sgarro">
-        <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#sgarro"/></svg>
-        Registra o prenota uno sgarro
-      </button>
+      <section class="sezione">
+        <header>
+          <h2>Acqua</h2>
+          <span class="piccolo tenue" id="acqua-testo"></span>
+        </header>
+        <div class="scheda">
+          <div class="bicchieri" id="acqua"></div>
+        </div>
+      </section>
+
+      <div class="riga" style="flex-wrap:wrap; margin-bottom: var(--sp-8)">
+        <a class="bottone bottone-2" href="/piano.html">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#sgarro"/></svg>
+          Registra o prenota uno sgarro
+        </a>
+        <a class="bottone bottone-2" href="/progressi.html">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#bilancia"/></svg>
+          Segna la pesata
+        </a>
+      </div>
     </div>
   </main>
 
   <script type="module">
-    import { avvia, alternaTema, $, num } from '/js/guscio.js';
-    import { profiloAttivo } from '/js/store.js';
-    import { riepilogo } from '/js/energia.js';
-    import { rendiFascia } from '/js/ui-budget.js';
-
-    avvia({ nav: 'oggi' });
-    $('#cambia-tema').addEventListener('click', alternaTema);
-
-    const oggi = new Date();
-    $('#data-oggi').textContent = oggi.toLocaleDateString('it-IT', {
-      weekday: 'long', day: 'numeric', month: 'long',
-    });
-
-    // Niente await di primo livello: il target di build non lo supporta.
-    (async () => {
-    const p = await profiloAttivo();
-    if (p?.pesoKg && p?.altezzaCm && p?.dataNascita) {
-      $('#benvenuto').hidden = true;
-      $('#giornata').hidden = false;
-
-      const r = riepilogo(p, oggi);
-      const target = r.fabbisogno.target;
-
-      $('#kcal-oggi').textContent = '0';
-      $('#kcal-target').textContent = `di ${num(target)} kcal`;
-
-      // Settimana ancora tutta da vivere: sette giorni sul loro target.
-      // Il giorno della settimana in Italia parte da lunedì.
-      const indiceOggi = (oggi.getDay() + 6) % 7;
-      rendiFascia($('#fascia'), {
-        target,
-        legenda: false,
-        giorni: ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'].map((e, i) => ({
-          etichetta: e, quota: target, oggi: i === indiceOggi,
-        })),
-      });
-
-      $('#pasti-oggi').innerHTML = `
-        <div class="scheda">
-          <div class="vuoto">
-            <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#piano"/></svg>
-            <p>Il menù della settimana non c'è ancora.<br>
-               Arriva insieme al ricettario e alla lista della spesa.</p>
-          </div>
-        </div>`;
-    }
-    })();
+    import { inizializza } from '/js/pagina-oggi.js';
+    inizializza();
   </script>
 </body>
 </html>

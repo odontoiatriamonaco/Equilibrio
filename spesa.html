@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Spesa — Equilibrio</title>
+  <meta name="description" content="La lista della spesa ordinata per reparto, con dispensa e antispreco.">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
@@ -23,22 +24,91 @@
       <a class="bottone-icona solo-stretto" href="/index.html" aria-label="Indietro">
         <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#indietro"/></svg>
       </a>
-      <h1>Spesa</h1>
+      <div style="flex:1; min-width:0">
+        <p class="occhiello">Ordinata come gli scaffali</p>
+        <h1>Spesa</h1>
+      </div>
     </header>
 
-    <section class="sezione">
-      <div class="scheda">
-        <div class="vuoto">
-          <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#spesa"/></svg>
-          <p>La lista ordinata per reparto, con dispensa e antispreco.<br>Arriva con la Fase 2.</p>
-        </div>
+    <div class="scheda" id="senza-profilo" hidden>
+      <div class="vuoto">
+        <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#utente"/></svg>
+        <p>Prima serve il profilo.</p>
+        <a class="bottone" href="/profilo.html">Crea il profilo</a>
       </div>
-    </section>
+    </div>
+
+    <div class="scheda" id="senza-piano" hidden>
+      <div class="vuoto">
+        <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#piano"/></svg>
+        <p>La lista nasce dalla settimana:<br>prima si genera il piano.</p>
+        <a class="bottone" href="/piano.html">Vai al piano</a>
+      </div>
+    </div>
+
+    <div id="contenuto">
+      <div class="scheda scheda-alta" id="riepilogo"></div>
+
+      <div class="riga non-stampare" style="flex-wrap:wrap; margin-block: var(--sp-5); gap: var(--sp-3)">
+        <div class="campo" style="min-width:8rem">
+          <label for="commensali">Per quante persone</label>
+          <select id="commensali">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+          </select>
+        </div>
+        <button class="bottone bottone-2" id="copia">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#condividi"/></svg>
+          Condividi
+        </button>
+        <button class="bottone bottone-2" id="stampa">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#stampa"/></svg>
+          Stampa
+        </button>
+      </div>
+
+      <p class="avviso avviso-ok non-stampare" id="esito" hidden></p>
+
+      <div id="reparti"></div>
+
+      <div class="riga non-stampare" style="margin-block: var(--sp-6)">
+        <button class="bottone bottone-2" id="svuota-spunte">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#rigenera"/></svg>
+          Azzera le spunte
+        </button>
+      </div>
+
+      <section class="sezione non-stampare" id="antispreco" hidden>
+        <header>
+          <h2>Antispreco</h2>
+          <span class="pillola pillola-sgarro" id="spreco-totale"></span>
+        </header>
+        <p class="morbido" style="margin-bottom: var(--sp-4)">
+          Le confezioni non si tagliano a metà: quello che resta è spreco, a meno che
+          non si programmi un piatto che lo finisce.</p>
+        <div id="antispreco-elenco"></div>
+      </section>
+
+      <section class="sezione non-stampare">
+        <header>
+          <h2>Dispensa</h2>
+          <button class="bottone bottone-fantasma" id="in-dispensa">
+            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#scorte"/></svg>
+            Metti gli avanzi
+          </button>
+        </header>
+        <div class="scheda" id="dispensa-elenco"></div>
+      </section>
+    </div>
   </main>
 
   <script type="module">
-    import { avvia } from '/js/guscio.js';
-    avvia({ nav: 'spesa' });
+    import { inizializza } from '/js/pagina-spesa.js';
+    inizializza();
   </script>
 </body>
 </html>

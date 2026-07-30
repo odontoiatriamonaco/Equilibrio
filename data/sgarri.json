@@ -1,0 +1,43 @@
+{
+  "versione": 1,
+  "nota": "Catalogo degli sgarri, con le calorie stimate della porzione intera come si mangia davvero. Sono stime di riferimento — un babà di pasticceria e uno del bar non sono la stessa cosa — e servono a registrare uno sgarro con un tocco invece che a occhio. `intervallo` dice quanto possono variare.",
+
+  "sgarri": [
+    { "id": "pizza-margherita", "nome": "Pizza margherita", "kcal": 850, "intervallo": [700, 1100], "categoria": "pizzeria" },
+    { "id": "pizza-farcita", "nome": "Pizza farcita o ripiena", "kcal": 1200, "intervallo": [1000, 1500], "categoria": "pizzeria" },
+    { "id": "pizza-fritta", "nome": "Pizza fritta", "kcal": 950, "intervallo": [800, 1200], "categoria": "pizzeria" },
+    { "id": "cuoppo", "nome": "Cuoppo di frittura", "kcal": 700, "intervallo": [550, 950], "categoria": "strada" },
+    { "id": "mozzarella-carrozza", "nome": "Mozzarella in carrozza", "kcal": 350, "intervallo": [280, 450], "categoria": "strada" },
+    { "id": "frittatina", "nome": "Frittatina di pasta", "kcal": 400, "intervallo": [320, 500], "categoria": "strada" },
+    { "id": "panino-bar", "nome": "Panino del bar", "kcal": 550, "intervallo": [400, 800], "categoria": "fuori" },
+
+    { "id": "sfogliatella", "nome": "Sfogliatella riccia", "kcal": 420, "intervallo": [350, 500], "categoria": "dolce" },
+    { "id": "baba", "nome": "Babà", "kcal": 380, "intervallo": [300, 480], "categoria": "dolce" },
+    { "id": "pastiera", "nome": "Pastiera (una fetta)", "kcal": 450, "intervallo": [350, 550], "categoria": "dolce" },
+    { "id": "zeppola", "nome": "Zeppola di San Giuseppe", "kcal": 520, "intervallo": [420, 650], "categoria": "dolce" },
+    { "id": "casatiello", "nome": "Casatiello (una fetta)", "kcal": 500, "intervallo": [400, 650], "categoria": "dolce" },
+    { "id": "struffoli", "nome": "Struffoli (un piattino)", "kcal": 400, "intervallo": [300, 550], "categoria": "dolce" },
+    { "id": "cornetto", "nome": "Cornetto e cappuccino", "kcal": 380, "intervallo": [300, 480], "categoria": "dolce" },
+    { "id": "gelato-cono", "nome": "Gelato, cono da due gusti", "kcal": 300, "intervallo": [220, 420], "categoria": "dolce" },
+    { "id": "gelato-coppa", "nome": "Coppa di gelato con panna", "kcal": 550, "intervallo": [420, 700], "categoria": "dolce" },
+    { "id": "tiramisu", "nome": "Tiramisù", "kcal": 450, "intervallo": [350, 600], "categoria": "dolce" },
+    { "id": "torta-fetta", "nome": "Torta di compleanno (una fetta)", "kcal": 400, "intervallo": [280, 600], "categoria": "dolce" },
+
+    { "id": "aperitivo", "nome": "Aperitivo con stuzzichini", "kcal": 600, "intervallo": [400, 900], "categoria": "fuori" },
+    { "id": "spritz", "nome": "Uno spritz", "kcal": 180, "intervallo": [140, 240], "categoria": "bevanda" },
+    { "id": "birra-media", "nome": "Birra media", "kcal": 200, "intervallo": [160, 260], "categoria": "bevanda" },
+    { "id": "vino-bicchiere", "nome": "Un bicchiere di vino", "kcal": 120, "intervallo": [90, 160], "categoria": "bevanda" },
+    { "id": "amaro", "nome": "Un amaro o un limoncello", "kcal": 130, "intervallo": [100, 180], "categoria": "bevanda" },
+
+    { "id": "pranzo-domenica", "nome": "Pranzo della domenica in famiglia", "kcal": 1600, "intervallo": [1200, 2200], "categoria": "famiglia" },
+    { "id": "ristorante-pesce", "nome": "Cena di pesce al ristorante", "kcal": 1100, "intervallo": [800, 1500], "categoria": "fuori" },
+    { "id": "ristorante-carne", "nome": "Cena di carne al ristorante", "kcal": 1300, "intervallo": [1000, 1700], "categoria": "fuori" },
+    { "id": "cena-suoceri", "nome": "Cena dai suoceri", "kcal": 1200, "intervallo": [900, 1800], "categoria": "famiglia" },
+    { "id": "sushi", "nome": "Sushi, all you can eat", "kcal": 1400, "intervallo": [1000, 2000], "categoria": "fuori" },
+
+    { "id": "patatine", "nome": "Un pacchetto di patatine", "kcal": 280, "intervallo": [200, 400], "categoria": "casa" },
+    { "id": "cioccolato-tavoletta", "nome": "Mezza tavoletta di cioccolato", "kcal": 270, "intervallo": [220, 330], "categoria": "casa" },
+    { "id": "biscotti", "nome": "Qualche biscotto in più", "kcal": 250, "intervallo": [150, 400], "categoria": "casa" },
+    { "id": "pane-extra", "nome": "Pane in più a tavola", "kcal": 200, "intervallo": [120, 350], "categoria": "casa" }
+  ]
+}
