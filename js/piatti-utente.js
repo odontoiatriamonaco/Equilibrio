@@ -136,7 +136,20 @@ export function togliIngrediente(piatto, alimentoId) {
   return {
     ...piatto,
     ingredienti: piatto.ingredienti.filter((i) => i.a !== alimentoId),
+    // Si tiene memoria di cosa e' stato tolto: serve a scoprire se il nome o
+    // il procedimento continuano a citarlo. Vale anche per le pietanze nate da
+    // zero, che non hanno un originale con cui confrontarsi.
+    tolti: [...new Set([...(piatto.tolti || []), alimentoId])],
   };
+}
+
+export function cambiaProcedimento(piatto, passi) {
+  const puliti = passi.map((s) => s.trim()).filter(Boolean);
+  return { ...piatto, procedimento: puliti.length ? puliti : undefined };
+}
+
+export function cambiaNome(piatto, nome) {
+  return { ...piatto, nome };
 }
 
 /* --- Controlli ------------------------------------------------------------- */
@@ -180,6 +193,83 @@ export function avvertimenti(piatto, valori) {
     }
   }
   return note;
+}
+
+/* --- Coerenza fra ingredienti, nome e procedimento -------------------------
+   Togliere il miele non basta: se il piatto si chiama «Latte, fette biscottate
+   e miele» e un passo dice «spalma il miele», la ricetta mente. Il testo lo
+   scrive una persona e non lo si riscrive a macchina — ma si puo' accorgersene
+   e proporre la correzione.
+   -------------------------------------------------------------------------- */
+
+/** La parola-chiave di un alimento: il primo sostantivo del nome. */
+function testa(nome) {
+  const pulito = String(nome).toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const prima = pulito.split(/[\s,'’]+/).find((w) => w.length >= 4);
+  return prima || null;
+}
+
+function parole(a) {
+  return [testa(a.nome), ...(a.sinonimi || []).map(testa)].filter(Boolean);
+}
+
+function citato(testo, parola) {
+  if (!testo) return false;
+  const t = String(testo).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  // Confine di parola a mano: \b non regge gli apostrofi italiani («dell'olio»).
+  return new RegExp(`(^|[^a-z])${parola}[a-z]{0,3}([^a-z]|$)`).test(t);
+}
+
+/**
+ * Alimenti ancora citati nel nome o nel procedimento ma non piu' fra gli
+ * ingredienti.
+ * @returns {Array<{alimentoId:string, nome:string, parola:string, nelNome:boolean, passi:number[]}>}
+ */
+export function incoerenze(piatto) {
+  const presenti = (piatto.ingredienti || []).map((i) => alimento(i.a)).filter(Boolean);
+  const parolePresenti = new Set(presenti.flatMap(parole));
+
+  const candidati = new Set();
+  const originale = piattiDiSerie.find((p) => p.id === piatto.derivatoDa);
+  for (const i of originale?.ingredienti || []) candidati.add(i.a);
+  for (const i of piatto.tolti || []) candidati.add(i);
+
+  const fuori = [];
+  const idPresenti = new Set((piatto.ingredienti || []).map((i) => i.a));
+
+  for (const id of candidati) {
+    if (idPresenti.has(id)) continue;
+    const a = alimento(id);
+    if (!a) continue;
+
+    // Se un ingrediente rimasto condivide la parola (pasta integrale al posto
+    // della pasta di semola), non c'e' nessuna incoerenza da segnalare.
+    const parola = parole(a).find((p) => !parolePresenti.has(p));
+    if (!parola) continue;
+
+    const nelNome = citato(piatto.nome, parola);
+    const passi = (piatto.procedimento || [])
+      .map((s, k) => (citato(s, parola) ? k : -1))
+      .filter((k) => k >= 0);
+
+    if (nelNome || passi.length) {
+      fuori.push({ alimentoId: id, nome: a.nome, parola, nelNome, passi });
+    }
+  }
+  return fuori;
+}
+
+/** Il nome senza la parola, con i connettivi ripuliti. */
+export function nomeSenza(nome, parola) {
+  const re = new RegExp(`\\s*(?:,|\\be\\b|\\bcon\\b|\\bal\\b|\\balla\\b)?\\s*${parola}[a-z]{0,3}\\b`, 'i');
+  let out = String(nome).replace(re, '');
+  out = out.replace(/\s{2,}/g, ' ')
+    .replace(/\s*,\s*$/, '')
+    .replace(/\s+(?:e|con|al|alla|di)\s*$/i, '')
+    .replace(/^\s*(?:e|con)\s+/i, '')
+    .trim();
+  return out ? out.charAt(0).toUpperCase() + out.slice(1) : nome;
 }
 
 /** Cosa e' cambiato rispetto al piatto di partenza, in parole. */

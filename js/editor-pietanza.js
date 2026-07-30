@@ -9,6 +9,7 @@ import { alimenti, alimento, valoriPiatto, gruppi, TIPI } from './alimenti.js';
 import {
   salvaPietanza, eliminaPietanza, comeVariante, nuovaPietanza,
   aggiungiIngrediente, cambiaQuantita, togliIngrediente,
+  cambiaProcedimento, incoerenze, nomeSenza,
   valida, avvertimenti, differenze, TIPI_AMMESSI,
 } from './piatti-utente.js';
 
@@ -43,6 +44,11 @@ export function collegaEditor() {
   $('#editor-tipo').addEventListener('change', (e) => { bozza.tipo = e.target.value; disegna(); });
   $('#editor-tempo').addEventListener('input', (e) => { bozza.tempo = Number(e.target.value) || 0; });
 
+  $('#editor-procedimento').addEventListener('input', (e) => {
+    bozza = cambiaProcedimento(bozza, e.target.value.split('\n'));
+    aggiornaTesta();
+  });
+
   $('#editor-cerca').addEventListener('input', disegnaCandidati);
   $('#editor-gruppo').addEventListener('change', disegnaCandidati);
 }
@@ -52,6 +58,7 @@ export function collegaEditor() {
 function disegna() {
   $('#editor-nome').value = bozza.nome;
   $('#editor-tempo').value = bozza.tempo ?? 20;
+  $('#editor-procedimento').value = (bozza.procedimento || []).join('\n');
 
   $('#editor-tipo').innerHTML = TIPI_AMMESSI
     .map((t) => `<option value="${t}" ${t === bozza.tipo ? 'selected' : ''}>${TIPI[t]}</option>`)
@@ -149,15 +156,67 @@ function aggiornaTesta() {
   const note = [...avvertimenti(bozza, v), ...differenze(bozza).length
     ? [`Rispetto all'originale: ${differenze(bozza).join(', ')}.`] : []];
 
-  $('#editor-note').innerHTML = note.length
-    ? note.map((n) => `<div class="avviso" style="margin-top:var(--sp-2)">
-        ${icona('info', 'icona icona-sm')}<div>${n}</div></div>`).join('')
-    : '';
+  $('#editor-note').innerHTML = note.map((n) => `
+    <div class="avviso" style="margin-top:var(--sp-2)">
+      ${icona('info', 'icona icona-sm')}<div>${n}</div></div>`).join('')
+    + rendiIncoerenze();
+
+  collegaIncoerenze();
 
   const errori = valida(bozza);
   $('#editor-salva').disabled = errori.length > 0;
   $('#editor-errore').hidden = !errori.length;
   if (errori.length) $('#editor-errore').textContent = errori[0];
+}
+
+/* --- Coerenza fra ingredienti, nome e procedimento ------------------------- */
+
+function rendiIncoerenze() {
+  const fuori = incoerenze(bozza);
+  if (!fuori.length) return '';
+
+  return fuori.map((x) => {
+    const azioni = [];
+    if (x.nelNome) {
+      azioni.push(`<button class="bottone bottone-2" data-correggi-nome="${x.parola}">
+        Togli «${x.parola}» dal nome</button>`);
+    }
+    for (const k of x.passi) {
+      azioni.push(`<button class="bottone bottone-2" data-togli-passo="${k}">
+        Elimina il passo ${k + 1}</button>`);
+    }
+
+    const dove = [
+      x.nelNome ? 'nel nome' : null,
+      x.passi.length ? `nel passo ${x.passi.map((k) => k + 1).join(' e ')}` : null,
+    ].filter(Boolean).join(' e ');
+
+    return `
+      <div class="avviso avviso-sgarro" style="margin-top:var(--sp-2)">
+        ${icona('avviso', 'icona icona-sm')}
+        <div>
+          <strong>${x.nome}</strong> non è più fra gli ingredienti, ma è ancora citato ${dove}.
+          <div class="riga" style="flex-wrap:wrap; gap:var(--sp-2); margin-top:var(--sp-3)">
+            ${azioni.join('')}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function collegaIncoerenze() {
+  $$('#editor-note [data-correggi-nome]').forEach((b) => b.addEventListener('click', () => {
+    bozza.nome = nomeSenza(bozza.nome, b.dataset.correggiNome);
+    $('#editor-nome').value = bozza.nome;
+    aggiornaTesta();
+  }));
+
+  $$('#editor-note [data-togli-passo]').forEach((b) => b.addEventListener('click', () => {
+    const k = Number(b.dataset.togliPasso);
+    bozza = cambiaProcedimento(bozza, (bozza.procedimento || []).filter((_, i) => i !== k));
+    $('#editor-procedimento').value = (bozza.procedimento || []).join('\n');
+    aggiornaTesta();
+  }));
 }
 
 /* --- Azioni ---------------------------------------------------------------- */

@@ -7,6 +7,7 @@ import {
   comeVariante, nuovaPietanza, aggiungiIngrediente, cambiaQuantita,
   togliIngrediente, valida, avvertimenti, differenze,
   salvaPietanza, eliminaPietanza, pietanzeDiCasa, caricaRicettario,
+  incoerenze, nomeSenza, cambiaProcedimento,
 } from '../js/piatti-utente.js';
 
 const P = 'p_test';
@@ -171,5 +172,68 @@ describe('salvataggio su archivio', () => {
     const salvata = await salvaPietanza(P, v);
     expect(salvata.ingredienti.some((i) => i.a === 'provola')).toBe(false);
     await eliminaPietanza(P, salvata.id);
+  });
+});
+
+describe('coerenza fra ingredienti, nome e procedimento', () => {
+  const colazione = piattiDiSerie.find((p) => p.id === 'caffe-latte-fette');
+
+  it('accorge che il nome cita un ingrediente tolto', () => {
+    const v = togliIngrediente(comeVariante(colazione), 'miele');
+    const fuori = incoerenze(v);
+    const miele = fuori.find((x) => x.alimentoId === 'miele');
+    expect(miele, 'il miele tolto dovrebbe essere segnalato').toBeTruthy();
+    expect(miele.nelNome).toBe(true);
+    expect(miele.parola).toBe('miele');
+  });
+
+  it('accorge che un passo cita un ingrediente tolto', () => {
+    const originale = piattiDiSerie.find((p) => p.id === 'pasta-patate-provola');
+    const v = togliIngrediente(comeVariante(originale), 'provola');
+    const provola = incoerenze(v).find((x) => x.alimentoId === 'provola');
+    expect(provola).toBeTruthy();
+    // «Spegni, aggiungi la provola a dadini…» è il quarto passo.
+    expect(provola.passi).toContain(3);
+  });
+
+  it('tace se un ingrediente rimasto condivide la parola', () => {
+    // Sostituire la pasta di semola con quella integrale non rende falso il
+    // nome «Pasta e fagioli»: la parola c'è ancora, sul piatto e nel piatto.
+    let v = comeVariante(piattiDiSerie.find((p) => p.id === 'pasta-fagioli'));
+    v = togliIngrediente(v, 'pasta-semola');
+    v = aggiungiIngrediente(v, 'pasta-integrale', 60);
+    expect(incoerenze(v).some((x) => x.parola === 'pasta')).toBe(false);
+  });
+
+  it('tace quando non c’è niente di incoerente', () => {
+    expect(incoerenze(comeVariante(colazione))).toEqual([]);
+  });
+
+  it('vale anche per una pietanza nata da zero', () => {
+    let n = {
+      ...nuovaPietanza(),
+      nome: 'Riso e piselli',
+      ingredienti: [{ a: 'riso', g: 80 }, { a: 'piselli-surgelati', g: 150 }],
+    };
+    n = togliIngrediente(n, 'piselli-surgelati');
+    expect(incoerenze(n).some((x) => x.alimentoId === 'piselli-surgelati')).toBe(true);
+  });
+
+  it('il nome suggerito toglie la parola e ripulisce i connettivi', () => {
+    expect(nomeSenza('Latte, fette biscottate e miele', 'miele'))
+      .toBe('Latte, fette biscottate');
+    expect(nomeSenza('Pasta e patate con provola', 'provola'))
+      .toBe('Pasta e patate');
+    expect(nomeSenza('Miele e noci', 'miele')).toBe('Noci');
+  });
+
+  it('il nome suggerito non svuota mai il titolo', () => {
+    expect(nomeSenza('Miele', 'miele')).toBe('Miele');
+  });
+
+  it('il procedimento si riscrive e i passi vuoti si scartano', () => {
+    const v = cambiaProcedimento(comeVariante(colazione), ['  Scalda il latte.  ', '', '  ']);
+    expect(v.procedimento).toEqual(['Scalda il latte.']);
+    expect(cambiaProcedimento(v, ['', '']).procedimento).toBeUndefined();
   });
 });
