@@ -28,15 +28,102 @@ export let piatti = datiPiatti.piatti;
 let INDICE_PIATTI = new Map(piatti.map((p) => [p.id, p]));
 
 /**
- * Innesta le pietanze di un profilo nel ricettario.
- * Va chiamata all'avvio di ogni pagina, prima di leggere `piatti`.
+ * Quanta parte delle calorie di un piatto puo' sparire prima che il piatto non
+ * sia piu' quel piatto. Oltre questa soglia si preferisce non proporlo.
  */
-export function registraPiattiUtente(deiUtente = []) {
+export const OMISSIONE_MAX = 0.4;
+
+/**
+ * Quanta parte delle PROTEINE puo' sparire.
+ * Serve perche' le calorie da sole non bastano: il polpo porta un terzo delle
+ * calorie di «polpo e patate» — olio e patate pesano di piu' — ma ne porta
+ * l'ottanta per cento delle proteine. E' quello il piatto.
+ */
+export const OMISSIONE_PRO_MAX = 0.4;
+
+/** Sotto queste calorie non resta un pasto: resta un piatto vuoto. */
+const KCAL_MINIME = 60;
+
+/**
+ * Toglie da un piatto gli alimenti che non si vogliono mettere.
+ *
+ * Non modifica niente in archivio: e' una lente applicata in lettura, quindi
+ * rimettere l'alimento fra i graditi lo fa ricomparire dov'era, con i valori
+ * che tornano da soli.
+ *
+ * @returns {{piatto:object|null, motivo?:string}} `piatto` null se togliere
+ *          quell'ingrediente snatura il piatto: senza il polpo, «polpo e
+ *          patate» non e' un piatto di pesce alleggerito — e' un contorno.
+ */
+export function applicaOmissioni(p, omessi) {
+  if (!omessi?.size) return { piatto: p };
+
+  const dentro = (p.ingredienti || []).filter((i) => omessi.has(i.a));
+  if (!dentro.length) return { piatto: p };
+
+  const totali = valoriPiatto(p);
+  const somma = (voci, campo) => voci.reduce((s, i) => {
+    const a = INDICE.get(i.a);
+    return s + (a ? (a.per100g[campo] * i.g) / 100 : 0);
+  }, 0);
+
+  const kcalTolte = somma(dentro, 'kcal');
+  const proTolte = somma(dentro, 'pro');
+  const nomi = dentro.map((i) => INDICE.get(i.a)?.nome?.toLowerCase() || i.a);
+  const esse = dentro.length === 1 ? "e'" : 'sono';
+
+  if (totali.kcal > 0 && kcalTolte / totali.kcal > OMISSIONE_MAX) {
+    return { piatto: null, motivo: `${nomi.join(' e ')} ${esse} il cuore del piatto` };
+  }
+
+  // La prova delle proteine: se sparisce la fonte proteica, non resta un
+  // secondo alleggerito — resta un contorno.
+  if (totali.pro > 1 && proTolte / totali.pro > OMISSIONE_PRO_MAX) {
+    return { piatto: null, motivo: `${nomi.join(' e ')} ${esse} il cuore del piatto` };
+  }
+
+  const ingredienti = (p.ingredienti || []).filter((i) => !omessi.has(i.a));
+  if (!ingredienti.length) {
+    return { piatto: null, motivo: 'non resterebbe nessun ingrediente' };
+  }
+
+  const ridotto = { ...p, ingredienti, omessi: nomi };
+  if (valoriPiatto(ridotto).kcal < KCAL_MINIME) {
+    return { piatto: null, motivo: 'quello che resta non fa un pasto' };
+  }
+
+  return { piatto: ridotto };
+}
+
+/** I piatti scartati dall'ultima registrazione, col perche'. */
+export let piattiScartati = [];
+
+/**
+ * Innesta le pietanze di un profilo nel ricettario e applica le omissioni.
+ * Va chiamata all'avvio di ogni pagina, prima di leggere `piatti`.
+ *
+ * @param {Array} deiUtente pietanze di casa
+ * @param {Iterable<string>} idOmessi alimenti da non mettere nei piatti
+ */
+export function registraPiattiUtente(deiUtente = [], idOmessi = []) {
   const coperti = new Set(deiUtente.map((p) => p.derivatoDa).filter(Boolean));
-  piatti = [
+  const base = [
     ...piattiDiSerie.filter((p) => !coperti.has(p.id)),
     ...deiUtente,
   ];
+
+  const omessi = new Set(idOmessi);
+  const buoni = [];
+  const scartati = [];
+
+  for (const p of base) {
+    const esito = applicaOmissioni(p, omessi);
+    if (esito.piatto) buoni.push(esito.piatto);
+    else scartati.push({ id: p.id, nome: p.nome, motivo: esito.motivo });
+  }
+
+  piatti = buoni;
+  piattiScartati = scartati;
   INDICE_PIATTI = new Map(piatti.map((p) => [p.id, p]));
   return piatti;
 }
@@ -161,6 +248,10 @@ export function etichette(piatto, mese = new Date().getMonth() + 1) {
   }
   if (piatto.avanzabile) e.push({ testo: 'Buono il giorno dopo', tono: '' });
   if (piatto.alleggerimento) e.push({ testo: 'Alleggerito', tono: 'pillola-dato' });
+  // Il piatto e' arrivato senza un ingrediente: va detto, non nascosto.
+  if (piatto.omessi?.length) {
+    e.push({ testo: `senza ${piatto.omessi.join(' e ')}`, tono: 'pillola-sgarro' });
+  }
   return e;
 }
 

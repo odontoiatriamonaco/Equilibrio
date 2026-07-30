@@ -75,7 +75,23 @@ export function gustoPiatto(pref, id) {
 }
 
 export function gustoAlimento(pref, id) {
-  return pref.alimenti?.[id] || 'neutro';
+  const v = pref.alimenti?.[id];
+  // «escluso» era la vecchia parola per la stessa intenzione: non lo voglio
+  // nel piatto. I profili salvati prima continuano a funzionare.
+  if (v === 'escluso') return 'omesso';
+  return v || 'neutro';
+}
+
+/**
+ * Gli alimenti da non mettere nei piatti.
+ *
+ * Non fanno sparire il piatto: lo fanno arrivare senza quell'ingrediente, con
+ * i valori ricalcolati. Il piatto sparisce solo se togliere quella cosa lo
+ * snatura, e quella decisione la prende `applicaOmissioni` in alimenti.js.
+ */
+export function omessi(pref) {
+  return Object.keys(pref.alimenti || {})
+    .filter((id) => gustoAlimento(pref, id) === 'omesso');
 }
 
 export function eAllergene(pref, id) {
@@ -88,6 +104,9 @@ export function eAllergene(pref, id) {
  * non una preferenza. Un gusto si puo' ignorare in emergenza, un'allergia no.
  */
 export function motivoEsclusione(pref, piatto) {
+  // L'allergia esclude il piatto intero, non solo l'ingrediente. E' la scelta
+  // prudente: un allergene sta anche nelle tracce e nel procedimento, e
+  // «basta non metterlo» non e' una cosa che un programma possa promettere.
   for (const ing of piatto.ingredienti || []) {
     if (eAllergene(pref, ing.a)) {
       return { tipo: 'allergia', alimento: ing.a, testo: `contiene ${nome(ing.a)}` };
@@ -96,11 +115,9 @@ export function motivoEsclusione(pref, piatto) {
   if (gustoPiatto(pref, piatto.id) === 'escluso') {
     return { tipo: 'piatto-escluso', testo: 'l’hai escluso' };
   }
-  for (const ing of piatto.ingredienti || []) {
-    if (gustoAlimento(pref, ing.a) === 'escluso') {
-      return { tipo: 'alimento-escluso', alimento: ing.a, testo: `contiene ${nome(ing.a)}` };
-    }
-  }
+  // Un alimento che non si vuole NON esclude il piatto: viene tolto dal piatto
+  // (vedi applicaOmissioni). Se toglierlo lo snatura, il piatto non arriva
+  // fin qui — e' gia' fuori dal ricettario in uso.
   return null;
 }
 
@@ -132,7 +149,7 @@ function nome(id) {
 
 /* --- Scritture ------------------------------------------------------------- */
 
-const CICLO = { neutro: 'amato', amato: 'escluso', escluso: 'neutro' };
+const CICLO = { neutro: 'amato', amato: 'omesso', omesso: 'neutro', escluso: 'neutro' };
 
 export function prossimoGusto(attuale) {
   return CICLO[attuale] || 'amato';

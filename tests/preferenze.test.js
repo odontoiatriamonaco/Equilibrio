@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { piatti } from '../js/alimenti.js';
 import {
   vuote, gustoPiatto, gustoAlimento, eAllergene, motivoEsclusione, ammesso,
-  peso, prossimoGusto, imposta, alternaAllergia, impostaTetto, riepilogo,
+  peso, prossimoGusto, imposta, alternaAllergia, impostaTetto, riepilogo, omessi,
   TETTI_PREDEFINITI,
 } from '../js/preferenze.js';
 
@@ -32,10 +32,22 @@ describe('esclusioni', () => {
     expect(ammesso(pref, conPasta)).toBe(true);
   });
 
-  it('escludere un alimento toglie ogni piatto che lo contiene', () => {
+  it('non mettere un alimento NON fa sparire il piatto', () => {
+    // Il piatto resta e arriva senza quell'ingrediente: e' `applicaOmissioni`
+    // in alimenti.js a togliere la roba dal piatto. Cancellare tutte le
+    // colazioni perche' non piace il miele sarebbe un'accetta.
+    const pref = imposta(vuote(P), 'alimenti', 'friarielli', 'omesso');
+    expect(ammesso(pref, conFriarielli)).toBe(true);
+    expect(motivoEsclusione(pref, conFriarielli)).toBeNull();
+  });
+
+  it('un profilo salvato con la vecchia parola continua a funzionare', () => {
+    // «escluso» sugli alimenti voleva dire la stessa cosa: non lo voglio nel
+    // piatto. I profili scritti prima non devono rompersi.
     const pref = imposta(vuote(P), 'alimenti', 'friarielli', 'escluso');
-    expect(ammesso(pref, conFriarielli)).toBe(false);
-    expect(motivoEsclusione(pref, conFriarielli).testo).toContain('friarielli');
+    expect(gustoAlimento(pref, 'friarielli')).toBe('omesso');
+    expect(omessi(pref)).toContain('friarielli');
+    expect(ammesso(pref, conFriarielli)).toBe(true);
   });
 
   it('l’allergia vince sul gusto e viene dichiarata come tale', () => {
@@ -86,9 +98,11 @@ describe('peso nella scelta', () => {
 });
 
 describe('ciclo dei gusti', () => {
-  it('gira neutro → amato → escluso → neutro', () => {
+  it('gira neutro → amato → omesso → neutro', () => {
     expect(prossimoGusto('neutro')).toBe('amato');
-    expect(prossimoGusto('amato')).toBe('escluso');
+    expect(prossimoGusto('amato')).toBe('omesso');
+    expect(prossimoGusto('omesso')).toBe('neutro');
+    // La vecchia parola chiude comunque il giro invece di incastrarsi.
     expect(prossimoGusto('escluso')).toBe('neutro');
   });
 
@@ -115,10 +129,17 @@ describe('riepilogo', () => {
     expect(pieno.scarso).toBe(false);
   });
 
-  it('escludere un alimento molto usato riduce i proponibili', () => {
+  it('non mettere un alimento non riduce i piatti proponibili', () => {
+    // I piatti restano: perdono l'ingrediente, non il posto in tavola.
     const pieno = riepilogo(vuote(P), piatti);
-    const senzaOlio = riepilogo(imposta(vuote(P), 'alimenti', 'olio-evo', 'escluso'), piatti);
-    expect(senzaOlio.ammessi).toBeLessThan(pieno.ammessi);
+    const senzaOlio = riepilogo(imposta(vuote(P), 'alimenti', 'olio-evo', 'omesso'), piatti);
+    expect(senzaOlio.ammessi).toBe(pieno.ammessi);
+  });
+
+  it('escludere un piatto invece lo riduce', () => {
+    const pieno = riepilogo(vuote(P), piatti);
+    const meno = riepilogo(imposta(vuote(P), 'piatti', piatti[0].id, 'escluso'), piatti);
+    expect(meno.ammessi).toBe(pieno.ammessi - 1);
   });
 
   it('avvisa quando restano troppo pochi piatti per variare la settimana', () => {

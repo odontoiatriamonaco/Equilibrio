@@ -122,6 +122,29 @@ passaggio è tutto in CSS.
 - **Contrasti ricalcolati per il tema scuro**, non invertiti.
 - Nuovi componenti: prima in `stile.html`, poi nelle pagine.
 
+### Gli alimenti che non si vogliono
+
+Sono tre livelli di «no», e fanno cose diverse di proposito:
+
+| Dove | Cosa fa |
+|---|---|
+| ics su un **piatto** | quel piatto sparisce dal menù |
+| ics su un **alimento** | l'ingrediente viene **tolto da tutti i piatti**, che restano con i valori ricalcolati |
+| lucchetto (**allergia**) | ogni piatto che lo contiene sparisce, ingrediente secondario compreso |
+
+L'omissione è una **lente applicata in lettura** (`applicaOmissioni` in
+`js/alimenti.js`), non una modifica dei dati: rimettere l'alimento fra i graditi lo
+fa ricomparire dov'era, coi valori di prima. Un piatto viene però **scartato** invece
+di mutilato quando l'ingrediente tolto vale più del 40% delle sue calorie **o** più
+del 40% delle sue proteine. La seconda soglia serve: il polpo porta un terzo delle
+calorie di «polpo e patate» — olio e patate pesano di più — ma l'ottanta per cento
+delle proteine, ed è quello il piatto. I piatti scartati finiscono in
+`piattiScartati`, col motivo, e l'interfaccia li elenca.
+
+L'allergia resta un'esclusione dura per prudenza: un allergene sta anche nelle tracce
+e nel procedimento, e «basta non metterlo» non è una cosa che un programma possa
+promettere.
+
 ### Le pietanze di casa
 
 Il ricettario di serie in `data/piatti.json` **non si modifica mai**. Modificare una

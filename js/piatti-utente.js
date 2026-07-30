@@ -9,6 +9,7 @@
 
 import { tutti, scrivi, elimina } from './store.js';
 import { registraPiattiUtente, piattiDiSerie, alimento } from './alimenti.js';
+import { caricaPreferenze, omessi } from './preferenze.js';
 
 export const TIPI_AMMESSI = [
   'colazione', 'spuntino', 'primo', 'secondo', 'contorno', 'piatto-unico',
@@ -29,8 +30,10 @@ export async function pietanzeDiCasa(profiloId) {
  * @returns {Promise<Array>} il ricettario in uso
  */
 export async function caricaRicettario(profiloId) {
-  const mie = profiloId ? await pietanzeDiCasa(profiloId) : [];
-  return registraPiattiUtente(mie);
+  if (!profiloId) return registraPiattiUtente([], []);
+  const mie = await pietanzeDiCasa(profiloId);
+  const pref = await caricaPreferenze(profiloId);
+  return registraPiattiUtente(mie, omessi(pref));
 }
 
 /* --- Scrittura ------------------------------------------------------------- */

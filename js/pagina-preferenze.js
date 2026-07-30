@@ -5,11 +5,13 @@
 import { avvia, icona, $, $$, num } from './guscio.js';
 import { profiloAttivo } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
-import { piatti, alimenti, gruppi, iconaPiatto, TIPI } from './alimenti.js';
+import {
+  piatti, piattiScartati, alimenti, alimento, gruppi, iconaPiatto, TIPI,
+} from './alimenti.js';
 import {
   caricaPreferenze, salvaPreferenze, gustoPiatto, gustoAlimento, eAllergene,
   motivoEsclusione, prossimoGusto, imposta, alternaAllergia, impostaTetto,
-  riepilogo, NOMI_TETTI,
+  riepilogo, omessi, NOMI_TETTI,
 } from './preferenze.js';
 
 let pref = null;
@@ -150,20 +152,33 @@ function controllo(tipo, id, valore, bloccato = false) {
     <button data-gusto-id="${id}" data-gusto-tipo="${tipo}" data-gusto-val="${v}"
             aria-pressed="${valore === v}" aria-label="${etichetta}" title="${etichetta}"
             ${bloccato ? 'disabled' : ''}>${icona(ic, 'icona icona-sm')}</button>`;
+
+  // Per un ALIMENTO il terzo stato non esclude il piatto: lo fa arrivare senza
+  // quell'ingrediente. Per un PIATTO invece esclude il piatto, ovviamente.
+  const terzo = tipo === 'alimenti'
+    ? bottone('omesso', 'chiudi', 'Non lo metto nei piatti')
+    : bottone('escluso', 'chiudi', 'Non lo voglio');
+
   return `
     <div class="gusti" role="group">
       ${bottone('amato', 'cuore', 'Mi piace')}
       ${bottone('neutro', 'meno', 'Indifferente')}
-      ${bottone('escluso', 'chiudi', 'Non lo voglio')}
+      ${terzo}
     </div>`;
 }
 
-function cambia(tipo, id, valore) {
+async function cambia(tipo, id, valore) {
   const attuale = tipo === 'piatti' ? gustoPiatto(pref, id) : gustoAlimento(pref, id);
   // Ritoccare lo stesso pulsante torna al neutro: evita di restare incastrati.
   const nuovo = attuale === valore ? 'neutro' : valore;
   pref = imposta(pref, tipo, id, nuovo);
-  salva();
+  await salvaPreferenze(pref);
+
+  // Togliere un alimento cambia i piatti, non solo una preferenza: il
+  // ricettario va rifatto perche' i valori tornino giusti subito.
+  if (tipo === 'alimenti') await caricaRicettario(profilo.id);
+
+  segnalaSalvato();
   disegnaElenco();
   disegnaRiepilogo();
 }
@@ -220,7 +235,46 @@ function disegnaRiepilogo() {
       <p class="piccolo tenue" style="margin-top:var(--sp-3)">
         ${r.allergie === 1 ? 'Un alimento è segnato' : `${r.allergie} alimenti sono segnati`}
         come allergia: sono esclusioni dure, non preferenze, e non verranno mai
-        proposti in nessun piatto.</p>` : ''}`;
+        proposti in nessun piatto.</p>` : ''}
+    ${rendiOmissioni()}`;
+}
+
+/**
+ * Cosa comporta davvero un «non lo metto»: quali piatti arrivano senza
+ * quell'ingrediente, e quali non arrivano affatto perche' senza quella cosa
+ * non sarebbero piu' loro.
+ */
+function rendiOmissioni() {
+  const senza = omessi(pref);
+  if (!senza.length) return '';
+
+  const nomi = senza.map((id) => alimento(id)?.nome || id);
+  const ridotti = piatti.filter((p) => p.omessi?.length).length;
+  const persi = piattiScartati;
+
+  return `
+    <div class="avviso" style="margin-top:var(--sp-4)">
+      ${icona('foglia', 'icona icona-sm')}
+      <div>
+        <strong>${nomi.join(', ')}</strong>: ${nomi.length === 1 ? 'non viene messo' : 'non vengono messi'}
+        nei piatti. ${ridotti
+    ? `${ridotti} ${ridotti === 1 ? 'pietanza arriva' : 'pietanze arrivano'} senza,
+           con le calorie già ricalcolate.`
+    : 'Nessuna pietanza del ricettario lo usava.'}
+        ${persi.length ? `
+          <div style="margin-top:var(--sp-2)">
+            ${persi.length === 1 ? 'Una pietanza è invece uscita' : `${persi.length} pietanze sono invece uscite`}
+            dal ricettario, perché toglierlo le snaturerebbe:
+            ${persi.slice(0, 4).map((x) => `<em>${x.nome}</em> (${x.motivo})`).join(', ')}${persi.length > 4 ? '…' : ''}.
+          </div>` : ''}
+      </div>
+    </div>`;
+}
+
+function segnalaSalvato() {
+  const n = $('#stato-salvataggio');
+  n.textContent = 'Salvato';
+  setTimeout(() => { if (n.textContent === 'Salvato') n.textContent = ''; }, 1600);
 }
 
 function salva() {
