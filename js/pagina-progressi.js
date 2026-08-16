@@ -25,6 +25,7 @@ export async function inizializza() {
   energia = riepilogoEnergia(profilo);
   $('#salva-peso').addEventListener('click', salvaPeso);
   $('#peso-nuovo').addEventListener('keydown', (e) => { if (e.key === 'Enter') salvaPeso(); });
+  $('#adotta-tdee').addEventListener('click', cambiaFabbisogno);
 
   await disegna();
 }
@@ -108,6 +109,8 @@ async function disegnaAdattivo(serie) {
     </div>`;
 
   if (stima.affidabile) {
+    // Il confronto e' con il numero su cui il piano e' tarato ADESSO, che puo'
+    // gia' essere una misura adottata in passato.
     const scarto = stima.tdee - energia.tdee;
     $('#nota-adattivo').className = 'avviso avviso-ok';
     $('#nota-adattivo div').innerHTML = Math.abs(scarto) < 80
@@ -115,12 +118,60 @@ async function disegnaAdattivo(serie) {
       : `Dai tuoi dati il fabbisogno reale risulta <strong>${num(Math.abs(scarto))} kcal `
         + `${scarto > 0 ? 'più alto' : 'più basso'}</strong> di quanto dicesse la formula. `
         + 'Vale più questo: è misurato su di te, non su una media.';
+    proponiAdozione(stima, scarto);
   } else {
     $('#nota-adattivo').className = 'avviso';
     $('#nota-adattivo div').innerHTML = `Il fabbisogno calcolato sui tuoi dati veri non è ancora
       affidabile: ${stima.motivo}. Fino a quel momento resta valida la stima da formula —
       dirti un numero preciso adesso sarebbe inventarlo.`;
+    $('#azione-adattivo').hidden = true;
   }
+}
+
+/** Sotto questo scarto ritarare il piano sarebbe rumore, non correzione. */
+const SCARTO_MINIMO = 0.05;
+
+/**
+ * Propone di adottare il fabbisogno misurato, non lo applica da solo.
+ * Il piano non deve cambiare sotto i piedi: e' la stessa scelta di tono del
+ * resto dell'app, che dichiara invece di agire di nascosto.
+ */
+function proponiAdozione(stima, scarto) {
+  const azione = $('#azione-adattivo');
+  const rilevante = Math.abs(scarto) / energia.tdee >= SCARTO_MINIMO;
+
+  // Gia' adottato e ancora valido: non c'e' niente da proporre.
+  if (!rilevante) {
+    azione.hidden = !profilo.tdeeMisurato;
+    if (profilo.tdeeMisurato) {
+      $('#testo-adotta').textContent = 'Torna al fabbisogno da formula';
+      azione.dataset.azione = 'annulla';
+    }
+    return;
+  }
+
+  azione.hidden = false;
+  azione.dataset.azione = 'adotta';
+  azione.dataset.tdee = String(stima.tdee);
+  $('#testo-adotta').textContent = `Taglia il piano su ${num(stima.tdee)} kcal`;
+}
+
+async function cambiaFabbisogno() {
+  const azione = $('#azione-adattivo');
+  const adotta = azione.dataset.azione === 'adotta';
+
+  profilo = { ...profilo, tdeeMisurato: adotta ? Number(azione.dataset.tdee) : null };
+  await scrivi('profili', profilo);
+  energia = riepilogoEnergia(profilo);
+
+  $('#esito').hidden = false;
+  $('#esito').className = 'avviso avviso-ok';
+  $('#esito').textContent = adotta
+    ? `Piano tarato su ${num(profilo.tdeeMisurato)} kcal: il target giornaliero è ora `
+      + `${num(energia.fabbisogno.target)} kcal. Il menù già fatto non cambia.`
+    : 'Sei tornata al fabbisogno calcolato dalla formula.';
+
+  await disegna();
 }
 
 async function salvaPeso() {

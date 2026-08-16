@@ -179,6 +179,31 @@
   box-shadow: var(--ombra-1);
 }
 
+/* Variante a due righe: sotto l'etichetta sta la conseguenza della scelta.
+   Serve dove una linguetta senza il proprio effetto non vuol dire niente —
+   «Regolare» da solo non e' un'informazione, «−0,19 kg a settimana» si.
+   I segmenti si dividono lo spazio in parti uguali, altrimenti le tre pillole
+   ballano a ogni ricalcolo. */
+.segmenti-doppio {
+  display: flex;
+  width: 100%;
+}
+
+.segmenti-doppio button {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-block: var(--sp-2);
+  padding-inline: var(--sp-2);
+  line-height: 1.25;
+}
+
+.segmenti-doppio button > .piccolo {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
 /* --- Campi ---------------------------------------------------------------- */
 
 .campo {

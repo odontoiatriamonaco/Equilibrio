@@ -23,6 +23,31 @@ export const CALO_MAX_SETTIMANA = 0.01;
 /** Proteine minime, g per kg di peso desiderabile. */
 export const PROTEINE_G_PER_KG = 1.2;
 
+/**
+ * Il ritmo e' una FRAZIONE del margine che i vincoli lasciano, non un numero
+ * fisso di kcal.
+ *
+ * Un deficit chiesto in kcal fisse viene tosato dai vincoli fino a collassare:
+ * su una donna sedentaria il margine massimo e' TDEE-basale, cioe' un quinto
+ * del basale, e «regolare» e «deciso» finiscono tutti e due li'. La scelta
+ * diventava una decorazione. Espressa in frazione, resta una scelta vera per
+ * ogni profilo, e senza allentare nessun vincolo.
+ */
+export const RITMI = {
+  calmo: { quota: 0.5, testo: 'Con calma' },
+  regolare: { quota: 0.75, testo: 'Regolare' },
+  deciso: { quota: 1, testo: 'Deciso' },
+};
+
+/** I vecchi profili portano un deficit in kcal: si traduce senza perdere nulla. */
+const RITMO_DA_KCAL = { 300: 'calmo', 500: 'regolare', 700: 'deciso' };
+
+/** Il ritmo di un profilo, comunque sia stato salvato. */
+export function ritmoDi(profilo) {
+  if (profilo?.ritmo && RITMI[profilo.ritmo]) return profilo.ritmo;
+  return RITMO_DA_KCAL[profilo?.deficitRichiesto] || 'regolare';
+}
+
 /** Livelli di attività fisica (moltiplicatori del metabolismo basale). */
 export const LAF = {
   sedentaria: { valore: 1.2, testo: 'Sedentaria — lavoro da seduta, niente sport' },
@@ -124,16 +149,53 @@ export function floorCalorico({ bmr, sesso }) {
 }
 
 /**
+ * Quanto deficit i vincoli di sicurezza lasciano davvero disponibile, e quale
+ * dei tre ha vinto.
+ *
+ * E' il numero che l'app non ha mai detto e che spiega tutto il resto: sotto
+ * quella soglia non si va, e sapere quale vincolo morde dice anche come
+ * alzarla — quasi sempre muovendosi di piu'.
+ *
+ * @returns {{kcal:number, motivo:string, perFloor:number, perPercentuale:number, perCalo:number}}
+ */
+export function margineDisponibile({ tdee: td, bmr, sesso, pesoKg }) {
+  const floor = floorCalorico({ bmr, sesso });
+  const perFloor = Math.max(0, td - floor);
+  const perPercentuale = td * DEFICIT_MAX;
+  const perCalo = (CALO_MAX_SETTIMANA * pesoKg * KCAL_PER_KG) / 7;
+
+  const candidati = [
+    { kcal: perFloor, motivo: `sotto ci sarebbe il metabolismo basale (${Math.round(floor)} kcal)` },
+    { kcal: perPercentuale, motivo: `il deficit non supera il ${Math.round(DEFICIT_MAX * 100)}% del fabbisogno` },
+    { kcal: perCalo, motivo: `il calo non supera l'${Math.round(CALO_MAX_SETTIMANA * 100)}% del peso a settimana` },
+  ];
+  const vincolo = candidati.reduce((a, b) => (b.kcal < a.kcal ? b : a));
+
+  return {
+    kcal: Math.round(Math.max(0, vincolo.kcal)),
+    motivo: vincolo.motivo,
+    perFloor: Math.round(perFloor),
+    perPercentuale: Math.round(perPercentuale),
+    perCalo: Math.round(perCalo),
+  };
+}
+
+/**
  * Calcola il target giornaliero applicando tutti i vincoli di sicurezza.
  * Restituisce sempre anche il perché di un'eventuale limitazione: l'app
  * deve poter dire la verità all'utente, non limitarsi ad arrotondare.
  *
+ * `ritmo` ha la precedenza su `deficitRichiesto`: il primo e' una frazione del
+ * margine, il secondo un numero fisso tenuto per i profili gia' salvati.
+ *
  * @param {{tdee:number, bmr:number, sesso:string, pesoKg:number,
- *          deficitRichiesto?:number}} p  deficitRichiesto in kcal/die
+ *          deficitRichiesto?:number, ritmo?:string}} p  deficitRichiesto in kcal/die
  */
-export function targetGiornaliero({ tdee: td, bmr, sesso, pesoKg, deficitRichiesto = 500 }) {
+export function targetGiornaliero({ tdee: td, bmr, sesso, pesoKg, deficitRichiesto = 500, ritmo }) {
   const limiti = [];
-  let deficit = Math.max(0, deficitRichiesto);
+  let deficit = RITMI[ritmo]
+    ? margineDisponibile({ tdee: td, bmr, sesso, pesoKg }).kcal * RITMI[ritmo].quota
+    : Math.max(0, deficitRichiesto);
 
   // 1. Deficit massimo in percentuale del fabbisogno.
   const tettoPercentuale = td * DEFICIT_MAX;
@@ -176,13 +238,74 @@ export function proteineMinime(pesoRiferimentoKg) {
  * Giorni stimati per arrivare all'obiettivo con un certo deficit giornaliero.
  * Restituisce null se il deficit è nullo: meglio nessuna previsione che una falsa.
  */
-export function previsioneTraguardo({ pesoAttualeKg, pesoObiettivoKg, deficitGiornaliero, da = new Date() }) {
+export function previsioneTraguardo({
+  pesoAttualeKg, pesoObiettivoKg, deficitGiornaliero, giorniAvvio = 0, da = new Date(),
+}) {
   const daPerdere = pesoAttualeKg - pesoObiettivoKg;
   if (daPerdere <= 0 || deficitGiornaliero <= 0) return null;
-  const giorni = Math.ceil((daPerdere * KCAL_PER_KG) / deficitGiornaliero);
+  // L'avvio graduale costa giorni veri: contarli e' l'unico modo di non mentire
+  // sulla data. Meglio un traguardo piu' lontano che uno che non arriva.
+  const giorni = Math.ceil((daPerdere * KCAL_PER_KG) / deficitGiornaliero) + giorniAvvio;
   const data = new Date(da);
   data.setDate(data.getDate() + giorni);
   return { giorni, data };
+}
+
+/* --- Avvio graduale --------------------------------------------------------
+   Si parte a un quarto del deficit e si sale di settimana in settimana fino al
+   pieno. Non e' un trucco metabolico e non va raccontato come tale: le prove
+   sul grasso perso sono modeste e non significative. Serve all'aderenza — le
+   prime settimane sono quelle in cui si molla, e arrivarci piano aiuta.
+   -------------------------------------------------------------------------- */
+
+export const AVVIO_SETTIMANE = 4;
+
+/** Le quote settimanali: con quattro settimane sono 25, 50, 75 e 100%. */
+export function quoteAvvio(settimane = AVVIO_SETTIMANE) {
+  return Array.from({ length: settimane }, (_, i) => (i + 1) / settimane);
+}
+
+export const AVVIO_QUOTE = quoteAvvio();
+
+/**
+ * Quanti giorni in piu' costa la rampa: la somma di cio' che non si e' tolto
+ * durante la salita, riportata in giorni di deficit pieno.
+ *
+ * `daSettimana` serve al traguardo, che guarda avanti: a meta' rampa il costo
+ * gia' pagato non va contato una seconda volta.
+ */
+export function giorniAggiuntiDallAvvio(settimane = AVVIO_SETTIMANE, daSettimana = 1) {
+  return Math.round(quoteAvvio(settimane)
+    .slice(Math.max(0, daSettimana - 1))
+    .reduce((s, q) => s + (1 - q) * 7, 0));
+}
+
+/**
+ * A che punto della rampa siamo oggi.
+ * @param {{attivo?:boolean, dal?:string, settimane?:number}} avvio
+ * @returns {{attivo:boolean, quota:number, settimana:number|null, di:number}}
+ */
+export function fattoreAvvio(avvio, oggi = new Date()) {
+  const settimane = avvio?.settimane ?? AVVIO_SETTIMANE;
+  const spento = { attivo: false, quota: 1, settimana: null, di: settimane };
+  if (!avvio?.attivo || !avvio.dal || settimane < 1) return spento;
+
+  const dal = new Date(avvio.dal);
+  dal.setHours(0, 0, 0, 0);
+  const g = new Date(oggi);
+  g.setHours(0, 0, 0, 0);
+
+  const giorni = Math.floor((g - dal) / 86400000);
+  // Data di partenza nel futuro: si sta ancora alla prima settimana, non fuori.
+  const indice = Math.max(0, Math.floor(giorni / 7));
+  if (indice >= settimane) return spento;
+
+  return {
+    attivo: true,
+    quota: quoteAvvio(settimane)[indice],
+    settimana: indice + 1,
+    di: settimane,
+  };
 }
 
 /* --- Peso di tendenza e TDEE adattivo -------------------------------------- */
@@ -288,20 +411,41 @@ export function riepilogo(profilo, oggi = new Date()) {
   const anni = eta(profilo.dataNascita, oggi);
   const valoreBmi = bmi(profilo.pesoKg, profilo.altezzaCm);
   const bmr = bmrMifflin({ sesso: profilo.sesso, pesoKg: profilo.pesoKg, altezzaCm: profilo.altezzaCm, anni });
-  const td = tdee(bmr, profilo.attivita);
+  const stimato = tdee(bmr, profilo.attivita);
+  // Il fabbisogno ricavato dal diario batte la formula, quando c'e' ed e' stato
+  // accettato dall'utente: e' una misura, non una previsione.
+  const td = profilo.tdeeMisurato > 0 ? profilo.tdeeMisurato : stimato;
   const desiderabile = pesoDesiderabile(profilo.altezzaCm);
   const bandiere = valutaBandiere(profilo.bandiere);
+  const ritmo = ritmoDi(profilo);
 
   const obiettivoKg = profilo.pesoObiettivoKg ?? Math.min(profilo.pesoKg, desiderabile.max);
-  const fabbisogno = bandiere.bloccante
+  const margine = margineDisponibile({ tdee: td, bmr, sesso: profilo.sesso, pesoKg: profilo.pesoKg });
+
+  const pieno = bandiere.bloccante
     ? { target: Math.round(td), deficit: 0, floor: Math.round(floorCalorico({ bmr, sesso: profilo.sesso })), limitato: true, limiti: ['piano ipocalorico non calcolato'] }
-    : targetGiornaliero({
-        tdee: td, bmr, sesso: profilo.sesso, pesoKg: profilo.pesoKg,
-        deficitRichiesto: profilo.deficitRichiesto ?? 500,
-      });
+    : targetGiornaliero({ tdee: td, bmr, sesso: profilo.sesso, pesoKg: profilo.pesoKg, ritmo });
+
+  // La rampa si applica DOPO i vincoli, e puo' solo alleggerire il deficit:
+  // non c'e' modo che scavalchi il pavimento calorico.
+  const avvio = fattoreAvvio(bandiere.bloccante ? null : profilo.avvioGraduale, oggi);
+  const fabbisogno = avvio.attivo
+    ? {
+        ...pieno,
+        deficit: Math.round(pieno.deficit * avvio.quota),
+        target: Math.round(td - pieno.deficit * avvio.quota),
+        deficitPieno: pieno.deficit,
+        targetPieno: pieno.target,
+      }
+    : pieno;
 
   return {
     anni,
+    ritmo,
+    margine,
+    avvio,
+    tdeeStimato: Math.round(stimato),
+    tdeeDaDiario: profilo.tdeeMisurato > 0,
     bmi: valoreBmi,
     classeBmi: classificaBmi(valoreBmi),
     whtr: profilo.vitaCm ? whtr(profilo.vitaCm, profilo.altezzaCm) : null,
@@ -318,10 +462,13 @@ export function riepilogo(profilo, oggi = new Date()) {
     proteineMinime: proteineMinime(Math.min(profilo.pesoKg, desiderabile.max)),
     fabbisogno,
     bandiere,
+    // Il traguardo si calcola sul deficit a regime, non su quello ridotto di
+    // oggi: la rampa e' temporanea, e il suo costo si conta a parte.
     traguardo: previsioneTraguardo({
       pesoAttualeKg: profilo.pesoKg,
       pesoObiettivoKg: obiettivoKg,
-      deficitGiornaliero: fabbisogno.deficit,
+      deficitGiornaliero: pieno.deficit,
+      giorniAvvio: avvio.attivo ? giorniAggiuntiDallAvvio(avvio.di, avvio.settimana) : 0,
       da: oggi,
     }),
   };

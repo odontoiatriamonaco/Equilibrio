@@ -23,7 +23,13 @@
       <a class="bottone-icona solo-stretto" href="/index.html" aria-label="Indietro">
         <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#indietro"/></svg>
       </a>
-      <h1>Profilo</h1>
+      <div style="flex:1; min-width:0">
+        <p class="occhiello" id="occhiello-profilo" hidden></p>
+        <h1 id="titolo-profilo">Profilo</h1>
+      </div>
+      <a class="bottone-icona" href="/impostazioni.html" aria-label="Tutti i profili">
+        <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#altro"/></svg>
+      </a>
     </header>
 
     <p class="morbido">Questi dati restano su questo dispositivo. Non vengono inviati da
@@ -114,9 +120,23 @@
           </div>
           <div class="campo">
             <label id="etichetta-ritmi">Con che ritmo</label>
-            <div class="segmenti" id="ritmi" role="tablist" aria-labelledby="etichetta-ritmi"></div>
-            <span class="aiuto">Se il ritmo scelto è troppo aggressivo, lo riduco e te lo dico.</span>
+            <div class="segmenti segmenti-doppio" id="ritmi" role="tablist" aria-labelledby="etichetta-ritmi"></div>
+            <span class="aiuto" id="aiuto-ritmi">Il ritmo è una quota di quello che i vincoli
+              di sicurezza lasciano disponibile.</span>
           </div>
+
+          <div class="avviso" id="nota-margine" hidden></div>
+
+          <label class="interruttore">
+            <input type="checkbox" id="avvio-graduale">
+            <span class="leva"></span>
+            <span>Parti piano
+              <span class="piccolo tenue" style="display:block">Le prime quattro settimane il
+                taglio cresce un poco alla volta invece di arrivare tutto insieme. Serve a non
+                mollare all'inizio, non è un trucco sul metabolismo: sposta il traguardo di
+                una decina di giorni, e te li dico.</span>
+            </span>
+          </label>
         </div>
       </section>
 
@@ -136,7 +156,7 @@
 
       <button class="bottone bottone-largo" id="salva" type="button">
         <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#salva"/></svg>
-        Salva il profilo
+        <span id="testo-salva">Salva il profilo</span>
       </button>
       <p class="avviso avviso-ok" id="esito" hidden style="margin-top:var(--sp-3)"></p>
     </form>

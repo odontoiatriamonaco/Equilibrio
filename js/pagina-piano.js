@@ -83,6 +83,22 @@ async function rigenera() {
   disegna();
 }
 
+/**
+ * Dove siamo nella rampa di avvio. Il piano di questa settimana e' tarato su un
+ * target piu' alto di quello a regime, e va detto: altrimenti sembra un errore.
+ */
+function rendiAvvio() {
+  const nota = $('#nota-avvio');
+  if (!energia.avvio?.attivo) { nota.hidden = true; return; }
+
+  const { settimana: s, di } = energia.avvio;
+  nota.hidden = false;
+  nota.querySelector('div').innerHTML = `<strong>Avvio graduale, settimana ${s} di ${di}.</strong>
+    Il piano di questi giorni è tarato su ${energia.fabbisogno.target} kcal invece di
+    ${energia.fabbisogno.targetPieno}: si scende un poco alla volta.
+    ${s === di ? 'Da lunedì si va a regime.' : `Ancora ${(di - s) * 7} giorni di salita.`}`;
+}
+
 /* --- Disegno --------------------------------------------------------------- */
 
 function disegna() {
@@ -109,6 +125,8 @@ function disegna() {
   } else {
     $('#nota-recupero').hidden = true;
   }
+
+  rendiAvvio();
 
   $('#settimana').innerHTML = settimana.giorni
     .map((g, i) => cartaGiorno(g, i, i === oggi)).join('');

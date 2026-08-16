@@ -175,6 +175,51 @@ Se un ritmo scelto è troppo aggressivo il motore lo riduce **e lo dice**. Quand
 un recupero non è ottenibile senza violare i vincoli, l'app non affama: recupera
 il possibile e sposta la data dell'obiettivo, dichiarandolo.
 
+### Il ritmo è una quota, non un numero di calorie
+
+Il ritmo era un deficit fisso — 300, 500 o 700 kcal — e questo lo rendeva **inerte**.
+I vincoli qui sopra tosano il deficit richiesto, e su un profilo con poco margine lo
+tosano tutte e tre le volte allo stesso valore: «con calma», «regolare» e «deciso»
+producevano lo stesso identico piano e la stessa identica data. Su una donna
+sedentaria di 48 anni, 73 kg per 165 cm, tutti e tre davano 1360 kcal e 227 giorni.
+
+La causa è aritmetica: col pavimento fissato al metabolismo basale il margine massimo
+è `TDEE − BMR`, cioè `(LAF − 1) × BMR`. Con `sedentaria` (LAF 1,2) sono **0,2 × BMR**,
+sempre meno del tetto del 25% — che quindi non entra mai in gioco.
+
+`margineDisponibile()` in `js/energia.js` calcola quel margine e dice **quale dei tre
+vincoli ha vinto**; `RITMI` ne prende una frazione — metà, tre quarti, tutto. Nessun
+vincolo è stato allentato: `floorCalorico`, `DEFICIT_MAX` e `CALO_MAX_SETTIMANA` sono
+esattamente quelli di prima, e i test che li difendono non sono stati toccati. Cambia
+solo da dove arriva il numero in ingresso, e i tre ritmi tornano a dare tre piani
+diversi (453, 302 e 227 giorni sullo stesso profilo).
+
+La pagina Profilo scrive il margine in chiaro, col motivo e con la sola leva che
+l'utente ha in mano: *«Il massimo che posso togliere è 272 kcal al giorno: sotto ci
+sarebbe il metabolismo basale (1360 kcal). Con un'attività leggera salirebbe a 468
+kcal.»*
+
+### Avvio graduale
+
+Le prime quattro settimane il taglio sale per quarti — 25, 50, 75, 100% — invece di
+arrivare tutto insieme. È uno strumento di **aderenza**, non un trucco metabolico: le
+prove sul grasso perso sono modeste e non significative, quello che regge è che nelle
+prime settimane si molla meno. L'interfaccia lo dice così, senza promettere metabolismo.
+
+La rampa si applica **dopo** i clamp di sicurezza (`riepilogo()` in `js/energia.js`),
+quindi può solo alleggerire il deficit e non c'è modo che scavalchi il pavimento. Scatta
+a settimane, che è la granularità su cui l'app è già costruita. Costa una decina di
+giorni sul traguardo e `previsioneTraguardo()` li conta — contando solo quelli ancora
+da pagare, non l'intera rampa quando si è già a metà.
+
+### Fabbisogno dal diario
+
+`tdeeAdattivo()` esisteva già ma il suo risultato moriva nella pagina Progressi. Ora,
+quando la stima è affidabile e si scosta di oltre il 5% da quella in uso, l'app
+**propone** di tararci il piano — non lo fa da sola. Il numero adottato finisce in
+`tdeeMisurato` sul profilo e `riepilogo()` lo preferisce alla formula; si torna
+indietro con lo stesso pulsante.
+
 ---
 
 ## Privacy

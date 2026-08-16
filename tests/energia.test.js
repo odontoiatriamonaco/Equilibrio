@@ -4,6 +4,8 @@ import {
   pesoDesiderabile, bmrMifflin, tdee, floorCalorico, targetGiornaliero,
   proteineMinime, previsioneTraguardo, pesoDiTendenza, tdeeAdattivo,
   valutaBandiere, riepilogo,
+  margineDisponibile, ritmoDi, fattoreAvvio, quoteAvvio, giorniAggiuntiDallAvvio,
+  RITMI, AVVIO_SETTIMANE,
   FLOOR_DONNA, DEFICIT_MAX, CALO_MAX_SETTIMANA, KCAL_PER_KG,
 } from '../js/energia.js';
 
@@ -119,6 +121,177 @@ describe('vincoli di sicurezza — non negoziabili', () => {
 
   it('tiene le proteine ad almeno 1,2 g per kg', () => {
     expect(proteineMinime(67.8)).toBe(81);
+  });
+});
+
+/* Il profilo che ha fatto emergere il difetto: donna sedentaria, margine
+   strettissimo. Prima della correzione i tre ritmi davano lo stesso numero. */
+const SEDENTARIA = {
+  sesso: 'donna', dataNascita: '1978-01-01', altezzaCm: 165, pesoKg: 73,
+  attivita: 'sedentaria', pesoObiettivoKg: 65,
+};
+const AGOSTO = new Date('2026-08-16T12:00:00Z');
+
+describe('margine disponibile', () => {
+  it('dice quanto deficit resta davvero e quale vincolo lo decide', () => {
+    // TDEE 1632, basale 1360: il pavimento lascia appena 272 kcal.
+    const m = margineDisponibile({ tdee: 1632, bmr: 1360, sesso: 'donna', pesoKg: 73 });
+    expect(m.kcal).toBe(272);
+    expect(m.motivo).toMatch(/basale/);
+    // Gli altri due limiti erano piu' larghi: e' il pavimento che comanda.
+    expect(m.perPercentuale).toBeGreaterThan(m.perFloor);
+    expect(m.perCalo).toBeGreaterThan(m.perFloor);
+  });
+
+  it('lascia comandare il tetto percentuale quando il basale non morde', () => {
+    const m = margineDisponibile({ tdee: 3000, bmr: 1600, sesso: 'uomo', pesoKg: 110 });
+    expect(m.kcal).toBe(Math.round(3000 * DEFICIT_MAX));
+    expect(m.motivo).toMatch(/25%/);
+  });
+
+  it('non restituisce mai un margine negativo', () => {
+    // Basale sopra il fabbisogno: caso limite, ma non deve produrre numeri assurdi.
+    const m = margineDisponibile({ tdee: 1300, bmr: 1500, sesso: 'donna', pesoKg: 50 });
+    expect(m.kcal).toBe(0);
+  });
+});
+
+describe('il ritmo come frazione del margine', () => {
+  it('i tre ritmi danno tre deficit DISTINTI anche su un margine stretto', () => {
+    // E' il test che avrebbe colto il difetto: prima erano tutti e tre 272.
+    const deficit = ['calmo', 'regolare', 'deciso'].map(
+      (ritmo) => riepilogo({ ...SEDENTARIA, ritmo }, AGOSTO).fabbisogno.deficit,
+    );
+    expect(deficit).toEqual([136, 204, 272]);
+    expect(new Set(deficit).size).toBe(3);
+  });
+
+  it('«deciso» prende tutto il margine e nemmeno un kcal di piu\'', () => {
+    const r = riepilogo({ ...SEDENTARIA, ritmo: 'deciso' }, AGOSTO);
+    expect(r.fabbisogno.deficit).toBe(r.margine.kcal);
+    expect(r.fabbisogno.target).toBe(r.fabbisogno.floor);
+  });
+
+  it('nessun ritmo scende mai sotto il pavimento', () => {
+    for (const ritmo of Object.keys(RITMI)) {
+      const r = riepilogo({ ...SEDENTARIA, ritmo }, AGOSTO);
+      expect(r.fabbisogno.target).toBeGreaterThanOrEqual(r.fabbisogno.floor);
+      expect(r.fabbisogno.target).toBeGreaterThanOrEqual(FLOOR_DONNA);
+    }
+  });
+
+  it('un ritmo piu\' deciso avvicina il traguardo', () => {
+    const calmo = riepilogo({ ...SEDENTARIA, ritmo: 'calmo' }, AGOSTO).traguardo.giorni;
+    const deciso = riepilogo({ ...SEDENTARIA, ritmo: 'deciso' }, AGOSTO).traguardo.giorni;
+    expect(deciso).toBeLessThan(calmo);
+  });
+
+  it('muoversi di piu\' allarga il margine, e questo si vede', () => {
+    const margini = ['sedentaria', 'leggera', 'moderata'].map(
+      (attivita) => riepilogo({ ...SEDENTARIA, attivita }, AGOSTO).margine.kcal,
+    );
+    expect(margini[0]).toBeLessThan(margini[1]);
+    expect(margini[1]).toBeLessThan(margini[2]);
+  });
+
+  it('traduce i profili vecchi salvati con un deficit in kcal', () => {
+    expect(ritmoDi({ deficitRichiesto: 300 })).toBe('calmo');
+    expect(ritmoDi({ deficitRichiesto: 500 })).toBe('regolare');
+    expect(ritmoDi({ deficitRichiesto: 700 })).toBe('deciso');
+    // Un profilo senza niente non deve rompersi: cade sul ritmo di mezzo.
+    expect(ritmoDi({})).toBe('regolare');
+    // Il campo nuovo ha la precedenza su quello vecchio.
+    expect(ritmoDi({ ritmo: 'calmo', deficitRichiesto: 700 })).toBe('calmo');
+  });
+});
+
+describe('avvio graduale', () => {
+  const AVVIO = { attivo: true, dal: '2026-08-16', settimane: 4 };
+  const piu = (giorni) => {
+    const d = new Date('2026-08-16T12:00:00Z');
+    d.setDate(d.getDate() + giorni);
+    return d;
+  };
+
+  it('sale di un quarto a settimana e poi resta al pieno', () => {
+    expect(quoteAvvio(4)).toEqual([0.25, 0.5, 0.75, 1]);
+    expect(fattoreAvvio(AVVIO, piu(0)).quota).toBe(0.25);
+    expect(fattoreAvvio(AVVIO, piu(7)).quota).toBe(0.5);
+    expect(fattoreAvvio(AVVIO, piu(14)).quota).toBe(0.75);
+    expect(fattoreAvvio(AVVIO, piu(21)).quota).toBe(1);
+    // Finita la rampa si esce: niente piu' avviso in interfaccia.
+    expect(fattoreAvvio(AVVIO, piu(28)).attivo).toBe(false);
+    expect(fattoreAvvio(AVVIO, piu(28)).quota).toBe(1);
+  });
+
+  it('numera le settimane per l\'interfaccia', () => {
+    expect(fattoreAvvio(AVVIO, piu(8))).toMatchObject({ attivo: true, settimana: 2, di: 4 });
+  });
+
+  it('spento, o senza data, non tocca niente', () => {
+    expect(fattoreAvvio(null).quota).toBe(1);
+    expect(fattoreAvvio({ attivo: false, dal: '2026-08-16' }).quota).toBe(1);
+    expect(fattoreAvvio({ attivo: true }).quota).toBe(1);
+  });
+
+  it('alleggerisce il deficit senza mai scavalcare il pavimento', () => {
+    const conRampa = riepilogo({ ...SEDENTARIA, ritmo: 'deciso', avvioGraduale: AVVIO }, piu(0));
+    const pieno = riepilogo({ ...SEDENTARIA, ritmo: 'deciso' }, piu(0));
+
+    expect(conRampa.fabbisogno.deficit).toBeLessThan(pieno.fabbisogno.deficit);
+    // Piu' cibo, non meno: e' il punto della rampa.
+    expect(conRampa.fabbisogno.target).toBeGreaterThan(pieno.fabbisogno.target);
+    expect(conRampa.fabbisogno.target).toBeGreaterThanOrEqual(conRampa.fabbisogno.floor);
+    // Il target a regime resta consultabile: serve a spiegare dove si sta andando.
+    expect(conRampa.fabbisogno.targetPieno).toBe(pieno.fabbisogno.target);
+  });
+
+  it('la rampa non puo\' mai aggravare il deficit', () => {
+    for (let s = 0; s < 6; s++) {
+      const r = riepilogo({ ...SEDENTARIA, ritmo: 'deciso', avvioGraduale: AVVIO }, piu(s * 7));
+      expect(r.fabbisogno.deficit).toBeLessThanOrEqual(r.margine.kcal);
+      expect(r.fabbisogno.target).toBeGreaterThanOrEqual(r.fabbisogno.floor);
+    }
+  });
+
+  it('sposta il traguardo di quanto costa davvero, e lo riavvicina strada facendo', () => {
+    expect(giorniAggiuntiDallAvvio(AVVIO_SETTIMANE)).toBe(11);
+    // A meta' rampa il costo gia' pagato non si conta due volte.
+    expect(giorniAggiuntiDallAvvio(4, 3)).toBe(2);
+
+    const senza = riepilogo({ ...SEDENTARIA, ritmo: 'deciso' }, piu(0)).traguardo.giorni;
+    const inizio = riepilogo({ ...SEDENTARIA, ritmo: 'deciso', avvioGraduale: AVVIO }, piu(0)).traguardo.giorni;
+    const fine = riepilogo({ ...SEDENTARIA, ritmo: 'deciso', avvioGraduale: AVVIO }, piu(21)).traguardo.giorni;
+
+    expect(inizio).toBe(senza + 11);
+    expect(fine).toBeLessThan(inizio);
+  });
+
+  it('in gravidanza non si applica: non c\'e\' nessun deficit da smorzare', () => {
+    const r = riepilogo({ ...SEDENTARIA, avvioGraduale: AVVIO, bandiere: { gravidanza: true } }, piu(0));
+    expect(r.avvio.attivo).toBe(false);
+    expect(r.fabbisogno.deficit).toBe(0);
+  });
+});
+
+describe('fabbisogno misurato dal diario', () => {
+  it('quando c\'e\', batte la formula', () => {
+    const r = riepilogo({ ...SEDENTARIA, tdeeMisurato: 1500 }, AGOSTO);
+    expect(r.tdee).toBe(1500);
+    expect(r.tdeeStimato).toBe(1632);
+    expect(r.tdeeDaDiario).toBe(true);
+  });
+
+  it('senza, resta la stima e l\'app lo dichiara', () => {
+    const r = riepilogo(SEDENTARIA, AGOSTO);
+    expect(r.tdee).toBe(r.tdeeStimato);
+    expect(r.tdeeDaDiario).toBe(false);
+  });
+
+  it('un fabbisogno misurato piu\' basso stringe il margine, non lo sfonda', () => {
+    const r = riepilogo({ ...SEDENTARIA, tdeeMisurato: 1450, ritmo: 'deciso' }, AGOSTO);
+    expect(r.fabbisogno.target).toBeGreaterThanOrEqual(r.fabbisogno.floor);
+    expect(r.margine.kcal).toBeLessThan(272);
   });
 });
 

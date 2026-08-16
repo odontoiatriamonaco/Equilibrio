@@ -124,7 +124,7 @@ async function rendiProfili() {
     $('#profili').innerHTML = `<div class="vuoto">
         <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#utente"/></svg>
         <p>Nessun profilo su questo dispositivo.</p>
-        <a class="bottone" href="/profilo.html">Crea il primo profilo</a>
+        <a class="bottone" href="/profilo.html?nuovo=1">Crea il primo profilo</a>
       </div>`;
     return;
   }
@@ -141,6 +141,9 @@ async function rendiProfili() {
       ${corrente
         ? '<span class="pillola pillola-accento">attivo</span>'
         : '<button class="bottone bottone-2" data-usa="' + p.id + '">Usa</button>'}
+      <a class="bottone-icona" href="/profilo.html?id=${p.id}" aria-label="Modifica ${p.nome || 'profilo'}">
+        <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#matita"/></svg>
+      </a>
       <button class="bottone-icona" data-elimina="${p.id}" aria-label="Elimina ${p.nome || 'profilo'}">
         <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#cestino"/></svg>
       </button>
