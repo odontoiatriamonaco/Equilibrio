@@ -271,19 +271,21 @@ function iconaAlimento(a) {
 }
 
 /**
- * Icona da mostrare sulla scheda del piatto.
- * Si puo' forzare con il campo `icona` sul piatto, quando la deduzione non
- * rende l'idea (la parmigiana e' un piatto di melanzane, non di mozzarella).
+ * L'ingrediente che fa il piatto: quello che si pesa davvero.
+ *
+ * Serve a due cose diverse — scegliere l'icona della scheda e dire in una riga
+ * quanto riso mettere nel risotto — e la regola e' la stessa, quindi sta scritta
+ * una volta sola.
+ *
+ * @returns {{ing:object, a:object, cereale:boolean}|null} `cereale` dice quale
+ *          dei due criteri ha deciso: serve all'icona, che distingue il riso
+ *          dalla pasta solo quando e' il cereale a comandare.
  */
-export function iconaPiatto(piatto) {
-  if (piatto.icona) return piatto.icona;
-  if (piatto.tipo === 'colazione') return 'caffe';
-  if (piatto.tipo === 'spuntino') return 'ortofrutta';
-  if (piatto.tipo === 'contorno') return 'verdura';
-
+export function ingredienteGuida(piatto) {
   const voci = (piatto.ingredienti || [])
     .map((ing) => ({ ing, a: INDICE.get(ing.a) }))
     .filter((v) => v.a);
+  if (!voci.length) return null;
 
   const totale = voci.reduce((s, v) => s + (v.a.per100g.kcal * v.ing.g) / 100, 0);
 
@@ -295,10 +297,10 @@ export function iconaPiatto(piatto) {
   for (const v of voci) {
     if (v.a.gruppo !== 'carboidrati' || v.a.id === 'patate') continue;
     const k = (v.a.per100g.kcal * v.ing.g) / 100;
-    if (k > kcalCereale) { kcalCereale = k; cereale = v.a; }
+    if (k > kcalCereale) { kcalCereale = k; cereale = v; }
   }
   if (cereale && totale > 0 && kcalCereale / totale >= 0.3) {
-    return cereale.id.startsWith('riso') ? 'riso' : 'pasta';
+    return { ...cereale, cereale: true };
   }
 
   // Altrimenti comanda la fonte proteica principale.
@@ -306,9 +308,57 @@ export function iconaPiatto(piatto) {
   let maxPro = -1;
   for (const v of voci) {
     const pro = (v.a.per100g.pro * v.ing.g) / 100;
-    if (pro > maxPro) { maxPro = pro; miglior = v.a; }
+    if (pro > maxPro) { maxPro = pro; miglior = v; }
   }
-  return iconaAlimento(miglior);
+  return miglior ? { ...miglior, cereale: false } : null;
+}
+
+/**
+ * Icona da mostrare sulla scheda del piatto.
+ * Si puo' forzare con il campo `icona` sul piatto, quando la deduzione non
+ * rende l'idea (la parmigiana e' un piatto di melanzane, non di mozzarella).
+ */
+export function iconaPiatto(piatto) {
+  if (piatto.icona) return piatto.icona;
+  if (piatto.tipo === 'colazione') return 'caffe';
+  if (piatto.tipo === 'spuntino') return 'ortofrutta';
+  if (piatto.tipo === 'contorno') return 'verdura';
+
+  const guida = ingredienteGuida(piatto);
+  if (!guida) return iconaAlimento(null);
+  if (guida.cereale) return guida.a.id.startsWith('riso') ? 'riso' : 'pasta';
+  return iconaAlimento(guida.a);
+}
+
+/**
+ * Le grammature di una voce del piano, gia' moltiplicate per porzioni e
+ * commensali. E' quello che serve per cucinare: «0,65 ×» non si pesa.
+ */
+export function dosiVoce(voce, commensali = 1) {
+  const quante = (voce.porzioni ?? 1) * commensali;
+
+  if (voce.tipo === 'alimento') {
+    const a = INDICE.get(voce.id);
+    return a ? [{ a: voce.id, alimento: a, grammi: Math.round(a.porzione * quante) }] : [];
+  }
+  const p = INDICE_PIATTI.get(voce.id);
+  return p ? ingredientiScalati(p, quante) : [];
+}
+
+/**
+ * La sola grammatura da mostrare quando ce n'e' spazio per una: l'ingrediente
+ * che fa il piatto, gia' scalato.
+ */
+export function dosePrincipale(voce, commensali = 1) {
+  const quante = (voce.porzioni ?? 1) * commensali;
+
+  if (voce.tipo === 'alimento') {
+    const a = INDICE.get(voce.id);
+    return a ? { alimento: a, grammi: Math.round(a.porzione * quante) } : null;
+  }
+  const p = INDICE_PIATTI.get(voce.id);
+  const guida = p && ingredienteGuida(p);
+  return guida ? { alimento: guida.a, grammi: Math.round(guida.ing.g * quante) } : null;
 }
 
 export const TIPI = {

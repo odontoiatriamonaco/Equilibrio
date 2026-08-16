@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   alimenti, piatti, gruppi, alimento, valoriPiatto,
   ingredientiScalati, diStagione, iconaPiatto,
+  dosiVoce, dosePrincipale, ingredienteGuida,
 } from '../js/alimenti.js';
 
 describe('nucleo alimenti', () => {
@@ -149,5 +150,49 @@ describe('icona del piatto', () => {
   it('le colazioni e gli spuntini hanno la loro', () => {
     expect(iconaPiatto({ tipo: 'colazione', ingredienti: [] })).toBe('caffe');
     expect(iconaPiatto({ tipo: 'spuntino', ingredienti: [] })).toBe('ortofrutta');
+  });
+});
+
+describe('le dosi da pesare', () => {
+  const risotto = piatti.find((p) => p.nome === 'Risotto ai pomodorini');
+
+  it('scala ogni ingrediente per le porzioni', () => {
+    // Il ricettario dice 80 g di riso per una porzione.
+    expect(risotto.ingredienti.find((i) => i.a === 'riso').g).toBe(80);
+
+    const dosi = dosiVoce({ tipo: 'piatto', id: risotto.id, porzioni: 0.65 });
+    expect(dosi.find((d) => d.a === 'riso').grammi).toBe(52);
+    expect(dosi).toHaveLength(risotto.ingredienti.length);
+  });
+
+  it('moltiplica anche per i commensali', () => {
+    const dosi = dosiVoce({ tipo: 'piatto', id: risotto.id, porzioni: 1 }, 3);
+    expect(dosi.find((d) => d.a === 'riso').grammi).toBe(240);
+  });
+
+  it('indica l’ingrediente che si pesa davvero', () => {
+    // Nel risotto i pomodorini pesano piu' del riso, ma e' il riso che fa il
+    // piatto ed e' quello che si va a cercare.
+    const guida = dosePrincipale({ tipo: 'piatto', id: risotto.id, porzioni: 0.65 });
+    expect(guida.alimento.id).toBe('riso');
+    expect(guida.grammi).toBe(52);
+  });
+
+  it('per «polpo e patate» la guida è il polpo, non le patate', () => {
+    const g = ingredienteGuida(piatti.find((p) => p.id === 'polpo-patate'));
+    expect(g.a.id).toBe('polpo');
+    expect(g.cereale).toBe(false);
+  });
+
+  it('un alimento singolo vale la sua porzione standard', () => {
+    const pane = alimento('pane');
+    const dosi = dosiVoce({ tipo: 'alimento', id: 'pane', porzioni: 0.65 });
+    expect(dosi).toHaveLength(1);
+    expect(dosi[0].grammi).toBe(Math.round(pane.porzione * 0.65));
+  });
+
+  it('non esplode su una voce che punta al nulla', () => {
+    expect(dosiVoce({ tipo: 'piatto', id: 'inesistente', porzioni: 1 })).toEqual([]);
+    expect(dosePrincipale({ tipo: 'alimento', id: 'inesistente', porzioni: 1 })).toBeNull();
   });
 });

@@ -6,7 +6,9 @@ import { caricaRicettario } from './piatti-utente.js';
 import { riepilogo as riepilogoEnergia } from './energia.js';
 import { caricaSettimana, caricaDiario, salvaDiario } from './dati.js';
 import { kcalGiorno, indiceOggi, iso } from './planner.js';
-import { nomeVoce, valoriVoce, iconaPiatto, vociOggetto, TIPI } from './alimenti.js';
+import {
+  nomeVoce, valoriVoce, iconaPiatto, vociOggetto, TIPI, dosiVoce,
+} from './alimenti.js';
 import { rendiFascia } from './ui-budget.js';
 import {
   cercaBarcode, valoriUtilizzabili, kcalPer, scansiona, scansioneDisponibile,
@@ -140,8 +142,10 @@ function disegnaPasti() {
               <br><span class="piccolo tenue">
                 ${voce.tipo === 'piatto' ? TIPI[oggetto?.tipo] || '' : 'Pane'}
                 · ${num(valoriVoce(voce).kcal)} kcal
-                ${voce.porzioni !== 1 ? ` · ${num(voce.porzioni, 2).replace(',00', '')}×` : ''}
               </span>
+              ${dosiVoce(voce).length ? `<br><span class="piccolo dosi-riga num">${
+  dosiVoce(voce).map((d) => `${d.alimento?.nome || d.a} ${num(d.grammi)} g`).join(' · ')
+}</span>` : ''}
             </span>
             ${voce.tipo === 'piatto'
               ? `<a class="bottone-icona" href="/ricette.html" aria-label="Vedi la ricetta">

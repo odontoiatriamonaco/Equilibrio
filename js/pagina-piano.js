@@ -10,7 +10,10 @@ import {
   generaSettimana, kcalGiorno, valoriGiorno, inizioSettimana, iso,
   indiceOggi, GIORNI,
 } from './planner.js';
-import { nomeVoce, valoriVoce, iconaPiatto, vociOggetto, piatto, TIPI } from './alimenti.js';
+import {
+  nomeVoce, valoriVoce, iconaPiatto, vociOggetto, piatto, TIPI,
+  dosiVoce, dosePrincipale,
+} from './alimenti.js';
 import { alternativePiatto, scambiaPiatto } from './scambi.js';
 import {
   calcolaRecupero, applicaRecupero, racconta, slittamentoTraguardo,
@@ -131,7 +134,11 @@ function disegna() {
   $('#settimana').innerHTML = settimana.giorni
     .map((g, i) => cartaGiorno(g, i, i === oggi)).join('');
 
-  $$('#settimana [data-scambia]').forEach((b) => b.addEventListener('click', () => {
+  $$('#settimana [data-scambia]').forEach((b) => b.addEventListener('click', (e) => {
+    // Il bottone sta dentro un <summary>: senza questo, scambiare aprirebbe
+    // anche l'elenco delle dosi.
+    e.preventDefault();
+    e.stopPropagation();
     const [giorno, pasto, indice] = b.dataset.scambia.split('|');
     apriScambio(Number(giorno), pasto, Number(indice));
   }));
@@ -189,24 +196,50 @@ function cartaGiorno(giorno, indice, eOggi) {
 function rigaVoce(voce, giorno, pasto, indice) {
   const oggetto = vociOggetto(voce);
   const kcal = valoriVoce(voce).kcal;
-  const porzione = voce.porzioni !== 1
-    ? `<span class="pillola">${num(voce.porzioni, 2).replace(',00', '')}×</span>` : '';
   const tipo = voce.tipo === 'piatto' ? TIPI[oggetto?.tipo] || '' : 'Contorno di pane';
+  const commensali = settimana.commensali || 1;
+
+  // La grammatura dell'ingrediente che fa il piatto. E' il numero che si va a
+  // cercare: un moltiplicatore non si pesa.
+  const guida = dosePrincipale(voce, commensali);
+  const dosi = dosiVoce(voce, commensali);
+
+  // La pillola resta corta per stare in riga, ma «73 g» da solo non dice di
+  // cosa: il nome per esteso va a chi legge con lo schermo e a chi passa sopra.
+  const etichetta = guida
+    ? `<span class="pillola pillola-dato num" title="${guida.alimento.nome}">
+         ${num(guida.grammi)} g<span class="solo-lettori"> di ${guida.alimento.nome.toLowerCase()}</span>
+       </span>`
+    : '';
+
+  const elenco = dosi.map((d) => `
+    <li class="riga-tra">
+      <span>${d.alimento?.nome || d.a}</span>
+      <span class="num morbido">${num(d.grammi)} g</span>
+    </li>`).join('');
+
+  // Le porzioni si dicono ancora, ma in coda e in piccolo: servono a capire
+  // perche' le dosi non sono quelle del ricettario, non a cucinare.
+  const quante = voce.porzioni !== 1
+    ? ` · ${num(voce.porzioni, 2).replace(',00', '')} porzioni` : '';
 
   return `
-    <div class="voce-piano">
-      <span class="sigillo-mini">${icona(voce.tipo === 'piatto' ? iconaPiatto(oggetto || {}) : 'panetteria', 'icona icona-sm')}</span>
-      <span class="nome">
-        ${nomeVoce(voce)}
-        <span class="piccolo tenue">${tipo} · ${num(kcal)} kcal</span>
-      </span>
-      ${porzione}
-      ${voce.tipo === 'piatto' ? `
-        <button class="bottone-icona" data-scambia="${giorno}|${pasto}|${indice}"
-                aria-label="Scambia ${nomeVoce(voce)}">
-          ${icona('scambia', 'icona icona-sm')}
-        </button>` : ''}
-    </div>`;
+    <details class="voce-piano">
+      <summary>
+        <span class="sigillo-mini">${icona(voce.tipo === 'piatto' ? iconaPiatto(oggetto || {}) : 'panetteria', 'icona icona-sm')}</span>
+        <span class="nome">
+          ${nomeVoce(voce)}
+          <span class="piccolo tenue">${tipo} · ${num(kcal)} kcal${quante}</span>
+        </span>
+        ${etichetta}
+        ${voce.tipo === 'piatto' ? `
+          <button class="bottone-icona" data-scambia="${giorno}|${pasto}|${indice}"
+                  aria-label="Scambia ${nomeVoce(voce)}">
+            ${icona('scambia', 'icona icona-sm')}
+          </button>` : ''}
+      </summary>
+      ${elenco ? `<ul class="dosi">${elenco}</ul>` : ''}
+    </details>`;
 }
 
 /* --- Scambio --------------------------------------------------------------- */
