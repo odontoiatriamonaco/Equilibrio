@@ -9,10 +9,13 @@ import { suggerimentiAntispreco } from './packaging.js';
 import { caricaPreferenze } from './preferenze.js';
 import { alimento, gruppi } from './alimenti.js';
 import { pubblica, scarica, mandaSpunta } from './lista-condivisa.js';
+import { riferimentoDi, settimaneDellaTavola } from './famiglia.js';
 
 let codiceLista = null;
 let profilo = null;
 let settimana = null;
+let membri = [];
+const esclusi = new Set();
 let lista = null;
 let spunte = new Map();
 let dispensa = [];
@@ -24,7 +27,13 @@ export async function inizializza() {
   profilo = await profiloAttivo();
   if (!profilo?.pesoKg) return mostraSolo('#senza-profilo');
 
-  settimana = await caricaSettimana(profilo.id);
+  // La spesa si fa per chi mangia a casa. Se il profilo attivo segue qualcuno,
+  // il carrello e' quello della tavola di quel qualcuno: si compra una volta.
+  const capo = (await riferimentoDi(profilo)) || profilo;
+  membri = await settimaneDellaTavola(capo);
+
+  settimana = membri.find((m) => m.profilo.id === profilo.id)?.settimana
+    || membri[0]?.settimana;
   if (!settimana) return mostraSolo('#senza-piano');
 
   await caricaRicettario(profilo.id);
@@ -39,8 +48,9 @@ export async function inizializza() {
     $('#codice-lista').textContent = codiceLista;
   }
 
-  $('#commensali').value = String(settimana.commensali || profilo.commensali || 1);
+  $('#commensali').value = String(settimana.commensali || 1);
   $('#commensali').addEventListener('change', ricostruisci);
+  rendiTavola();
   $('#copia').addEventListener('click', copia);
   $('#stampa').addEventListener('click', () => window.print());
   $('#in-dispensa').addEventListener('click', metteInDispensa);
@@ -156,9 +166,41 @@ function mostraSolo(sel) {
   $(sel).hidden = false;
 }
 
+/**
+ * Chi mangia a casa questa settimana. Con una persona sola resta il vecchio
+ * selettore del numero; da due in su non ha piu' senso — ognuno ha le sue
+ * porzioni e la lista e' la loro somma.
+ */
+function rendiTavola() {
+  const soloUno = membri.length < 2;
+  $('#riquadro-commensali').hidden = !soloUno;
+  $('#riquadro-tavola').hidden = soloUno;
+  if (soloUno) return;
+
+  $('#tavola').innerHTML = membri.map((m) => `
+    <label class="interruttore">
+      <input type="checkbox" data-membro="${m.profilo.id}" ${esclusi.has(m.profilo.id) ? '' : 'checked'}>
+      <span class="leva"></span>
+      <span>${m.profilo.nome || 'Profilo'}</span>
+    </label>`).join('');
+
+  $$('#tavola [data-membro]').forEach((c) => c.addEventListener('change', () => {
+    if (c.checked) esclusi.delete(c.dataset.membro);
+    else esclusi.add(c.dataset.membro);
+    ricostruisci();
+  }));
+}
+
 function ricostruisci() {
-  const commensali = Number($('#commensali').value) || 1;
-  lista = costruisciLista(settimana, { commensali, dispensa });
+  // Con piu' persone a tavola il moltiplicatore non serve piu': ognuno ha le
+  // sue porzioni e la lista e' la loro somma, non una moltiplicazione.
+  const aTavola = membri.filter((m) => !esclusi.has(m.profilo.id));
+  if (aTavola.length > 1) {
+    lista = costruisciLista(settimana, { membri: aTavola, dispensa });
+  } else {
+    const commensali = Number($('#commensali').value) || 1;
+    lista = costruisciLista(settimana, { commensali, dispensa });
+  }
   disegna();
 }
 

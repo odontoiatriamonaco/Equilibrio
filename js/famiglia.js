@@ -1,0 +1,218 @@
+/* Equilibrio — la dieta di famiglia.
+
+   Si cucina una volta sola. Un profilo decide il menu' della settimana; gli
+   altri lo seguono con le PROPRIE porzioni, ricavate dal proprio fabbisogno.
+   Quando una pietanza per qualcuno non va — un'allergia, un gusto — l'app
+   propone un'alternativa per quel pasto e per quella persona soltanto.
+
+   Il piano resta uno: qui sopra ci vive solo lo strato personale di chi segue.
+   Cosi' rigenerare la settimana aggiorna tutti, e nessuno resta indietro. */
+
+import { leggi, scrivi, profili } from './store.js';
+import { caricaSettimana } from './dati.js';
+import { lenteRicettario, valoriPiatto } from './alimenti.js';
+import { caricaPreferenze, omessi, motivoEsclusione } from './preferenze.js';
+import { pietanzeDiCasa } from './piatti-utente.js';
+import { riepilogo as riepilogoEnergia } from './energia.js';
+import {
+  ribilanciaGiorno, applicaRibilanciamento, vociConChiave, inizioSettimana, iso,
+} from './planner.js';
+
+/* --- Il legame ------------------------------------------------------------- */
+
+export function segue(profilo) {
+  return Boolean(profilo?.seguo);
+}
+
+/**
+ * Chi puo' fare da riferimento a questo profilo.
+ * Niente catene: un riferimento non puo' a sua volta seguire qualcuno,
+ * altrimenti «segui chi segue chi» diventa impossibile da spiegare e da
+ * calcolare senza cicli.
+ */
+export async function possibiliRiferimenti(profiloId) {
+  const elenco = await profili();
+  const miSeguono = new Set(elenco.filter((p) => p.seguo === profiloId).map((p) => p.id));
+  return elenco.filter((p) => p.id !== profiloId && !p.seguo && !miSeguono.has(p.id));
+}
+
+/**
+ * Chi segue questo profilo, piu' il profilo stesso: la tavola.
+ * In ordine alfabetico dopo il capotavola — `profili()` restituisce per chiave,
+ * cioe' per UUID, e una famiglia che cambia ordine a ogni apertura e' fastidiosa.
+ */
+export async function tavola(profiloId) {
+  const elenco = await profili();
+  const capo = elenco.find((p) => p.id === profiloId);
+  if (!capo) return [];
+  const seguaci = elenco
+    .filter((p) => p.seguo === profiloId)
+    .sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'it'));
+  return [capo, ...seguaci];
+}
+
+/** Il riferimento di un profilo, o null. */
+export async function riferimentoDi(profilo) {
+  if (!segue(profilo)) return null;
+  return (await leggi('profili', profilo.seguo)) || null;
+}
+
+/* --- Lo strato personale --------------------------------------------------- */
+
+function chiavePers(profiloId, inizio) {
+  return `${profiloId}:${inizio}`;
+}
+
+export async function caricaPersonalizzazioni(profiloId, inizio) {
+  const riga = await leggi('personalizzazioni', chiavePers(profiloId, inizio));
+  return riga || { id: chiavePers(profiloId, inizio), profiloId, inizio, voci: {} };
+}
+
+/** Scrive una sola voce dello strato personale, senza toccare le altre. */
+export async function salvaPersonalizzazione(profiloId, inizio, chiave, dati) {
+  const p = await caricaPersonalizzazioni(profiloId, inizio);
+  p.voci = { ...p.voci, [chiave]: { ...(p.voci[chiave] || {}), ...dati } };
+  return scrivi('personalizzazioni', p);
+}
+
+export async function dimenticaPersonalizzazione(profiloId, inizio, chiave) {
+  const p = await caricaPersonalizzazioni(profiloId, inizio);
+  if (!p.voci[chiave]) return p;
+  const voci = { ...p.voci };
+  delete voci[chiave];
+  return scrivi('personalizzazioni', { ...p, voci });
+}
+
+/* --- La lente di una persona ------------------------------------------------ */
+
+/**
+ * Il ricettario come lo vede questa persona, senza toccare quello in uso.
+ * @returns {{piatti:Array, indice:Map, scartati:Array, preferenze:object}}
+ */
+export async function lenteDi(profiloId) {
+  const mie = await pietanzeDiCasa(profiloId);
+  const pref = await caricaPreferenze(profiloId);
+  return { ...lenteRicettario(mie, omessi(pref)), preferenze: pref };
+}
+
+/* --- La settimana come la vede una persona ---------------------------------- */
+
+/**
+ * @param {object} profilo
+ * @param {Date} data
+ * @returns {Promise<{settimana:object|null, riferimento:object|null,
+ *          avvisi:Array<{chiave:string, nome:string, motivo:string}>,
+ *          inizio:string}>}
+ */
+export async function settimanaPer(profilo, data = new Date()) {
+  const inizio = iso(inizioSettimana(data));
+  const riferimento = await riferimentoDi(profilo);
+  const proprietario = riferimento?.id || profilo.id;
+
+  const settimana = await caricaSettimana(proprietario, data);
+  if (!settimana) return { settimana: null, riferimento, avvisi: [], inizio };
+
+  // Chi non segue nessuno vede il proprio piano com'e': nessuna derivazione,
+  // nessun costo, nessun comportamento nuovo.
+  if (!riferimento) return { settimana, riferimento: null, avvisi: [], inizio };
+
+  const lente = await lenteDi(profilo.id);
+  const pers = await caricaPersonalizzazioni(profilo.id, inizio);
+  const energia = riepilogoEnergia(profilo, data);
+
+  const copia = structuredClone(settimana);
+  const avvisi = [];
+
+  for (const giorno of copia.giorni) {
+    // Del riferimento si prendono i PIATTI, non le sue quantita': quelle sono
+    // il suo pasto. Si riparte dalle dosi del ricettario e si ricalibra sul
+    // fabbisogno di chi segue — altrimenti i 600 g di pollo che si e' pesato
+    // Antonio finirebbero pari pari nel piatto di Gaia, e i secondi non si
+    // riequilibrano per progetto.
+    for (const x of vociConChiave(giorno)) {
+      x.voce.porzioni = 1;
+      delete x.voce.fissata;
+    }
+    // Anche il recupero di uno sgarro appartiene a chi l'ha fatto.
+    delete giorno.stato;
+    delete giorno.recuperoKcal;
+    delete giorno.sgarro;
+
+    for (const x of vociConChiave(giorno)) {
+      const chiave = `${giorno.etichetta}|${x.chiave}`;
+      const scelto = pers.voci[chiave] || {};
+
+      // 1. Il sostituto scelto in passato prende il posto dell'originale.
+      if (scelto.sostituto && lente.indice.has(scelto.sostituto)) {
+        x.voce.id = scelto.sostituto;
+        x.voce.sostituito = true;
+      }
+
+      // 2. Quello che per questa persona non va si segnala. Non si toglie:
+      //    un buco nel piano non si puo' cucinare, e la scelta resta a lei.
+      const p = lente.indice.get(x.voce.id);
+      if (x.voce.tipo === 'piatto') {
+        const motivo = p
+          ? motivoEsclusione(lente.preferenze, p)
+          : { tipo: 'assente', testo: 'non è nel tuo ricettario' };
+        if (motivo) {
+          x.voce.nonPerMe = motivo.testo;
+          avvisi.push({ chiave, giorno: giorno.etichetta, nome: p?.nome || x.voce.id, motivo: motivo.testo });
+        }
+      }
+
+      // 3. Le porzioni decise a mano da questa persona vincono sul ricalcolo.
+      if (scelto.porzioni !== undefined) {
+        x.voce.porzioni = scelto.porzioni;
+        x.voce.fissata = true;
+      }
+    }
+
+    // 4. Le porzioni si ricalibrano sul fabbisogno di CHI segue, tenendo ferme
+    //    quelle che ha deciso lei. E' la stessa funzione che usa la bilancia.
+    const ferme = new Set(
+      vociConChiave(giorno).filter((x) => x.voce.fissata).map((x) => x.chiave),
+    );
+    const esito = ribilanciaGiorno(giorno, energia.fabbisogno.target, {
+      ferme, floor: energia.fabbisogno.floor,
+    });
+    applicaRibilanciamento(giorno, esito);
+  }
+
+  copia.target = energia.fabbisogno.target;
+  copia.floor = energia.fabbisogno.floor;
+  copia.derivataDa = riferimento.id;
+
+  return { settimana: copia, riferimento, avvisi, inizio };
+}
+
+/**
+ * Le settimane di tutta la tavola, gia' scalate su ciascuno.
+ * E' l'ingresso della spesa di famiglia: si somma quello che mangiano tutti.
+ */
+export async function settimaneDellaTavola(profiloRiferimento, data = new Date()) {
+  // Accetta il profilo o il suo id: chi chiama ha in mano l'uno o l'altro a
+  // seconda della pagina, e sbagliarsi qui restituiva una tavola vuota.
+  const id = typeof profiloRiferimento === 'string' ? profiloRiferimento : profiloRiferimento?.id;
+  const membri = await tavola(id);
+  const fuori = [];
+  for (const m of membri) {
+    const { settimana } = await settimanaPer(m, data);
+    if (settimana) fuori.push({ profilo: m, settimana });
+  }
+  return fuori;
+}
+
+/** Quante kcal in piu' o in meno mangia questa persona rispetto al riferimento. */
+export function scartoDalRiferimento(profilo, riferimento, data = new Date()) {
+  if (!riferimento) return 0;
+  const mio = riepilogoEnergia(profilo, data).fabbisogno.target;
+  const suo = riepilogoEnergia(riferimento, data).fabbisogno.target;
+  return mio - suo;
+}
+
+/** Il piatto che sostituisce, con i valori ricalcolati sulla lente di chi mangia. */
+export function valoriConLente(lente, id, porzioni = 1) {
+  const p = lente.indice.get(id);
+  return p ? valoriPiatto(p, porzioni) : null;
+}

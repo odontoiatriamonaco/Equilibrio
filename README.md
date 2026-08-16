@@ -28,6 +28,9 @@ Tre cose che le altre app non fanno:
   250, il generatore mette in settimana un secondo piatto che finisce il barattolo.
 - **Un piatto per tutta la famiglia.** Stesso piatto per tutti, porzioni
   differenziate. Cucinare due volte è il motivo n.1 per cui le diete saltano.
+  Un profilo decide il menù, gli altri lo seguono con le proprie porzioni; a chi
+  non può mangiare qualcosa l'app propone un'alternativa **per quel pasto e per
+  lui soltanto**. La spesa somma tutti.
 
 ---
 
@@ -93,6 +96,7 @@ js/sgarro.js              redistribuzione dello sgarro, retroattiva e preventiva
 js/spesa.js               aggregazione, dispensa, formati di vendita, condivisione
 js/packaging.js           residui delle confezioni e proposte antispreco
 js/scambi.js              alternative fra alimenti e fra piatti
+js/famiglia.js            il legame fra profili, la settimana derivata, la tavola
 js/preferenze.js          gusti, allergie, tetti, peso di un piatto nella scelta
 js/alimenti.js            valori dei piatti calcolati dagli ingredienti
 js/piatti-utente.js       le pietanze di casa: varianti e piatti nuovi
@@ -211,6 +215,35 @@ quindi può solo alleggerire il deficit e non c'è modo che scavalchi il pavimen
 a settimane, che è la granularità su cui l'app è già costruita. Costa una decina di
 giorni sul traguardo e `previsioneTraguardo()` li conta — contando solo quelli ancora
 da pagare, non l'intera rampa quando si è già a metà.
+
+### La dieta di famiglia
+
+Un profilo decide il menù; gli altri portano `seguo: <id>` e lo seguono. Il piano
+resta **uno solo** — rigenerarlo aggiorna tutti — e sopra ci vive uno strato
+personale per ciascuno, nell'archivio `personalizzazioni`: le proprie porzioni
+decise a mano e i propri sostituti.
+
+Di chi decide si prendono i **piatti**, non le sue quantità: le porzioni ripartono
+dalle dosi del ricettario e si ricalibrano sul fabbisogno di chi segue con
+`ribilanciaGiorno`. I 600 g di pollo che si è pesato Maurizio restano nel piatto
+di Maurizio.
+
+L'ostacolo era il ricettario, tenuto in **stato globale di modulo**: caricare
+quello di Gaia sovrascriveva quello di Carmela per tutta la pagina, in silenzio.
+`lenteRicettario()` in `js/alimenti.js` è ora il nucleo puro che restituisce una
+lente senza assegnare niente; `registraPiattiUtente` ne è solo il primo
+consumatore, e `alternativePiatto` accetta un ricettario iniettato. Il primo test
+di `tests/famiglia.test.js` difende esattamente questo.
+
+Verificato sul caso peggiore: un uomo di 110 kg molto attivo (3310 kcal) e una
+bambina di 35 kg sedentaria (1200 kcal) — le giornate di lei atterrano a
+1204-1261, dentro il suo pavimento. Reggere quel divario ha richiesto di dare a
+`ribilanciaGiorno` il **secondo passo** che `calibra` aveva già: quando i soli
+carboidrati non bastano si alleggerisce tutto un poco, secondi compresi.
+
+Cancellare il profilo di riferimento **stacca** chi lo seguiva invece di lasciarlo
+puntato al vuoto, e l'import di un fascicolo azzera `seguo`, che punterebbe a un
+id inesistente su quel dispositivo.
 
 ### Fabbisogno dal diario
 

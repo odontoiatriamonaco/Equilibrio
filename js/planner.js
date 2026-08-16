@@ -332,27 +332,44 @@ export function ribilanciaGiorno(giorno, bersaglio, { ferme = new Set(), floor =
 
   const fattore = (limite - kcalFerme) / kcalMobili;
 
-  // Ogni voce parte dalla PROPRIA porzione, non da 1: e' la differenza che
-  // rende questa funzione utile dopo una modifica a mano.
-  const porzioni = mobili.map((x) => {
-    const da = x.voce.porzioni ?? 1;
-    return {
-      chiave: x.chiave,
-      da,
-      a: Math.min(PORZIONE_MAX, Math.max(PORZIONE_MIN, arrotondaPorzione(da * fattore))),
-    };
-  });
+  // Primo passo: si ritoccano solo i carboidrati. Ogni voce parte dalla PROPRIA
+  // porzione, non da 1 — e' la differenza che rende utile questa funzione dopo
+  // una modifica a mano.
+  const nuove = new Map(mobili.map((x) => [
+    x.chiave,
+    Math.min(PORZIONE_MAX, Math.max(PORZIONE_MIN, arrotondaPorzione((x.voce.porzioni ?? 1) * fattore))),
+  ]));
 
-  const kcalDopo = Math.round(kcalFerme + mobili.reduce(
-    (s, x, i) => s + valoriVoce({ ...x.voce, porzioni: porzioni[i].a }).kcal, 0,
+  const conta = () => Math.round(tutte.reduce(
+    (s, x) => s + valoriVoce({ ...x.voce, porzioni: nuove.get(x.chiave) ?? x.voce.porzioni }).kcal, 0,
   ));
+
+  // Secondo passo, lo stesso di `calibra`: se anche coi carboidrati al minimo
+  // la giornata resta molto sopra, si alleggerisce tutto un poco — secondi
+  // compresi. Preferire i carboidrati e' una priorita', non un dogma: lasciare
+  // un giorno al 30% sopra il bersaglio sarebbe peggio che alleggerire il pesce.
+  const attuale = conta();
+  if (attuale > limite * (1 + TOLLERANZA)) {
+    const secondo = Math.max(PORZIONE_SECONDO_MIN, limite / attuale);
+    for (const x of tutte) {
+      if (ferme.has(x.chiave)) continue;
+      const da = nuove.get(x.chiave) ?? x.voce.porzioni ?? 1;
+      nuove.set(x.chiave, Math.max(PORZIONE_ASSOLUTA_MIN, arrotondaPorzione(da * secondo)));
+    }
+  }
+
+  const porzioni = tutte
+    .filter((x) => nuove.has(x.chiave))
+    .map((x) => ({ chiave: x.chiave, da: x.voce.porzioni ?? 1, a: nuove.get(x.chiave) }));
+
+  const kcalDopo = conta();
 
   return {
     porzioni,
     kcalPrima,
     kcalDopo,
     residuo: kcalDopo - limite,
-    alLimite: porzioni.some((p) => p.a === PORZIONE_MIN || p.a === PORZIONE_MAX),
+    alLimite: porzioni.some((p) => p.a <= PORZIONE_MIN || p.a >= PORZIONE_MAX),
   };
 }
 

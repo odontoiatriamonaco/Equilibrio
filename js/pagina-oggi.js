@@ -7,6 +7,7 @@ import { riepilogo as riepilogoEnergia } from './energia.js';
 import {
   caricaSettimana, salvaSettimana, caricaDiario, salvaDiario,
 } from './dati.js';
+import { settimanaPer } from './famiglia.js';
 import {
   kcalGiorno, indiceOggi, iso,
   ribilanciaGiorno, applicaRibilanciamento, vociConChiave,
@@ -37,6 +38,18 @@ let energia = null;
 let settimana = null;
 let diario = null;
 let giorno = null;
+let riferimento = null;
+
+/** Chi decide il menù, quando non sei tu. Va detto, non lasciato indovinare. */
+function rendiRiferimento() {
+  const nota = $('#nota-riferimento');
+  if (!nota) return;
+  nota.hidden = !riferimento;
+  if (!riferimento) return;
+  nota.querySelector('div').innerHTML = `Segui il menù di <strong>${riferimento.nome}</strong>.
+    I piatti sono gli stessi — si cucina una volta sola — ma le porzioni sono le tue,
+    calcolate sul tuo fabbisogno.`;
+}
 
 export async function inizializza() {
   avvia({ nav: 'oggi' });
@@ -55,8 +68,14 @@ export async function inizializza() {
 
   await caricaRicettario(profilo.id);
   energia = riepilogoEnergia(profilo, oggi);
-  settimana = await caricaSettimana(profilo.id, oggi);
+
+  // Chi segue il menu' di un altro vede i suoi piatti, con le proprie porzioni.
+  const derivata = await settimanaPer(profilo, oggi);
+  settimana = derivata.settimana;
+  riferimento = derivata.riferimento;
   diario = await caricaDiario(profilo.id, oggi);
+
+  rendiRiferimento();
 
   const i = settimana ? indiceOggi(settimana, oggi) : -1;
   giorno = i >= 0 ? settimana.giorni[i] : null;

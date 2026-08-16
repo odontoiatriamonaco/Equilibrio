@@ -3,7 +3,7 @@
 import { $, avvia, applicaTema, temaSalvato, num } from './guscio.js';
 import {
   profili, profiloAttivo, impostaProfiloAttivo, eliminaProfilo,
-  esportaFascicolo, importaFascicolo,
+  esportaFascicolo, importaFascicolo, leggi, scrivi,
 } from './store.js';
 import {
   cifra, decifra, nomeFile, scarica, leggiDaFile,
@@ -116,6 +116,34 @@ function annuncia(testo) {
 
 /* --- Profili --------------------------------------------------------------- */
 
+/**
+ * Il selettore «segue il menù di…» su ogni carta.
+ * Sta qui e non in una sezione a parte perché è una proprietà del profilo, e
+ * si va a cercarla dov'è il profilo.
+ */
+function selettoreRiferimento(p, elenco) {
+  // Niente catene: chi fa già da riferimento a qualcuno non può mettersi a
+  // seguire, e chi segue non può fare da riferimento.
+  const haSeguaci = elenco.some((x) => x.seguo === p.id);
+  if (haSeguaci) {
+    const quanti = elenco.filter((x) => x.seguo === p.id).length;
+    return `<span class="piccolo tenue">decide il menù per ${quanti}
+      ${quanti === 1 ? 'altra persona' : 'altre persone'}</span>`;
+  }
+
+  const candidati = elenco.filter((x) => x.id !== p.id && !x.seguo);
+  if (!candidati.length) return '';
+
+  return `<label class="piccolo tenue" style="display:flex; gap:var(--sp-2); align-items:center">
+      segue
+      <select data-seguo="${p.id}" style="max-width:11rem">
+        <option value="">il proprio menù</option>
+        ${candidati.map((x) => `<option value="${x.id}"${x.id === p.seguo ? ' selected' : ''}>
+          ${x.nome || 'Profilo'}</option>`).join('')}
+      </select>
+    </label>`;
+}
+
 async function rendiProfili() {
   const elenco = await profili();
   attivo = await profiloAttivo();
@@ -133,10 +161,13 @@ async function rendiProfili() {
     const corrente = p.id === attivo?.id;
     const misure = p.pesoKg ? `${num(p.pesoKg, 1)} kg · ${num(p.altezzaCm)} cm` : 'dati incompleti';
     return `<div class="carta-piatto" data-profilo="${p.id}">
-      <span class="sigillo"><svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#utente"/></svg></span>
+      <span class="sigillo"><svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#${
+  p.seguo ? 'famiglia' : 'utente'
+}"/></svg></span>
       <span class="corpo">
         <span class="titolo">${p.nome || 'Profilo'}</span>
         <span class="meta"><span>${misure}</span>${corrente ? '<span>in uso</span>' : ''}</span>
+        ${selettoreRiferimento(p, elenco)}
       </span>
       ${corrente
         ? '<span class="pillola pillola-accento">attivo</span>'
@@ -149,6 +180,22 @@ async function rendiProfili() {
       </button>
     </div>`;
   }).join('');
+}
+
+async function cambiaRiferimento(e) {
+  const sel = e.target.closest('[data-seguo]');
+  if (!sel) return;
+
+  const id = sel.dataset.seguo;
+  const p = await leggi('profili', id);
+  await scrivi('profili', { ...p, seguo: sel.value || null });
+  await rendiProfili();
+
+  const capo = sel.value ? await leggi('profili', sel.value) : null;
+  annuncia(capo
+    ? `${p.nome || 'Il profilo'} segue il menù di ${capo.nome}: stessi piatti, `
+      + 'porzioni calcolate sul suo fabbisogno. Si cucina una volta sola.'
+    : `${p.nome || 'Il profilo'} è tornato a un menù suo.`);
 }
 
 async function gestisciProfili(e) {
@@ -174,9 +221,16 @@ async function gestisciProfili(e) {
     return;
   }
   inAttesaDiConferma = null;
-  await eliminaProfilo(id);
+  const esito = await eliminaProfilo(id);
   await rendiProfili();
   await rendiRipristino();
+
+  // Cancellare un riferimento stacca chi lo seguiva: va detto, non scoperto
+  // aprendo il piano e trovandolo cambiato.
+  if (esito?.staccati?.length) {
+    annuncia(`${esito.staccati.join(' e ')} ${esito.staccati.length === 1 ? 'seguiva' : 'seguivano'} `
+      + 'quel profilo: ora ha un menù suo.');
+  }
 }
 
 /* --- Export ---------------------------------------------------------------- */
@@ -260,6 +314,7 @@ export async function inizializza() {
   await rendiRipristino();
 
   $('#profili').addEventListener('click', gestisciProfili);
+  $('#profili').addEventListener('change', cambiaRiferimento);
   $('#esporta').addEventListener('click', esporta);
   $('#importa').addEventListener('click', importa);
   collegaRipristino();

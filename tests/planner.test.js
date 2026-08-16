@@ -270,10 +270,25 @@ describe('riequilibrio di una giornata', () => {
     for (const bersaglio of [200, 800, 1500, 2500, 9000]) {
       const esito = ribilanciaGiorno(giornoDi(), bersaglio);
       for (const p of esito.porzioni) {
-        expect(p.a, `bersaglio ${bersaglio}`).toBeGreaterThanOrEqual(PORZIONE_MIN);
+        // Come in `calibra`: il secondo passo puo' scendere sotto il minimo del
+        // primo, ma mai sotto il minimo assoluto.
+        expect(p.a, `bersaglio ${bersaglio}`).toBeGreaterThanOrEqual(PORZIONE_ASSOLUTA_MIN);
         expect(p.a, `bersaglio ${bersaglio}`).toBeLessThanOrEqual(PORZIONE_MAX);
       }
     }
+  });
+
+  it('alleggerisce anche i secondi quando i soli carboidrati non bastano', () => {
+    // E' il secondo passo di `calibra`, che qui mancava: senza, una giornata
+    // molto sopra il bersaglio restava sopra e basta.
+    const g = giornoDi();
+    const esito = ribilanciaGiorno(g, 700);
+    const tocca = esito.porzioni.filter((p) => {
+      const x = vociConChiave(g).find((v) => v.chiave === p.chiave);
+      return !voceFlessibile(x.voce);
+    });
+    expect(tocca.length).toBeGreaterThan(0);
+    expect(tocca.every((p) => p.a < 1)).toBe(true);
   });
 
   it('il pavimento vince sul bersaglio', () => {

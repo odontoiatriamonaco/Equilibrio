@@ -99,13 +99,18 @@ export function applicaOmissioni(p, omessi) {
 export let piattiScartati = [];
 
 /**
- * Innesta le pietanze di un profilo nel ricettario e applica le omissioni.
- * Va chiamata all'avvio di ogni pagina, prima di leggere `piatti`.
+ * Il ricettario come lo vede UNA persona: le sue pietanze di casa innestate,
+ * i suoi alimenti sgraditi tolti dai piatti.
+ *
+ * Pura di proposito, e non tocca `piatti`: a tavola ci sono piu' persone, e per
+ * sapere cosa puo' mangiare Gaia non si deve sporcare il ricettario in uso di
+ * Carmela. Il globale qui sotto e' solo il suo primo consumatore.
  *
  * @param {Array} deiUtente pietanze di casa
  * @param {Iterable<string>} idOmessi alimenti da non mettere nei piatti
+ * @returns {{piatti:Array, indice:Map, scartati:Array}}
  */
-export function registraPiattiUtente(deiUtente = [], idOmessi = []) {
+export function lenteRicettario(deiUtente = [], idOmessi = []) {
   const coperti = new Set(deiUtente.map((p) => p.derivatoDa).filter(Boolean));
   const base = [
     ...piattiDiSerie.filter((p) => !coperti.has(p.id)),
@@ -122,9 +127,21 @@ export function registraPiattiUtente(deiUtente = [], idOmessi = []) {
     else scartati.push({ id: p.id, nome: p.nome, motivo: esito.motivo });
   }
 
-  piatti = buoni;
-  piattiScartati = scartati;
-  INDICE_PIATTI = new Map(piatti.map((p) => [p.id, p]));
+  return { piatti: buoni, indice: new Map(buoni.map((p) => [p.id, p])), scartati };
+}
+
+/**
+ * Innesta le pietanze di un profilo nel ricettario IN USO e applica le omissioni.
+ * Va chiamata all'avvio di ogni pagina, prima di leggere `piatti`.
+ *
+ * @param {Array} deiUtente pietanze di casa
+ * @param {Iterable<string>} idOmessi alimenti da non mettere nei piatti
+ */
+export function registraPiattiUtente(deiUtente = [], idOmessi = []) {
+  const lente = lenteRicettario(deiUtente, idOmessi);
+  piatti = lente.piatti;
+  piattiScartati = lente.scartati;
+  INDICE_PIATTI = lente.indice;
   return piatti;
 }
 

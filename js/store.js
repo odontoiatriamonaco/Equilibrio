@@ -5,7 +5,7 @@
    mai da una scansione globale, cosi' due profili non si mescolano per errore. */
 
 const NOME_DB = 'equilibrio';
-const VERSIONE_DB = 1;
+const VERSIONE_DB = 2;
 
 /** Archivi partizionati per profilo (hanno tutti l'indice `profiloId`). */
 export const ARCHIVI_PROFILO = [
@@ -16,6 +16,9 @@ export const ARCHIVI_PROFILO = [
   'spesa',
   'piatti',
   'misure',
+  // Chi segue il menu' di un altro tiene qui le proprie porzioni e le proprie
+  // alternative: il piano resta uno solo, questo e' lo strato personale.
+  'personalizzazioni',
 ];
 
 /** Archivi globali: non contengono dati sanitari. */
@@ -168,11 +171,22 @@ export async function eliminaProfilo(profiloId) {
   tx.objectStore('profili').delete(profiloId);
   await attesaTx(tx);
 
+  // Chi seguiva questo profilo resterebbe puntato al vuoto: si stacca, e
+  // torna a un piano suo. Meglio slegato che rotto.
+  const staccati = [];
+  for (const p of await profili()) {
+    if (p.seguo !== profiloId) continue;
+    await scrivi('profili', { ...p, seguo: null });
+    staccati.push(p.nome || 'Profilo');
+  }
+
   const attivo = await leggi('impostazioni', 'profiloAttivo');
   if (attivo?.valore === profiloId) {
     const rimasti = await profili();
     await impostaProfiloAttivo(rimasti[0]?.id ?? null);
   }
+
+  return { staccati };
 }
 
 /* --- Fascicolo completo (per export/import) -------------------------------- */
@@ -213,6 +227,9 @@ export async function importaFascicolo(fascicolo, { nuovoNome } = {}) {
     ...fascicolo.profilo,
     id: nuovoId,
     nome: nuovoNome || fascicolo.profilo?.nome || 'Profilo importato',
+    // Il legame di famiglia punta a un id che su QUESTO dispositivo non esiste:
+    // portarselo dietro lascerebbe un riferimento pendente. Si ricollega a mano.
+    seguo: null,
     importatoIl: new Date().toISOString(),
   };
   await scrivi('profili', profilo);

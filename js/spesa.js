@@ -35,13 +35,38 @@ export function aggregaSettimana(settimana, commensali = 1) {
 }
 
 /**
+ * Somma quello che mangia tutta la tavola.
+ *
+ * Il moltiplicatore scalare non basta piu': in famiglia ognuno ha le sue
+ * porzioni, ricavate dal suo fabbisogno, e `aggregaSettimana` le collassa in un
+ * numero solo. Qui si sommano le settimane gia' scalate su ciascuno — una
+ * spesa, tre piatti diversi, si cucina una volta.
+ *
+ * @param {Array<{settimana:object}>} membri
+ * @returns {Map<string, number>}
+ */
+export function aggregaFamiglia(membri) {
+  const somma = new Map();
+  for (const m of membri) {
+    for (const [id, g] of aggregaSettimana(m.settimana, 1)) {
+      somma.set(id, (somma.get(id) || 0) + g);
+    }
+  }
+  return somma;
+}
+
+/**
  * Costruisce la lista completa.
  *
  * @param {object} settimana
- * @param {{commensali?:number, dispensa?:Array<{alimentoId:string, grammi:number}>}} opzioni
+ * @param {{commensali?:number, dispensa?:Array<{alimentoId:string, grammi:number}>,
+ *          membri?:Array<{profilo:object, settimana:object}>}} opzioni
+ *        `membri`, quando c'e', ha la precedenza sul moltiplicatore.
  */
-export function costruisciLista(settimana, { commensali = 1, dispensa = [] } = {}) {
-  const necessario = aggregaSettimana(settimana, commensali);
+export function costruisciLista(settimana, { commensali = 1, dispensa = [], membri = null } = {}) {
+  const necessario = membri?.length
+    ? aggregaFamiglia(membri)
+    : aggregaSettimana(settimana, commensali);
   const scorte = new Map(dispensa.map((d) => [d.alimentoId, d.grammi]));
 
   const voci = [];
@@ -96,7 +121,8 @@ export function costruisciLista(settimana, { commensali = 1, dispensa = [] } = {
 
   return {
     inizio: settimana.inizio,
-    commensali,
+    commensali: membri?.length || commensali,
+    perChi: membri?.map((m) => m.profilo.nome || 'Profilo') || null,
     reparti: ordinati,
     voci,
     residui,

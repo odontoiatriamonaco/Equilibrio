@@ -50,7 +50,7 @@
       <div class="scheda scheda-alta" id="riepilogo"></div>
 
       <div class="riga non-stampare" style="flex-wrap:wrap; margin-block: var(--sp-5); gap: var(--sp-3)">
-        <div class="campo" style="min-width:8rem">
+        <div class="campo" style="min-width:8rem" id="riquadro-commensali">
           <label for="commensali">Per quante persone</label>
           <select id="commensali">
             <option value="1">1</option>
@@ -60,6 +60,13 @@
             <option value="5">5</option>
             <option value="6">6</option>
           </select>
+        </div>
+
+        <!-- Con più persone a tavola il numero non basta: ognuno ha le sue
+             porzioni, e si sceglie chi mangia a casa questa settimana. -->
+        <div class="campo" id="riquadro-tavola" hidden style="min-width:14rem">
+          <label id="etichetta-tavola">Chi mangia a casa</label>
+          <div class="pila" id="tavola" style="gap:var(--sp-1)"></div>
         </div>
         <button class="bottone bottone-2" id="copia">
           <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#condividi"/></svg>

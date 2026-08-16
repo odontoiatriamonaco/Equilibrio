@@ -4,6 +4,7 @@ import { avvia, icona, $, $$, num } from './guscio.js';
 import { profiloAttivo } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import { riepilogo as riepilogoEnergia } from './energia.js';
+import { settimanaPer, salvaPersonalizzazione, lenteDi } from './famiglia.js';
 import { caricaPreferenze } from './preferenze.js';
 import { caricaSettimana, salvaSettimana } from './dati.js';
 import {
@@ -34,6 +35,8 @@ let energia = null;
 let pref = null;
 let settimana = null;
 let scambioAperto = null;
+let riferimento = null;
+let avvisiFamiglia = [];
 
 export async function inizializza() {
   avvia({ nav: 'piano' });
@@ -48,7 +51,18 @@ export async function inizializza() {
   energia = riepilogoEnergia(profilo);
   await caricaRicettario(profilo.id);
   pref = await caricaPreferenze(profilo.id);
-  settimana = await caricaSettimana(profilo.id);
+
+  const derivata = await settimanaPer(profilo);
+  settimana = derivata.settimana;
+  riferimento = derivata.riferimento;
+  avvisiFamiglia = derivata.avvisi;
+
+  // Chi segue non rigenera: il menu' lo decide il riferimento, altrimenti
+  // la settimana si sdoppierebbe e non si cucinerebbe piu' una volta sola.
+  if (riferimento) {
+    $('#rigenera').hidden = true;
+    $('#genera').hidden = true;
+  }
 
   $('#rigenera').addEventListener('click', () => rigenera());
   $('#genera').addEventListener('click', () => rigenera());
@@ -102,6 +116,32 @@ function rendiAvvio() {
     ${s === di ? 'Da lunedì si va a regime.' : `Ancora ${(di - s) * 7} giorni di salita.`}`;
 }
 
+/**
+ * Chi decide il menù, e cosa in quel menù non va bene per chi lo segue.
+ * I pasti problematici non si tolgono: un buco non si può cucinare, e la
+ * scelta del sostituto resta a chi mangia.
+ */
+function rendiRiferimento() {
+  const nota = $('#nota-riferimento');
+  nota.hidden = !riferimento;
+  if (!riferimento) return;
+
+  const righe = [`Segui il menù di <strong>${riferimento.nome}</strong>: gli stessi piatti,
+    con le porzioni calcolate sul tuo fabbisogno.`];
+
+  if (avvisiFamiglia.length) {
+    const quanti = avvisiFamiglia.length;
+    righe.push(`<strong>${quanti} ${quanti === 1 ? 'pietanza' : 'pietanze'}</strong>
+      ${quanti === 1 ? 'non va' : 'non vanno'} bene per te: ${
+  avvisiFamiglia.slice(0, 3).map((a) => `${a.nome} (${a.motivo})`).join(', ')
+}${quanti > 3 ? ' e altre' : ''}. Tocca lo scambio su quella riga per sceglierne un'altra:
+      cambia solo nel tuo piatto.`);
+  }
+
+  nota.className = avvisiFamiglia.length ? 'avviso avviso-sgarro' : 'avviso';
+  nota.querySelector('div').innerHTML = righe.join(' ');
+}
+
 /* --- Disegno --------------------------------------------------------------- */
 
 function disegna() {
@@ -130,6 +170,7 @@ function disegna() {
   }
 
   rendiAvvio();
+  rendiRiferimento();
 
   $('#settimana').innerHTML = settimana.giorni
     .map((g, i) => cartaGiorno(g, i, i === oggi)).join('');
@@ -206,11 +247,13 @@ function rigaVoce(voce, giorno, pasto, indice) {
 
   // La pillola resta corta per stare in riga, ma «73 g» da solo non dice di
   // cosa: il nome per esteso va a chi legge con lo schermo e a chi passa sopra.
-  const etichetta = guida
-    ? `<span class="pillola pillola-dato num" title="${guida.alimento.nome}">
-         ${num(guida.grammi)} g<span class="solo-lettori"> di ${guida.alimento.nome.toLowerCase()}</span>
-       </span>`
-    : '';
+  const etichetta = voce.nonPerMe
+    ? `<span class="pillola pillola-sgarro" title="${voce.nonPerMe}">non per te</span>`
+    : guida
+      ? `<span class="pillola pillola-dato num" title="${guida.alimento.nome}">
+           ${num(guida.grammi)} g<span class="solo-lettori"> di ${guida.alimento.nome.toLowerCase()}</span>
+         </span>`
+      : '';
 
   const elenco = dosi.map((d) => `
     <li class="riga-tra">
@@ -244,7 +287,7 @@ function rigaVoce(voce, giorno, pasto, indice) {
 
 /* --- Scambio --------------------------------------------------------------- */
 
-function apriScambio(giorno, pasto, indice) {
+async function apriScambio(giorno, pasto, indice) {
   const voce = settimana.giorni[giorno].pasti[pasto][indice];
   scambioAperto = { giorno, pasto, indice };
 
@@ -252,14 +295,21 @@ function apriScambio(giorno, pasto, indice) {
     .flatMap((g) => Object.values(g.pasti).flat())
     .map((v) => v.id));
 
+  // Chi segue cerca nel PROPRIO ricettario: le sue pietanze di casa, i suoi
+  // alimenti tolti. Quello in uso porta la lente di chi decide il menù.
+  const lente = riferimento ? await lenteDi(profilo.id) : null;
+
   const alternative = alternativePiatto(voce, {
     preferenze: pref,
     mese: new Date().getMonth() + 1,
     esclusiIds: usati,
     quanti: 10,
+    ...(lente ? { piatti: lente.piatti } : {}),
   });
 
-  $('#scambio-titolo').textContent = `Al posto di «${nomeVoce(voce)}»`;
+  $('#scambio-titolo').textContent = riferimento
+    ? `Al posto di «${nomeVoce(voce)}», solo per te`
+    : `Al posto di «${nomeVoce(voce)}»`;
   $('#scambio-elenco').innerHTML = alternative.length
     ? alternative.map((a) => `
         <button class="carta-piatto" data-nuovo="${a.id}">
@@ -276,8 +326,20 @@ function apriScambio(giorno, pasto, indice) {
     : `<div class="vuoto"><p>Non ci sono alternative disponibili con le tue preferenze.</p></div>`;
 
   $$('#scambio-elenco [data-nuovo]').forEach((b) => b.addEventListener('click', async () => {
-    settimana = scambiaPiatto(settimana, { ...scambioAperto, nuovoId: b.dataset.nuovo });
-    await salvaSettimana(profilo.id, settimana);
+    if (riferimento) {
+      // Il menù è di un altro: si cambia solo nel proprio piatto, e resta
+      // scritto nello strato personale. Gli altri non se ne accorgono.
+      const g = settimana.giorni[scambioAperto.giorno];
+      await salvaPersonalizzazione(profilo.id, settimana.inizio,
+        `${g.etichetta}|${scambioAperto.pasto}|${scambioAperto.indice}`,
+        { sostituto: b.dataset.nuovo });
+      const derivata = await settimanaPer(profilo);
+      settimana = derivata.settimana;
+      avvisiFamiglia = derivata.avvisi;
+    } else {
+      settimana = scambiaPiatto(settimana, { ...scambioAperto, nuovoId: b.dataset.nuovo });
+      await salvaSettimana(profilo.id, settimana);
+    }
     $('#scambio').close();
     disegna();
   }));

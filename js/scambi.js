@@ -55,16 +55,25 @@ function arrotondaGrammi(g) {
  * Piatti che possono prendere il posto di quello dato: stesso tipo, ammessi
  * dalle preferenze, di stagione, ordinati per somiglianza calorica e gradimento.
  *
+ * `piatti` e' iniettabile perche' a tavola c'e' piu' di una persona: cercare
+ * un'alternativa per Gaia vuol dire cercarla nel SUO ricettario, non in quello
+ * in uso — che porta le pietanze di casa e le omissioni di qualcun altro.
+ *
  * @param {object} voce  la voce del piano da sostituire
- * @param {{preferenze:object, mese:number, esclusiIds?:Set<string>, quanti?:number}} ctx
+ * @param {{preferenze:object, mese:number, esclusiIds?:Set<string>,
+ *          quanti?:number, piatti?:Array}} ctx
  */
-export function alternativePiatto(voce, { preferenze, mese, esclusiIds = new Set(), quanti = 8 }) {
-  const attuale = tuttiPiatti.find((p) => p.id === voce.id);
+export function alternativePiatto(voce, {
+  preferenze, mese, esclusiIds = new Set(), quanti = 8, piatti: catalogo = tuttiPiatti,
+}) {
+  const attuale = catalogo.find((p) => p.id === voce.id);
   if (!attuale) return [];
 
-  const kcalAttuali = valoriVoce({ ...voce, porzioni: 1 }).kcal;
+  // Dal catalogo dato, non dall'indice globale: possono essere due ricettari
+  // diversi, e lo stesso piatto valere kcal diverse per due persone.
+  const kcalAttuali = valoriPiatto(attuale, 1).kcal;
 
-  return tuttiPiatti
+  return catalogo
     .filter((p) => p.id !== attuale.id && p.tipo === attuale.tipo)
     .filter((p) => !esclusiIds.has(p.id))
     .filter((p) => ammesso(preferenze, p))
