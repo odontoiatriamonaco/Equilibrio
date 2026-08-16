@@ -361,6 +361,26 @@ export function dosePrincipale(voce, commensali = 1) {
   return guida ? { alimento: guida.a, grammi: Math.round(guida.ing.g * quante) } : null;
 }
 
+/**
+ * Quante porzioni valgono i grammi scritti a mano per l'ingrediente guida.
+ *
+ * 100 g di pasta su una ricetta che ne prevede 40 fanno 2,5 porzioni: il piatto
+ * scala tutto, sugo compreso, e resta una puttanesca. Se uno ha fatto il doppio
+ * di pasta, il sugo che ci vuole e' di piu' — tenerlo fermo darebbe un piatto
+ * che non e' mai esistito.
+ *
+ * Non si arrotonda a 0,05 come fa il generatore: qui il numero l'ha scritto una
+ * persona, e arrotondarlo le restituirebbe grammi diversi da quelli che ha
+ * pesato.
+ *
+ * @returns {number|null} null se il piatto non ha un ingrediente guida
+ */
+export function porzioniPerGrammi(voce, grammi, commensali = 1) {
+  const base = dosePrincipale({ ...voce, porzioni: 1 }, commensali);
+  if (!base || !(base.grammi > 0)) return null;
+  return Math.max(0, grammi) / base.grammi;
+}
+
 export const TIPI = {
   colazione: 'Colazione',
   spuntino: 'Spuntino',

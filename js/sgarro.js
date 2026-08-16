@@ -10,8 +10,11 @@
    sul traguardo. Dire la verita' e' una funzione, non una rinuncia. */
 
 import { KCAL_PER_KG } from './energia.js';
-import { valoriVoce, piatti as tuttiPiatti, alimento } from './alimenti.js';
-import { tutteLeVoci, kcalGiorno, riducibileGiorno, PORZIONE_MIN } from './planner.js';
+import { valoriVoce } from './alimenti.js';
+import {
+  tutteLeVoci, kcalGiorno, riducibileGiorno, PORZIONE_MIN,
+  voceFlessibile as flessibile, arrotondaPorzione,
+} from './planner.js';
 
 /** Riduzione massima su un singolo giorno, in frazione del suo target. */
 export const TAGLIO_MAX = 0.20;
@@ -197,18 +200,12 @@ function riduciGiorno(giorno, taglio, floor) {
   const daTogliere = attuale - bersaglio;
   if (daTogliere <= 0) return 0;
 
-  const fattore = Math.max(PORZIONE_MIN / 1, (kcalFlessibili - daTogliere) / kcalFlessibili);
+  const fattore = Math.max(PORZIONE_MIN, (kcalFlessibili - daTogliere) / kcalFlessibili);
   for (const v of voci) {
-    v.porzioni = Math.max(PORZIONE_MIN, Math.round(v.porzioni * fattore * 20) / 20);
+    v.porzioni = Math.max(PORZIONE_MIN, arrotondaPorzione(v.porzioni * fattore));
   }
   giorno.quota = kcalGiorno(giorno);
   return daTogliere;
-}
-
-function flessibile(voce) {
-  if (voce.tipo === 'alimento') return alimento(voce.id)?.gruppo === 'carboidrati';
-  const p = tuttiPiatti.find((x) => x.id === voce.id);
-  return p ? ['primo', 'piatto-unico', 'colazione', 'spuntino'].includes(p.tipo) : false;
 }
 
 /* --- Riepilogo leggibile --------------------------------------------------- */

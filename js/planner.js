@@ -239,7 +239,7 @@ function eFlessibile(voce) {
 }
 
 /** Porzioni a passi di 0,05: piu' fine di cosi' e' finta precisione. */
-function arrotondaPorzione(f) {
+export function arrotondaPorzione(f) {
   return Math.round(f * 20) / 20;
 }
 
@@ -267,6 +267,106 @@ export function riducibileGiorno(giorno) {
       const alMinimo = valoriVoce({ ...v, porzioni: PORZIONE_MIN }).kcal;
       return s + Math.max(0, ora - alMinimo);
     }, 0));
+}
+
+/* --- Riequilibrio di una giornata sola --------------------------------------
+   Quando una quantita' la decide una persona — «di pasta ne ho fatti 100 g,
+   non 40» — il resto della giornata deve riassestarsi da solo.
+
+   `calibra` non serve a questo e non si tocca: rifa' la settimana da zero
+   assumendo tutte le porzioni a 1, riscrive ogni voce senza eccezioni e passa
+   una seconda volta su tutte, disfacendo qualunque esclusione. Qui invece
+   quello che e' gia' stato deciso o gia' mangiato deve restare fermo.
+   -------------------------------------------------------------------------- */
+
+/** Le voci di un giorno, con la chiave «pasto|indice» usata dal diario. */
+export function vociConChiave(giorno) {
+  const fuori = [];
+  for (const [pasto, voci] of Object.entries(giorno.pasti || {})) {
+    (voci || []).forEach((voce, i) => {
+      if (voce) fuori.push({ chiave: `${pasto}|${i}`, pasto, indice: i, voce });
+    });
+  }
+  return fuori;
+}
+
+/**
+ * Riporta una giornata sul bersaglio muovendo solo le voci ancora in gioco.
+ *
+ * NON applica niente: restituisce le porzioni nuove, cosi' l'anteprima e la
+ * conferma girano sullo stesso identico calcolo e non possono divergere.
+ *
+ * @param {object} giorno
+ * @param {number} bersaglio  kcal a cui portare la giornata
+ * @param {{ferme?:Set<string>, floor?:number}} opzioni  `ferme` sono chiavi
+ *        «pasto|indice» intoccabili: gia' mangiate, o decise a mano
+ * @returns {{porzioni:Array<{chiave:string, da:number, a:number}>,
+ *           kcalPrima:number, kcalDopo:number, residuo:number, alLimite:boolean}}
+ *          `residuo` positivo = la giornata non riassorbe tutto; negativo =
+ *          avanza margine.
+ */
+export function ribilanciaGiorno(giorno, bersaglio, { ferme = new Set(), floor = 0 } = {}) {
+  const limite = Math.max(bersaglio, floor);
+  const kcalPrima = kcalGiorno(giorno);
+
+  const tutte = vociConChiave(giorno);
+  const mobili = tutte.filter((x) => eFlessibile(x.voce) && !ferme.has(x.chiave));
+  const chiaviMobili = new Set(mobili.map((x) => x.chiave));
+
+  const kcalFerme = tutte
+    .filter((x) => !chiaviMobili.has(x.chiave))
+    .reduce((s, x) => s + valoriVoce(x.voce).kcal, 0);
+  const kcalMobili = mobili.reduce((s, x) => s + valoriVoce(x.voce).kcal, 0);
+
+  // Niente da muovere: la giornata e' quella che e', e va detto invece di
+  // fingere un riequilibrio.
+  if (!mobili.length || kcalMobili <= 0) {
+    return {
+      porzioni: [],
+      kcalPrima,
+      kcalDopo: kcalPrima,
+      residuo: Math.round(kcalPrima - limite),
+      alLimite: true,
+    };
+  }
+
+  const fattore = (limite - kcalFerme) / kcalMobili;
+
+  // Ogni voce parte dalla PROPRIA porzione, non da 1: e' la differenza che
+  // rende questa funzione utile dopo una modifica a mano.
+  const porzioni = mobili.map((x) => {
+    const da = x.voce.porzioni ?? 1;
+    return {
+      chiave: x.chiave,
+      da,
+      a: Math.min(PORZIONE_MAX, Math.max(PORZIONE_MIN, arrotondaPorzione(da * fattore))),
+    };
+  });
+
+  const kcalDopo = Math.round(kcalFerme + mobili.reduce(
+    (s, x, i) => s + valoriVoce({ ...x.voce, porzioni: porzioni[i].a }).kcal, 0,
+  ));
+
+  return {
+    porzioni,
+    kcalPrima,
+    kcalDopo,
+    residuo: kcalDopo - limite,
+    alLimite: porzioni.some((p) => p.a === PORZIONE_MIN || p.a === PORZIONE_MAX),
+  };
+}
+
+/** Scrive nel giorno le porzioni calcolate da `ribilanciaGiorno`. */
+export function applicaRibilanciamento(giorno, esito) {
+  const perChiave = new Map(esito.porzioni.map((p) => [p.chiave, p.a]));
+  for (const x of vociConChiave(giorno)) {
+    const nuova = perChiave.get(x.chiave);
+    if (nuova !== undefined) x.voce.porzioni = nuova;
+  }
+  // Un giorno di sgarro tiene l'extra dentro `quota` (vedi sgarro.js):
+  // ricalcolarla come fa `calibra` cancellerebbe l'evento registrato.
+  if (giorno.stato !== 'sgarro') giorno.quota = kcalGiorno(giorno);
+  return giorno;
 }
 
 export function kcalGiorno(giorno, commensali = 1) {

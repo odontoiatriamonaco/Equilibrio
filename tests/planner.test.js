@@ -3,8 +3,9 @@ import {
   generaSettimana, kcalGiorno, kcalSettimana, valoriGiorno, tutteLeVoci,
   conteggiSettimana, inizioSettimana, iso, categorieDi, GIORNI_VARIETA,
   PORZIONE_MIN, PORZIONE_MAX, PORZIONE_ASSOLUTA_MIN,
+  ribilanciaGiorno, applicaRibilanciamento, vociConChiave, voceFlessibile,
 } from '../js/planner.js';
-import { piatti, valoriVoce } from '../js/alimenti.js';
+import { piatti, valoriVoce, porzioniPerGrammi, dosePrincipale } from '../js/alimenti.js';
 import { vuote, imposta, alternaAllergia } from '../js/preferenze.js';
 import { generatore, pescaPesato, semeDaTesto } from '../js/casuale.js';
 
@@ -229,5 +230,130 @@ describe('voci del piano', () => {
     // arrotondato una volta non e' esattamente la meta' di 275.
     expect(due.kcal).toBeCloseTo(uno.kcal * 2, -0.5);
     expect(Math.abs(due.kcal - uno.kcal * 2)).toBeLessThanOrEqual(1);
+  });
+});
+
+/* --- Riequilibrio di una giornata sola --------------------------------------
+   Serve quando una quantita' la decide una persona: «di pasta ne ho fatti
+   100 g, non 40». Il resto della giornata si riassesta, ma senza toccare
+   quello che e' gia' stato mangiato o gia' deciso.
+   -------------------------------------------------------------------------- */
+
+describe('riequilibrio di una giornata', () => {
+  const giornoDi = (opzioni = {}) => genera(opzioni).giorni[0];
+
+  it('non tocca mai una voce dichiarata ferma', () => {
+    const g = giornoDi();
+    const flessibili = vociConChiave(g).filter((x) => voceFlessibile(x.voce));
+    const ferma = flessibili[0];
+    const prima = ferma.voce.porzioni;
+
+    const esito = ribilanciaGiorno(g, 1200, { ferme: new Set([ferma.chiave]) });
+
+    expect(esito.porzioni.map((p) => p.chiave)).not.toContain(ferma.chiave);
+    applicaRibilanciamento(g, esito);
+    expect(ferma.voce.porzioni).toBe(prima);
+  });
+
+  it('non tocca le voci già mangiate', () => {
+    const g = giornoDi();
+    const chiavi = vociConChiave(g).filter((x) => voceFlessibile(x.voce)).map((x) => x.chiave);
+    const mangiate = new Set(chiavi.slice(0, 2));
+
+    const esito = ribilanciaGiorno(g, 1100, { ferme: mangiate });
+    for (const c of mangiate) {
+      expect(esito.porzioni.map((p) => p.chiave)).not.toContain(c);
+    }
+  });
+
+  it('nessuna porzione esce mai dai limiti, per quanto assurdo sia il bersaglio', () => {
+    for (const bersaglio of [200, 800, 1500, 2500, 9000]) {
+      const esito = ribilanciaGiorno(giornoDi(), bersaglio);
+      for (const p of esito.porzioni) {
+        expect(p.a, `bersaglio ${bersaglio}`).toBeGreaterThanOrEqual(PORZIONE_MIN);
+        expect(p.a, `bersaglio ${bersaglio}`).toBeLessThanOrEqual(PORZIONE_MAX);
+      }
+    }
+  });
+
+  it('il pavimento vince sul bersaglio', () => {
+    const esito = ribilanciaGiorno(giornoDi(), 400, { floor: 1300 });
+    // Il bersaglio effettivo e' il pavimento, non i 400 chiesti.
+    expect(esito.kcalDopo).toBeGreaterThan(900);
+  });
+
+  it('avendo mangiato di più, il residuo è quello che la giornata non riassorbe', () => {
+    const g = giornoDi();
+    const grosso = vociConChiave(g).find((x) => voceFlessibile(x.voce));
+    grosso.voce.porzioni = 6;           // una porzione fuori scala, decisa a mano
+    grosso.voce.fissata = true;
+
+    const esito = ribilanciaGiorno(g, 1700, { ferme: new Set([grosso.chiave]) });
+
+    expect(esito.residuo).toBeGreaterThan(0);
+    expect(esito.alLimite).toBe(true);
+    // Il residuo e' davvero la distanza dal bersaglio, non un numero inventato.
+    expect(esito.kcalDopo - 1700).toBe(esito.residuo);
+  });
+
+  it('avendo mangiato di meno, i pasti che restano salgono ma non oltre il massimo', () => {
+    const g = giornoDi();
+    const piccolo = vociConChiave(g).find((x) => voceFlessibile(x.voce));
+    piccolo.voce.porzioni = 0.1;
+    piccolo.voce.fissata = true;
+
+    const esito = ribilanciaGiorno(g, 1700, { ferme: new Set([piccolo.chiave]) });
+
+    for (const p of esito.porzioni) {
+      expect(p.a).toBeGreaterThanOrEqual(p.da);   // salgono, non scendono
+      expect(p.a).toBeLessThanOrEqual(PORZIONE_MAX);
+    }
+  });
+
+  it('non inventa un riequilibrio quando non c’è niente da muovere', () => {
+    const g = giornoDi();
+    const tutte = new Set(vociConChiave(g).map((x) => x.chiave));
+    const esito = ribilanciaGiorno(g, 900, { ferme: tutte });
+
+    expect(esito.porzioni).toEqual([]);
+    expect(esito.kcalDopo).toBe(esito.kcalPrima);
+    expect(esito.alLimite).toBe(true);
+  });
+
+  it('anteprima e applicazione danno lo stesso identico risultato', () => {
+    // E' il motivo per cui la funzione non applica: se anteprima e conferma
+    // divergessero, l'utente confermerebbe una cosa e ne otterrebbe un'altra.
+    const g = giornoDi();
+    const esito = ribilanciaGiorno(g, 1400);
+    applicaRibilanciamento(g, esito);
+    expect(kcalGiorno(g)).toBe(esito.kcalDopo);
+  });
+
+  it('non cancella l’extra di un giorno di sgarro', () => {
+    const g = giornoDi();
+    g.stato = 'sgarro';
+    g.quota = 2600;                     // kcal del giorno + lo sgarro registrato
+    applicaRibilanciamento(g, ribilanciaGiorno(g, 1400));
+    expect(g.quota).toBe(2600);
+  });
+});
+
+describe('dai grammi alle porzioni', () => {
+  it('scrivere il doppio dei grammi raddoppia le porzioni', () => {
+    const voce = { tipo: 'piatto', id: 'pasta-puttanesca', porzioni: 0.5 };
+    const previsti = dosePrincipale({ ...voce, porzioni: 1 }).grammi;
+
+    expect(porzioniPerGrammi(voce, previsti)).toBeCloseTo(1, 5);
+    expect(porzioniPerGrammi(voce, previsti * 2)).toBeCloseTo(2, 5);
+    // Zero e' un caso vero: «non l'ho mangiato».
+    expect(porzioniPerGrammi(voce, 0)).toBe(0);
+  });
+
+  it('non arrotonda: i grammi scritti tornano quelli', () => {
+    const voce = { tipo: 'piatto', id: 'pasta-puttanesca', porzioni: 1 };
+    for (const g of [37, 55, 93, 117]) {
+      const p = porzioniPerGrammi(voce, g);
+      expect(dosePrincipale({ ...voce, porzioni: p }).grammi).toBe(g);
+    }
   });
 });

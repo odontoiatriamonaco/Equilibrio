@@ -4,10 +4,17 @@ import { avvia, alternaTema, icona, $, $$, num } from './guscio.js';
 import { profiloAttivo } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import { riepilogo as riepilogoEnergia } from './energia.js';
-import { caricaSettimana, caricaDiario, salvaDiario } from './dati.js';
-import { kcalGiorno, indiceOggi, iso } from './planner.js';
+import {
+  caricaSettimana, salvaSettimana, caricaDiario, salvaDiario,
+} from './dati.js';
+import {
+  kcalGiorno, indiceOggi, iso,
+  ribilanciaGiorno, applicaRibilanciamento, vociConChiave,
+} from './planner.js';
+import { calcolaRecupero, applicaRecupero, racconta } from './sgarro.js';
 import {
   nomeVoce, valoriVoce, iconaPiatto, vociOggetto, TIPI, dosiVoce,
+  dosePrincipale, porzioniPerGrammi,
 } from './alimenti.js';
 import { rendiFascia } from './ui-budget.js';
 import {
@@ -55,6 +62,7 @@ export async function inizializza() {
   giorno = i >= 0 ? settimana.giorni[i] : null;
 
   collegaProdotto();
+  collegaQuantita();
   disegna(i);
 }
 
@@ -147,13 +155,26 @@ function disegnaPasti() {
   dosiVoce(voce).map((d) => `${d.alimento?.nome || d.a} ${num(d.grammi)} g`).join(' · ')
 }</span>` : ''}
             </span>
+            <button class="bottone-icona" data-quantita="${chiave}"
+                    aria-label="Cambia la quantità di ${nomeVoce(voce)}">
+              ${icona('bilancia', 'icona icona-sm')}
+            </button>
             ${voce.tipo === 'piatto'
-              ? `<a class="bottone-icona" href="/ricette.html" aria-label="Vedi la ricetta">
+              ? `<a class="bottone-icona" href="/ricette.html" aria-label="Vedi la ricetta di ${nomeVoce(voce)}">
                    ${icona(iconaPiatto(oggetto || {}), 'icona icona-sm')}</a>`
               : ''}
           </label>`;
       }).join('')}
     </section>`).join('');
+
+  $$('#pasti-oggi [data-quantita]').forEach((b) => b.addEventListener('click', (e) => {
+    // Il bottone sta dentro la <label> della spunta: senza questo, cambiare la
+    // quantita' segnerebbe anche il pasto come consumato.
+    e.preventDefault();
+    e.stopPropagation();
+    const [pasto, i] = b.dataset.quantita.split('|');
+    apriQuantita(pasto, Number(i));
+  }));
 
   $$('#pasti-oggi input[type="checkbox"]').forEach((c) =>
     c.addEventListener('change', async () => {
@@ -165,6 +186,173 @@ function disegnaPasti() {
       await salvaDiario(diario);
       disegnaAnello(giorno?.quota ?? energia.fabbisogno.target);
     }));
+}
+
+/* --- Quanto ne ho mangiato davvero ------------------------------------------
+   Il piano dice 40 g di pasta; capita di farne 100. Si scrivono i grammi
+   dell'ingrediente che fa il piatto, il piatto scala tutto in proporzione, e i
+   pasti che restano nella giornata si riassestano. Quello che la giornata non
+   riesce ad assorbire si puo' spalmare sulla settimana, col motore dello
+   sgarro, che sa gia' farlo dentro i vincoli.
+   -------------------------------------------------------------------------- */
+
+let quantitaAperta = null;
+
+function collegaQuantita() {
+  $('#chiudi-quantita').addEventListener('click', () => $('#dialogo-quantita').close());
+  $('#quantita-grammi').addEventListener('input', anteprimaQuantita);
+  $('#conferma-quantita').addEventListener('click', () => confermaQuantita(false));
+  $('#spalma-quantita').addEventListener('click', () => confermaQuantita(true));
+}
+
+function apriQuantita(pasto, indice) {
+  const voce = giorno?.pasti?.[pasto]?.[indice];
+  if (!voce) return;
+
+  const base = dosePrincipale({ ...voce, porzioni: 1 });
+  if (!base) return;
+
+  quantitaAperta = { pasto, indice, chiave: `${pasto}|${indice}`, base };
+
+  $('#quantita-piatto').textContent = nomeVoce(voce);
+  $('#quantita-etichetta').textContent = `Quanti grammi di ${base.alimento.nome.toLowerCase()}`;
+  $('#quantita-aiuto').textContent = `il piano ne prevede ${num(base.grammi)} g`
+    + ' — scrivi 0 se non l’hai mangiato';
+  $('#quantita-grammi').value = dosePrincipale(voce).grammi;
+
+  anteprimaQuantita();
+  $('#dialogo-quantita').showModal();
+}
+
+/**
+ * Calcola tutto senza applicare niente, su una copia della giornata.
+ * L'anteprima e la conferma chiamano questa stessa funzione: se divergessero,
+ * si confermerebbe una cosa e se ne otterrebbe un'altra.
+ */
+function simulaQuantita() {
+  const { pasto, indice, chiave } = quantitaAperta;
+  const grammi = Math.max(0, Number($('#quantita-grammi').value) || 0);
+
+  const copia = structuredClone(giorno);
+  const voce = copia.pasti[pasto][indice];
+  const porzioni = porzioniPerGrammi(voce, grammi);
+  if (porzioni === null) return null;
+
+  voce.porzioni = porzioni;
+  voce.fissata = true;
+
+  // Ferme restano le voci gia' mangiate e tutte quelle gia' decise a mano.
+  const ferme = new Set(diario.consumato || []);
+  ferme.add(chiave);
+  for (const x of vociConChiave(copia)) if (x.voce.fissata) ferme.add(x.chiave);
+
+  const bersaglio = energia.fabbisogno.target;
+  const esito = ribilanciaGiorno(copia, bersaglio, {
+    ferme, floor: energia.fabbisogno.floor,
+  });
+
+  return { copia, voce, grammi, esito, bersaglio };
+}
+
+function anteprimaQuantita() {
+  const sim = simulaQuantita();
+  const riquadro = $('#quantita-anteprima');
+  if (!sim) { riquadro.innerHTML = ''; return; }
+
+  const { pasto, indice } = quantitaAperta;
+  const prima = valoriVoce(giorno.pasti[pasto][indice]).kcal;
+  const dopo = valoriVoce(sim.voce).kcal;
+
+  // Cosa si muove nella giornata, in grammi: e' il punto di tutta la funzione.
+  const perChiave = new Map(vociConChiave(sim.copia).map((x) => [x.chiave, x.voce]));
+  const mosse = sim.esito.porzioni
+    .filter((p) => p.a !== p.da)
+    .map((p) => {
+      // Le grammature vanno lette con la porzione NUOVA: `ribilanciaGiorno` non
+      // applica niente, quindi la voce nella copia porta ancora quella vecchia.
+      const voce = perChiave.get(p.chiave);
+      const g = dosePrincipale({ ...voce, porzioni: p.a });
+      return g ? `${nomeVoce(voce)} → ${num(g.grammi)} g` : nomeVoce(voce);
+    });
+
+  const residuo = sim.esito.residuo;
+  const sopra = residuo > 20;
+  const sotto = residuo < -20;
+
+  $('#spalma-quantita').hidden = !sopra;
+  $('#testo-conferma-quantita').textContent = sopra ? 'Tienilo solo su oggi' : 'Conferma';
+
+  riquadro.innerHTML = `
+    <div class="riga-tra">
+      <span class="morbido">${nomeVoce(sim.voce)}</span>
+      <span class="num"><span class="tenue">${num(prima)}</span> → <strong>${num(dopo)}</strong> kcal</span>
+    </div>
+    <div class="riga-tra" style="margin-top:var(--sp-2)">
+      <span class="morbido">La giornata</span>
+      <span class="num"><strong>${num(sim.esito.kcalDopo)}</strong> di ${num(sim.bersaglio)} kcal</span>
+    </div>
+    ${mosse.length ? `<p class="piccolo morbido" style="margin-top:var(--sp-2)">
+      Si riassestano: ${mosse.join(' · ')}.</p>` : ''}
+    ${sopra ? `<p class="piccolo sgarro-testo" style="margin-top:var(--sp-2)">
+      La giornata non riassorbe ${num(residuo)} kcal: i pasti che restano sono già al minimo.
+      ${raccontoSettimana(residuo)}</p>` : ''}
+    ${sotto ? `<p class="piccolo morbido" style="margin-top:var(--sp-2)">
+      Resti sotto di ${num(-residuo)} kcal e va bene così: non ti faccio mangiare
+      per far quadrare un numero.</p>` : ''}`;
+}
+
+/** La frase sulla settimana, scritta dal motore dello sgarro. */
+function raccontoSettimana(extra) {
+  const i = indiceOggi(settimana);
+  if (!settimana || i < 0) return '';
+  const recupero = calcolaRecupero({
+    giorni: settimana.giorni,
+    target: settimana.target,
+    floor: settimana.floor,
+    extra,
+    indiceEvento: i,
+    modo: 'dopo',
+  });
+  return racconta({
+    recupero,
+    extra,
+    modo: 'dopo',
+    deficitGiornaliero: energia.fabbisogno.deficit || 300,
+    etichetta: 'Il di più',
+  });
+}
+
+async function confermaQuantita(spalma) {
+  const sim = simulaQuantita();
+  if (!sim) return;
+
+  const { pasto, indice } = quantitaAperta;
+  giorno.pasti[pasto][indice].porzioni = sim.voce.porzioni;
+  giorno.pasti[pasto][indice].fissata = true;
+  applicaRibilanciamento(giorno, sim.esito);
+
+  if (spalma && sim.esito.residuo > 0) {
+    const i = indiceOggi(settimana);
+    const recupero = calcolaRecupero({
+      giorni: settimana.giorni,
+      target: settimana.target,
+      floor: settimana.floor,
+      extra: sim.esito.residuo,
+      indiceEvento: i,
+      modo: 'dopo',
+    });
+    // `indiceEvento: null` perche' questo non e' uno sgarro: le calorie in piu'
+    // sono gia' dentro la giornata, non vanno aggiunte una seconda volta.
+    settimana = applicaRecupero(settimana, recupero, { indiceEvento: null });
+    giorno = settimana.giorni[i];
+  }
+
+  await salvaSettimana(profilo.id, settimana);
+  diario.kcalTotali = kcalConsumate();
+  await salvaDiario(diario);
+
+  $('#dialogo-quantita').close();
+  disegna(indiceOggi(settimana));
 }
 
 /* --- Prodotti confezionati -------------------------------------------------- */

@@ -251,6 +251,47 @@
     </div>
   </dialog>
 
+  <!-- Quanto ne ho mangiato davvero -->
+  <dialog id="dialogo-quantita" class="dialogo" aria-labelledby="titolo-quantita">
+    <div class="dialogo-riquadro">
+      <header class="dialogo-testa">
+        <span class="sigillo"><svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#bilancia"/></svg></span>
+        <h2 id="titolo-quantita" style="flex:1; min-width:0">Quanto ne hai mangiato</h2>
+        <button class="bottone-icona" id="chiudi-quantita" aria-label="Chiudi">
+          <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#chiudi"/></svg>
+        </button>
+      </header>
+
+      <div class="dialogo-corpo pila">
+        <p class="occhiello" id="quantita-piatto"></p>
+
+        <div class="campo">
+          <label for="quantita-grammi" id="quantita-etichetta">Quanti grammi</label>
+          <input id="quantita-grammi" type="number" inputmode="numeric" step="5" min="0">
+          <span class="aiuto" id="quantita-aiuto"></span>
+        </div>
+
+        <div class="scheda scheda-piatta" id="quantita-anteprima"></div>
+
+        <div class="avviso">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#info"/></svg>
+          <div>Cambio le porzioni dei pasti che restano, non i piatti: quello che
+            hai comprato resta buono. La lista della spesa però ricalcola i grammi,
+            quindi se ci torni sopra li vedrai aggiornati.</div>
+        </div>
+
+        <button class="bottone bottone-largo" id="conferma-quantita">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spunta"/></svg>
+          <span id="testo-conferma-quantita">Solo per oggi</span>
+        </button>
+        <button class="bottone bottone-2 bottone-largo" id="spalma-quantita" hidden>
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#calendario-piu"/></svg>
+          Spalma sulla settimana
+        </button>
+      </div>
+    </div>
+  </dialog>
+
   <script type="module">
     import { inizializza } from '/js/pagina-oggi.js';
     inizializza();
