@@ -202,6 +202,20 @@
           <button role="tab" aria-selected="false">Grammi</button>
         </div>
 
+        <!-- Chi sta guardando: sta in cima a ogni pagina. Con più profili sullo
+             stesso dispositivo, «di chi sono questi numeri» deve avere risposta
+             senza doverla cercare. -->
+        <div class="riga" style="gap:var(--sp-3); flex-wrap:wrap">
+          <a class="chi-sei" href="#">
+            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#utente"/></svg>
+            <span class="pila"><b>Carmela</b></span>
+          </a>
+          <a class="chi-sei" href="#">
+            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#famiglia"/></svg>
+            <span class="pila"><b>Gaia</b><small>segue Carmela</small></span>
+          </a>
+        </div>
+
         <!-- Variante a due righe: la scelta porta con sé la propria conseguenza.
              Si usa dove l'etichetta da sola non informa — «Regolare» non vuol
              dire niente finché non si sa quanto costa in settimane. -->

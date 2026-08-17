@@ -348,7 +348,10 @@ async function quale() {
 }
 
 export async function inizializza() {
-  avvia({ nav: 'altro' });
+  // Qui il nome in cima lo mette la pagina stessa, ed e' quello del profilo
+  // che si sta MODIFICANDO: mostrare accanto quello in uso direbbe due nomi
+  // diversi nello stesso posto.
+  avvia({ nav: 'altro', chiSei: false });
   montaAttivita();
   montaRitmi();
   montaBandiere();

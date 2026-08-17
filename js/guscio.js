@@ -94,6 +94,49 @@ export function montaNav(attiva) {
   nav.querySelector('[data-tema-rail]').addEventListener('click', alternaTema);
 }
 
+/* --- Di chi e' questo piano ------------------------------------------------
+   Sullo stesso dispositivo possono esserci piu' persone, e da quando esiste la
+   dieta di famiglia il piano che si vede puo' essere derivato da quello di un
+   altro. Guardare i numeri della persona sbagliata e' un errore facile e
+   silenzioso: il nome sta in cima a ogni pagina, e si tocca per cambiare.
+   -------------------------------------------------------------------------- */
+
+export function rendiChiSei(profilo, riferimento) {
+  const testa = document.querySelector('.intestazione');
+  if (!testa || !profilo) return;
+
+  const nodo = document.createElement('a');
+  nodo.className = 'chi-sei';
+  nodo.href = '/impostazioni.html';
+  nodo.setAttribute('aria-label', riferimento
+    ? `Stai vedendo ${profilo.nome}, che segue il menù di ${riferimento.nome}. Cambia profilo`
+    : `Stai vedendo ${profilo.nome}. Cambia profilo`);
+
+  nodo.innerHTML = `
+    ${icona(riferimento ? 'famiglia' : 'utente', 'icona icona-sm')}
+    <span class="pila">
+      <b>${profilo.nome || 'Profilo'}</b>
+      ${riferimento ? `<small>segue ${riferimento.nome}</small>` : ''}
+    </span>`;
+
+  // Prende il posto dell'icona anonima verso le impostazioni, dove c'e': fa la
+  // stessa cosa, ma dice anche di chi si tratta.
+  const vecchia = testa.querySelector('a[href="/impostazioni.html"]:not(.chi-sei)');
+  if (vecchia) vecchia.replaceWith(nodo);
+  else testa.appendChild(nodo);
+}
+
+/** Legge il profilo in uso e lo mostra. Non blocca l'avvio della pagina. */
+async function mostraChiSei() {
+  try {
+    const { profiloAttivo, leggi } = await import('./store.js');
+    const profilo = await profiloAttivo();
+    if (!profilo) return;
+    const riferimento = profilo.seguo ? await leggi('profili', profilo.seguo) : null;
+    rendiChiSei(profilo, riferimento);
+  } catch { /* senza profilo la pagina funziona lo stesso */ }
+}
+
 /* --- Utilita' ------------------------------------------------------------- */
 
 export function $(sel, dove = document) {
@@ -115,9 +158,12 @@ export function num(valore, decimali = 0) {
 
 /* --- Avvio ---------------------------------------------------------------- */
 
-export function avvia({ nav } = {}) {
+export function avvia({ nav, chiSei = true } = {}) {
   aggiornaColoreBarra();
   if (nav) montaNav(nav);
+  // Import pigro dello store: la guida e la style guide non hanno profili e
+  // non devono pagarne il costo.
+  if (chiSei) mostraChiSei();
 
   // Se il tema segue il sistema, va aggiornato quando il sistema cambia.
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
