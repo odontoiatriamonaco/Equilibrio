@@ -81,6 +81,7 @@ export function generaSettimana(opzioni) {
     target, floor, preferenze, mese = new Date().getMonth() + 1,
     seme = Date.now(), rigidi = [], commensali = 1,
     piatti = tuttiPiatti, inizio = inizioSettimana(new Date()),
+    vincoli = {},
   } = opzioni;
 
   const semeNum = typeof seme === 'string' ? semeDaTesto(seme) : seme >>> 0;
@@ -89,7 +90,13 @@ export function generaSettimana(opzioni) {
   const disponibili = piatti.filter((p) => ammesso(preferenze, p));
   const usati = new Map();          // piattoId -> ultimo giorno in cui e' comparso
   const conteggi = new Map();       // categoria -> volte nella settimana
-  const tetti = preferenze?.tetti || {};
+
+  // I tetti di salute vincono su quelli scelti a mano, e solo se sono piu'
+  // stretti: una condizione dichiarata non deve poter allargare niente.
+  const tetti = { ...(preferenze?.tetti || {}) };
+  for (const [cat, volte] of Object.entries(vincoli.tetti || {})) {
+    tetti[cat] = Math.min(tetti[cat] ?? Infinity, volte);
+  }
 
   const giorni = [];
   for (let g = 0; g < 7; g++) {
@@ -97,10 +104,10 @@ export function generaSettimana(opzioni) {
     data.setDate(data.getDate() + g);
 
     const pasti = {
-      colazione: [scegli({ tipo: 'colazione' }, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd })],
-      'spuntino-mattina': [scegli({ tipo: 'spuntino' }, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd })],
+      colazione: [scegli({ tipo: 'colazione' }, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli })],
+      'spuntino-mattina': [scegli({ tipo: 'spuntino' }, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli })],
       pranzo: [],
-      'spuntino-pomeriggio': [scegli({ tipo: 'spuntino' }, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd })],
+      'spuntino-pomeriggio': [scegli({ tipo: 'spuntino' }, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli })],
       cena: [],
     };
 
@@ -108,7 +115,7 @@ export function generaSettimana(opzioni) {
       for (const slot of schemaPasto(pasto, rnd)) {
         const voce = slot.alimento
           ? { tipo: 'alimento', id: slot.alimento, porzioni: 1 }
-          : scegli(slot, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd });
+          : scegli(slot, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli });
         if (voce) pasti[pasto].push(voce);
       }
     }
@@ -135,7 +142,7 @@ export function generaSettimana(opzioni) {
 }
 
 function scegli(slot, giorno, ctx) {
-  const { disponibili, usati, conteggi, tetti, preferenze, mese, rnd } = ctx;
+  const { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli } = ctx;
   const candidati = disponibili.filter((p) => p.tipo === slot.tipo);
   if (!candidati.length) return null;
 
@@ -157,6 +164,11 @@ function scegli(slot, giorno, ctx) {
       // Fuori stagione non si esclude: si rende improbabile. Le pesche a
       // gennaio esistono, ma non e' quello che si vuole vedere nel piano.
       if (!diStagione(p, mese)) w *= 0.15;
+      // Col tetto al sodio i piatti molto salati non spariscono — sarebbe una
+      // dieta triste — ma diventano rari, come il fuori stagione. Il sodio e'
+      // l'unico valore «clinico» che il ricettario conosce su tutti gli alimenti.
+      w *= pesoSodio(p, vincoli?.sodioMax);
+      w *= pesoFibra(p, vincoli?.fibraMin);
       ammessi.push(p);
       pesi.push(w);
     }
@@ -171,6 +183,47 @@ function scegli(slot, giorno, ctx) {
     }
   }
   return null;
+}
+
+/**
+ * Quanto un piatto va reso improbabile per via del sodio.
+ *
+ * Un giorno ha cinque momenti: un piatto che da solo copre piu' di un quinto
+ * del tetto giornaliero e' «salato» per questo piano. Sopra quella soglia il
+ * peso cala in proporzione, senza mai azzerarsi — escludere del tutto
+ * lascerebbe fuori mezzo ricettario e la dieta non si seguirebbe.
+ */
+function pesoSodio(piatto, sodioMax) {
+  if (!sodioMax) return 1;
+  const sod = valoriVoce({ tipo: 'piatto', id: piatto.id, porzioni: 1 }).sod
+    ?? sodioDi(piatto);
+  const quota = sodioMax / 5;
+  if (sod <= quota) return 1;
+  return Math.max(0.1, quota / sod);
+}
+
+/**
+ * Quanto favorire un piatto per la fibra che porta.
+ *
+ * Al contrario del sodio qui non si penalizza: si preferisce. Cinque momenti al
+ * giorno, quindi un piatto che porta un quinto del bersaglio e' gia' «buono» e
+ * non guadagna nulla; sotto, il peso cala un poco. Nessuno viene escluso —
+ * anche un secondo di pesce senza fibra deve poter entrare nel menu'.
+ */
+function pesoFibra(piatto, fibraMin) {
+  if (!fibraMin) return 1;
+  const fib = valoriVoce({ tipo: 'piatto', id: piatto.id, porzioni: 1 }).fib || 0;
+  const quota = fibraMin / 5;
+  if (fib >= quota) return 1.6;
+  return Math.max(0.5, 0.5 + (fib / quota));
+}
+
+/** Il sodio di un piatto, sommato dagli ingredienti come tutto il resto. */
+function sodioDi(piatto) {
+  return (piatto.ingredienti || []).reduce((s, ing) => {
+    const a = alimento(ing.a);
+    return s + (a ? (a.per100g.sod * ing.g) / 100 : 0);
+  }, 0);
 }
 
 function sforaTetto(piatto, conteggi, tetti) {

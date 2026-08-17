@@ -359,16 +359,82 @@ export function tdeeAdattivo({ kcalMedie, deltaPesoTendenzaKg, giorni, aderenza 
  * Non è burocrazia difensiva: sono i casi in cui un deficit calorico
  * deciso da un algoritmo può fare danno.
  */
+/**
+ * Le condizioni dichiarate nel questionario.
+ *
+ * `effetti` e' quello che l'app cambia DAVVERO nel piano, e vale solo dove il
+ * motore sa misurare: il sodio e' l'unico nutriente clinico presente su tutti
+ * gli alimenti, la fibra c'e', i tetti settimanali per categoria ci sono.
+ * Grassi saturi, zuccheri semplici, glutine, lattosio e purine NON sono nei
+ * dati: dove mancano l'app non finge di aggiustare, lo dice e basta — ed e' la
+ * ragione del campo `limite`.
+ */
 export const BANDIERE = [
   { id: 'gravidanza', testo: 'Sei in gravidanza', bloccante: true },
   { id: 'allattamento', testo: 'Stai allattando', bloccante: true },
   { id: 'disturbiAlimentari', testo: 'Hai avuto disturbi del comportamento alimentare', bloccante: true },
   { id: 'minore', testo: 'Hai meno di 18 anni', bloccante: true },
+
+  {
+    id: 'ipertensione',
+    testo: 'Hai la pressione alta',
+    bloccante: false,
+    effetti: { sodioMax: 2000 },
+    nota: 'Tengo il sodio sotto 2000 mg al giorno, come indica l’OMS, e i piatti '
+      + 'più salati diventano rari nel menù.',
+  },
+  {
+    id: 'colesterolo',
+    testo: 'Hai il colesterolo alto',
+    bloccante: false,
+    effetti: { tetti: { salumi: 0, formaggi: 2, 'carne-rossa': 1 }, fibraMin: 30 },
+    limite: 'I grassi saturi non sono fra i valori che conosco, quindi non posso '
+      + 'contarli: stringo le categorie che li portano di più e alzo la fibra.',
+  },
+  {
+    id: 'diverticoli',
+    testo: 'Hai i diverticoli o il colon irritabile',
+    bloccante: false,
+    effetti: { fibraMin: 30 },
+    limite: 'Alzo la fibra, che è quello che serve nei periodi tranquilli. '
+      + 'Durante un attacco serve l’opposto: in quel caso segui il medico e non me.',
+  },
   { id: 'diabete', testo: 'Hai il diabete', bloccante: false },
   { id: 'tiroide', testo: 'Hai una patologia della tiroide', bloccante: false },
-  { id: 'renaliEpatiche', testo: 'Hai una patologia renale o epatica', bloccante: false },
+  {
+    id: 'renaliEpatiche',
+    testo: 'Hai una patologia renale o epatica',
+    bloccante: false,
+    effetti: { senzaMinimoProteico: true },
+    nota: 'Smetto di imporre il minimo di proteine: nell’insufficienza renale '
+      + 'spesso vanno nella direzione opposta, e quanto ne servono lo dice il '
+      + 'nefrologo, non io.',
+  },
   { id: 'farmaci', testo: 'Assumi farmaci che influenzano peso o appetito', bloccante: false },
 ];
+
+/** Somma gli effetti delle condizioni dichiarate, prendendo sempre il piu' prudente. */
+export function vincoliDa(risposte = {}) {
+  const fuori = { tetti: {} };
+  for (const b of BANDIERE) {
+    if (!risposte[b.id] || !b.effetti) continue;
+    for (const [chiave, valore] of Object.entries(b.effetti)) {
+      if (chiave === 'tetti') {
+        for (const [cat, volte] of Object.entries(valore)) {
+          // Due condizioni sullo stesso gruppo: vince la piu' stretta.
+          fuori.tetti[cat] = Math.min(fuori.tetti[cat] ?? Infinity, volte);
+        }
+      } else if (chiave === 'sodioMax') {
+        fuori.sodioMax = Math.min(fuori.sodioMax ?? Infinity, valore);
+      } else if (chiave === 'fibraMin') {
+        fuori.fibraMin = Math.max(fuori.fibraMin ?? 0, valore);
+      } else {
+        fuori[chiave] = valore;
+      }
+    }
+  }
+  return fuori;
+}
 
 /**
  * @param {Record<string, boolean>} risposte
@@ -378,9 +444,17 @@ export function valutaBandiere(risposte = {}) {
   const attive = BANDIERE.filter((b) => risposte[b.id]);
   const bloccanti = attive.filter((b) => b.bloccante);
 
+  // Cosa l'app cambia davvero, e cosa dichiara di non saper fare.
+  const vincoli = vincoliDa(risposte);
+  const note = attive.filter((b) => b.nota).map((b) => b.nota);
+  const limiti = attive.filter((b) => b.limite).map((b) => b.limite);
+
   if (bloccanti.length) {
     return {
       bloccante: true,
+      vincoli,
+      note,
+      limiti,
       daSegnalare: attive.map((b) => b.id),
       messaggio:
         'In questa condizione un piano ipocalorico va impostato da un medico o da un nutrizionista. ' +
@@ -391,6 +465,9 @@ export function valutaBandiere(risposte = {}) {
   if (attive.length) {
     return {
       bloccante: false,
+      vincoli,
+      note,
+      limiti,
       daSegnalare: attive.map((b) => b.id),
       messaggio:
         'Puoi usare il piano, ma parlane con il medico curante: la tua condizione può cambiare ' +
@@ -398,7 +475,7 @@ export function valutaBandiere(risposte = {}) {
     };
   }
 
-  return { bloccante: false, daSegnalare: [], messaggio: null };
+  return { bloccante: false, vincoli, note: [], limiti: [], daSegnalare: [], messaggio: null };
 }
 
 /* --- Riepilogo ------------------------------------------------------------- */
@@ -459,7 +536,13 @@ export function riepilogo(profilo, oggi = new Date()) {
     bmr: Math.round(bmr),
     tdee: Math.round(td),
     pesoDesiderabile: desiderabile,
-    proteineMinime: proteineMinime(Math.min(profilo.pesoKg, desiderabile.max)),
+    // Con una patologia renale il minimo non si impone: nell'insufficienza
+    // renale le proteine vanno spesso nella direzione opposta, e quante ne
+    // servano lo dice il nefrologo. Meglio nessun numero che uno che fa male.
+    proteineMinime: bandiere.vincoli?.senzaMinimoProteico
+      ? null
+      : proteineMinime(Math.min(profilo.pesoKg, desiderabile.max)),
+    vincoliSalute: bandiere.vincoli,
     fabbisogno,
     bandiere,
     // Il traguardo si calcola sul deficit a regime, non su quello ridotto di

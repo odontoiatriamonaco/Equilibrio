@@ -95,6 +95,9 @@ async function rigenera() {
     seme,
     commensali: profilo.commensali || 1,
     inizio: inizioSettimana(new Date()),
+    // Le condizioni dichiarate nel profilo entrano nella scelta dei piatti,
+    // non solo in un avviso.
+    vincoli: energia.vincoliSalute,
   });
   await salvaSettimana(profilo.id, settimana);
   disegna();
@@ -223,7 +226,14 @@ function cartaGiorno(giorno, indice, eOggi) {
 
       <div class="giorno-corpo">
         <div class="riga-tra piccolo morbido" style="margin-bottom: var(--sp-3)">
-          <span>P ${num(v.pro, 0)} g · C ${num(v.car, 0)} g · G ${num(v.gra, 0)} g · fibra ${num(v.fib, 0)} g</span>
+          <span>P ${num(v.pro, 0)} g · C ${num(v.car, 0)} g · G ${num(v.gra, 0)} g · fibra ${num(v.fib, 0)} g${
+  // Il sale si mostra solo a chi ha un tetto: agli altri e' un numero in piu'
+  // che non serve a niente.
+  energia.vincoliSalute?.sodioMax
+    ? ` · <span class="${v.sod > energia.vincoliSalute.sodioMax ? 'sgarro-testo' : ''}">sale ${
+      num((v.sod * 2.5) / 1000, 1)} g</span>`
+    : ''
+}</span>
           <button class="bottone bottone-fantasma" data-rigido="${indice}"
                   title="Un giorno rigido non viene alleggerito dal recupero di uno sgarro">
             ${icona(giorno.rigido ? 'blocco' : 'orologio', 'icona icona-sm')}

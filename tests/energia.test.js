@@ -4,7 +4,7 @@ import {
   pesoDesiderabile, bmrMifflin, tdee, floorCalorico, targetGiornaliero,
   proteineMinime, previsioneTraguardo, pesoDiTendenza, tdeeAdattivo,
   valutaBandiere, riepilogo,
-  margineDisponibile, ritmoDi, fattoreAvvio, quoteAvvio, giorniAggiuntiDallAvvio,
+  margineDisponibile, ritmoDi, fattoreAvvio, quoteAvvio, giorniAggiuntiDallAvvio, vincoliDa,
   RITMI, AVVIO_SETTIMANE,
   FLOOR_DONNA, DEFICIT_MAX, CALO_MAX_SETTIMANA, KCAL_PER_KG,
 } from '../js/energia.js';
@@ -367,7 +367,10 @@ describe('bandiere rosse', () => {
   });
 
   it('non dice nulla se non c\'è nulla da dire', () => {
-    expect(valutaBandiere({})).toEqual({ bloccante: false, daSegnalare: [], messaggio: null });
+    expect(valutaBandiere({})).toEqual({
+      bloccante: false, daSegnalare: [], messaggio: null,
+      vincoli: { tetti: {} }, note: [], limiti: [],
+    });
   });
 });
 
@@ -390,5 +393,66 @@ describe('riepilogo', () => {
     expect(r.fabbisogno.deficit).toBe(0);
     expect(r.fabbisogno.target).toBe(r.tdee);
     expect(r.traguardo).toBeNull();
+  });
+});
+
+/* --- Le condizioni di salute che toccano il piano ---------------------------
+   La regola: l'app cambia il piano SOLO dove sa misurare. Il sodio e la fibra
+   sono nei dati, i tetti settimanali esistono. Grassi saturi, zuccheri, glutine
+   e purine no — e dove non sa, dichiara invece di fingere.
+   -------------------------------------------------------------------------- */
+
+describe('condizioni di salute e piano', () => {
+  it('senza condizioni non impone niente di nuovo', () => {
+    const v = vincoliDa({});
+    expect(v.tetti).toEqual({});
+    expect(v.sodioMax).toBeUndefined();
+    expect(v.fibraMin).toBeUndefined();
+  });
+
+  it('la pressione alta mette un tetto al sodio', () => {
+    expect(vincoliDa({ ipertensione: true }).sodioMax).toBe(2000);
+  });
+
+  it('il colesterolo stringe i tetti e alza la fibra', () => {
+    const v = vincoliDa({ colesterolo: true });
+    expect(v.tetti.salumi).toBe(0);
+    expect(v.tetti.formaggi).toBe(2);
+    expect(v.fibraMin).toBe(30);
+  });
+
+  it('due condizioni insieme prendono sempre la più prudente', () => {
+    const v = vincoliDa({ colesterolo: true, diverticoli: true, ipertensione: true });
+    expect(v.tetti.salumi).toBe(0);
+    expect(v.sodioMax).toBe(2000);
+    expect(v.fibraMin).toBe(30);
+  });
+
+  it('la patologia renale toglie il minimo proteico, e lo dice', () => {
+    // 1,2 g/kg puo' essere controindicato nell'insufficienza renale: l'app
+    // smette di imporlo invece di sostituirlo con un numero che non sa.
+    const b = valutaBandiere({ renaliEpatiche: true });
+    expect(b.vincoli.senzaMinimoProteico).toBe(true);
+    expect(b.note.join(' ')).toMatch(/nefrologo/);
+
+    const r = riepilogo({ ...SEDENTARIA, bandiere: { renaliEpatiche: true } }, AGOSTO);
+    expect(r.proteineMinime).toBeNull();
+    // Senza la condizione il minimo resta, per tutti gli altri.
+    expect(riepilogo(SEDENTARIA, AGOSTO).proteineMinime).toBeGreaterThan(0);
+  });
+
+  it('dove non sa misurare lo dichiara invece di fingere', () => {
+    // I grassi saturi e le purine non sono nei dati: se un giorno lo diventassero
+    // questo test va aggiornato, ma finche' non lo sono l'app non deve tacere.
+    const b = valutaBandiere({ colesterolo: true, diverticoli: true });
+    expect(b.limiti.length).toBe(2);
+    expect(b.limiti.join(' ')).toMatch(/grassi saturi/);
+    expect(b.limiti.join(' ')).toMatch(/attacco/);
+  });
+
+  it('una condizione bloccante porta comunque con sé i suoi vincoli', () => {
+    const b = valutaBandiere({ gravidanza: true, ipertensione: true });
+    expect(b.bloccante).toBe(true);
+    expect(b.vincoli.sodioMax).toBe(2000);
   });
 });

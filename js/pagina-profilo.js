@@ -226,6 +226,20 @@ function aggiorna() {
       <div>Ho ridotto il ritmo che avevi scelto: ${r.fabbisogno.limiti.join('; ')}.
         Scendere più in fretta non fa perdere più grasso, fa perdere muscolo.</div></div>`);
   }
+  // Cosa cambia davvero nel piano per le condizioni dichiarate.
+  if (r.bandiere.note?.length) {
+    avvisi.push(`<div class="avviso avviso-ok">
+      <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spunta"/></svg>
+      <div><strong>Cosa cambio nel piano:</strong> ${r.bandiere.note.join(' ')}</div></div>`);
+  }
+  // E cosa NON sa fare: un'app che tace su questo lascia credere di aver
+  // adattato la dieta a una malattia, che sarebbe peggio di non fare niente.
+  if (r.bandiere.limiti?.length) {
+    avvisi.push(`<div class="avviso avviso-sgarro">
+      <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#avviso"/></svg>
+      <div><strong>Quello che invece non posso fare:</strong> ${r.bandiere.limiti.join(' ')}</div></div>`);
+  }
+
   if (r.avvio.attivo) {
     avvisi.push(`<div class="avviso avviso-sgarro">
       <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#info"/></svg>
@@ -264,7 +278,9 @@ function aggiorna() {
       ${r.classeVita ? riga('Circonferenza vita', `${num(dati.vitaCm)} cm`, r.classeVita.testo, CLASSE_PILLOLA[r.classeVita.codice]) : ''}
       ${riga('Massa grassa stimata', `${r.massaGrassa.toFixed(1)} %`)}
       ${riga('Peso desiderabile', `${r.pesoDesiderabile.min.toFixed(1)}–${r.pesoDesiderabile.max.toFixed(1)} kg`)}
-      ${riga('Proteine minime al giorno', `${num(r.proteineMinime)} g`)}
+      ${r.proteineMinime === null
+    ? riga('Proteine minime al giorno', '—', 'le decide il medico', 'pillola-sgarro')
+    : riga('Proteine minime al giorno', `${num(r.proteineMinime)} g`)}
       ${riga('Non si scende sotto', `${num(r.fabbisogno.floor)} kcal`)}
       ${riga('Calo a settimana', `${kgSettimana(r.fabbisogno.deficitPieno ?? r.fabbisogno.deficit).toFixed(2).replace('.', ',')} kg`)}
     </div>
