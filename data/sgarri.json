@@ -1,43 +1,1006 @@
 {
-  "versione": 1,
-  "nota": "Catalogo degli sgarri, con le calorie stimate della porzione intera come si mangia davvero. Sono stime di riferimento — un babà di pasticceria e uno del bar non sono la stessa cosa — e servono a registrare uno sgarro con un tocco invece che a occhio. `intervallo` dice quanto possono variare.",
-
+  "versione": 2,
+  "nota": "Catalogo degli sgarri, con le calorie stimate della porzione intera come si mangia davvero. Sono stime di riferimento — un baba di pasticceria e uno del bar non sono la stessa cosa — e servono a registrare uno sgarro con un tocco invece che a occhio. `intervallo` dice quanto possono variare. Le categorie servono a trovare la voce in fretta: un elenco di novanta righe piatte non si scorre.",
+  "categorie": [
+    {
+      "id": "pizzeria",
+      "nome": "In pizzeria"
+    },
+    {
+      "id": "strada",
+      "nome": "Friggitoria e cibo di strada"
+    },
+    {
+      "id": "fuori",
+      "nome": "Al bar e al ristorante"
+    },
+    {
+      "id": "dolce",
+      "nome": "Dolci e pasticceria"
+    },
+    {
+      "id": "bevanda",
+      "nome": "Da bere"
+    },
+    {
+      "id": "famiglia",
+      "nome": "Pranzi e cene in famiglia"
+    },
+    {
+      "id": "casa",
+      "nome": "A casa, fuori pasto"
+    }
+  ],
   "sgarri": [
-    { "id": "pizza-margherita", "nome": "Pizza margherita", "kcal": 850, "intervallo": [700, 1100], "categoria": "pizzeria" },
-    { "id": "pizza-farcita", "nome": "Pizza farcita o ripiena", "kcal": 1200, "intervallo": [1000, 1500], "categoria": "pizzeria" },
-    { "id": "pizza-fritta", "nome": "Pizza fritta", "kcal": 950, "intervallo": [800, 1200], "categoria": "pizzeria" },
-    { "id": "cuoppo", "nome": "Cuoppo di frittura", "kcal": 700, "intervallo": [550, 950], "categoria": "strada" },
-    { "id": "mozzarella-carrozza", "nome": "Mozzarella in carrozza", "kcal": 350, "intervallo": [280, 450], "categoria": "strada" },
-    { "id": "frittatina", "nome": "Frittatina di pasta", "kcal": 400, "intervallo": [320, 500], "categoria": "strada" },
-    { "id": "panino-bar", "nome": "Panino del bar", "kcal": 550, "intervallo": [400, 800], "categoria": "fuori" },
-
-    { "id": "sfogliatella", "nome": "Sfogliatella riccia", "kcal": 420, "intervallo": [350, 500], "categoria": "dolce" },
-    { "id": "baba", "nome": "Babà", "kcal": 380, "intervallo": [300, 480], "categoria": "dolce" },
-    { "id": "pastiera", "nome": "Pastiera (una fetta)", "kcal": 450, "intervallo": [350, 550], "categoria": "dolce" },
-    { "id": "zeppola", "nome": "Zeppola di San Giuseppe", "kcal": 520, "intervallo": [420, 650], "categoria": "dolce" },
-    { "id": "casatiello", "nome": "Casatiello (una fetta)", "kcal": 500, "intervallo": [400, 650], "categoria": "dolce" },
-    { "id": "struffoli", "nome": "Struffoli (un piattino)", "kcal": 400, "intervallo": [300, 550], "categoria": "dolce" },
-    { "id": "cornetto", "nome": "Cornetto e cappuccino", "kcal": 380, "intervallo": [300, 480], "categoria": "dolce" },
-    { "id": "gelato-cono", "nome": "Gelato, cono da due gusti", "kcal": 300, "intervallo": [220, 420], "categoria": "dolce" },
-    { "id": "gelato-coppa", "nome": "Coppa di gelato con panna", "kcal": 550, "intervallo": [420, 700], "categoria": "dolce" },
-    { "id": "tiramisu", "nome": "Tiramisù", "kcal": 450, "intervallo": [350, 600], "categoria": "dolce" },
-    { "id": "torta-fetta", "nome": "Torta di compleanno (una fetta)", "kcal": 400, "intervallo": [280, 600], "categoria": "dolce" },
-
-    { "id": "aperitivo", "nome": "Aperitivo con stuzzichini", "kcal": 600, "intervallo": [400, 900], "categoria": "fuori" },
-    { "id": "spritz", "nome": "Uno spritz", "kcal": 180, "intervallo": [140, 240], "categoria": "bevanda" },
-    { "id": "birra-media", "nome": "Birra media", "kcal": 200, "intervallo": [160, 260], "categoria": "bevanda" },
-    { "id": "vino-bicchiere", "nome": "Un bicchiere di vino", "kcal": 120, "intervallo": [90, 160], "categoria": "bevanda" },
-    { "id": "amaro", "nome": "Un amaro o un limoncello", "kcal": 130, "intervallo": [100, 180], "categoria": "bevanda" },
-
-    { "id": "pranzo-domenica", "nome": "Pranzo della domenica in famiglia", "kcal": 1600, "intervallo": [1200, 2200], "categoria": "famiglia" },
-    { "id": "ristorante-pesce", "nome": "Cena di pesce al ristorante", "kcal": 1100, "intervallo": [800, 1500], "categoria": "fuori" },
-    { "id": "ristorante-carne", "nome": "Cena di carne al ristorante", "kcal": 1300, "intervallo": [1000, 1700], "categoria": "fuori" },
-    { "id": "cena-suoceri", "nome": "Cena dai suoceri", "kcal": 1200, "intervallo": [900, 1800], "categoria": "famiglia" },
-    { "id": "sushi", "nome": "Sushi, all you can eat", "kcal": 1400, "intervallo": [1000, 2000], "categoria": "fuori" },
-
-    { "id": "patatine", "nome": "Un pacchetto di patatine", "kcal": 280, "intervallo": [200, 400], "categoria": "casa" },
-    { "id": "cioccolato-tavoletta", "nome": "Mezza tavoletta di cioccolato", "kcal": 270, "intervallo": [220, 330], "categoria": "casa" },
-    { "id": "biscotti", "nome": "Qualche biscotto in più", "kcal": 250, "intervallo": [150, 400], "categoria": "casa" },
-    { "id": "pane-extra", "nome": "Pane in più a tavola", "kcal": 200, "intervallo": [120, 350], "categoria": "casa" }
+    {
+      "id": "pizza-marinara",
+      "nome": "Pizza marinara",
+      "kcal": 650,
+      "intervallo": [
+        520,
+        800
+      ],
+      "categoria": "pizzeria"
+    },
+    {
+      "id": "pizza-margherita",
+      "nome": "Pizza margherita",
+      "kcal": 850,
+      "intervallo": [
+        700,
+        1100
+      ],
+      "categoria": "pizzeria"
+    },
+    {
+      "id": "pizza-margherita-con-bufala",
+      "nome": "Pizza margherita con bufala",
+      "kcal": 950,
+      "intervallo": [
+        800,
+        1200
+      ],
+      "categoria": "pizzeria"
+    },
+    {
+      "id": "pizza-con-salsiccia-e-friarielli",
+      "nome": "Pizza con salsiccia e friarielli",
+      "kcal": 1100,
+      "intervallo": [
+        900,
+        1350
+      ],
+      "categoria": "pizzeria"
+    },
+    {
+      "id": "pizza-quattro-formaggi",
+      "nome": "Pizza quattro formaggi",
+      "kcal": 1200,
+      "intervallo": [
+        1000,
+        1450
+      ],
+      "categoria": "pizzeria"
+    },
+    {
+      "id": "pizza-capricciosa",
+      "nome": "Pizza capricciosa",
+      "kcal": 1050,
+      "intervallo": [
+        880,
+        1300
+      ],
+      "categoria": "pizzeria"
+    },
+    {
+      "id": "pizza-diavola",
+      "nome": "Pizza diavola",
+      "kcal": 1000,
+      "intervallo": [
+        850,
+        1250
+      ],
+      "categoria": "pizzeria"
+    },
+    {
+      "id": "pizza-ortolana-o-vegetariana",
+      "nome": "Pizza ortolana o vegetariana",
+      "kcal": 800,
+      "intervallo": [
+        650,
+        1000
+      ],
+      "categoria": "pizzeria"
+    },
+    {
+      "id": "pizza-farcita-o-ripiena",
+      "nome": "Pizza farcita o ripiena",
+      "kcal": 1200,
+      "intervallo": [
+        1000,
+        1500
+      ],
+      "categoria": "pizzeria"
+    },
+    {
+      "id": "pizza-fritta",
+      "nome": "Pizza fritta",
+      "kcal": 950,
+      "intervallo": [
+        800,
+        1200
+      ],
+      "categoria": "pizzeria"
+    },
+    {
+      "id": "calzone-al-forno",
+      "nome": "Calzone al forno",
+      "kcal": 1000,
+      "intervallo": [
+        850,
+        1250
+      ],
+      "categoria": "pizzeria"
+    },
+    {
+      "id": "montanara-pizzella-fritta",
+      "nome": "Montanara, pizzella fritta",
+      "kcal": 350,
+      "intervallo": [
+        280,
+        450
+      ],
+      "categoria": "pizzeria"
+    },
+    {
+      "id": "una-porzione-di-pizza-a-metro",
+      "nome": "Una porzione di pizza a metro",
+      "kcal": 900,
+      "intervallo": [
+        700,
+        1150
+      ],
+      "categoria": "pizzeria"
+    },
+    {
+      "id": "antipasto-della-casa-in-pizzeria",
+      "nome": "Antipasto della casa in pizzeria",
+      "kcal": 450,
+      "intervallo": [
+        320,
+        650
+      ],
+      "categoria": "pizzeria"
+    },
+    {
+      "id": "cuoppo-di-frittura",
+      "nome": "Cuoppo di frittura",
+      "kcal": 700,
+      "intervallo": [
+        550,
+        950
+      ],
+      "categoria": "strada"
+    },
+    {
+      "id": "mozzarella-in-carrozza",
+      "nome": "Mozzarella in carrozza",
+      "kcal": 350,
+      "intervallo": [
+        280,
+        450
+      ],
+      "categoria": "strada"
+    },
+    {
+      "id": "frittatina-di-pasta",
+      "nome": "Frittatina di pasta",
+      "kcal": 400,
+      "intervallo": [
+        320,
+        520
+      ],
+      "categoria": "strada"
+    },
+    {
+      "id": "crocche-di-patate",
+      "nome": "Crocche di patate",
+      "kcal": 180,
+      "intervallo": [
+        140,
+        230
+      ],
+      "categoria": "strada"
+    },
+    {
+      "id": "panzarotto",
+      "nome": "Panzarotto",
+      "kcal": 220,
+      "intervallo": [
+        170,
+        290
+      ],
+      "categoria": "strada"
+    },
+    {
+      "id": "arancino-di-riso",
+      "nome": "Arancino di riso",
+      "kcal": 350,
+      "intervallo": [
+        280,
+        450
+      ],
+      "categoria": "strada"
+    },
+    {
+      "id": "zeppoline-di-alghe-una-porzione",
+      "nome": "Zeppoline di alghe, una porzione",
+      "kcal": 300,
+      "intervallo": [
+        220,
+        400
+      ],
+      "categoria": "strada"
+    },
+    {
+      "id": "pizzetta-al-taglio",
+      "nome": "Pizzetta al taglio",
+      "kcal": 300,
+      "intervallo": [
+        230,
+        400
+      ],
+      "categoria": "strada"
+    },
+    {
+      "id": "graffa",
+      "nome": "Graffa",
+      "kcal": 300,
+      "intervallo": [
+        240,
+        380
+      ],
+      "categoria": "strada"
+    },
+    {
+      "id": "panino-con-la-salsiccia",
+      "nome": "Panino con la salsiccia",
+      "kcal": 550,
+      "intervallo": [
+        430,
+        720
+      ],
+      "categoria": "strada"
+    },
+    {
+      "id": "panino-imbottito",
+      "nome": "Panino imbottito",
+      "kcal": 700,
+      "intervallo": [
+        550,
+        950
+      ],
+      "categoria": "strada"
+    },
+    {
+      "id": "hamburger-da-asporto",
+      "nome": "Hamburger da asporto",
+      "kcal": 600,
+      "intervallo": [
+        480,
+        800
+      ],
+      "categoria": "strada"
+    },
+    {
+      "id": "kebab",
+      "nome": "Kebab",
+      "kcal": 800,
+      "intervallo": [
+        620,
+        1050
+      ],
+      "categoria": "strada"
+    },
+    {
+      "id": "patatine-fritte-porzione-media",
+      "nome": "Patatine fritte, porzione media",
+      "kcal": 350,
+      "intervallo": [
+        270,
+        470
+      ],
+      "categoria": "strada"
+    },
+    {
+      "id": "panino-del-bar",
+      "nome": "Panino del bar",
+      "kcal": 550,
+      "intervallo": [
+        420,
+        720
+      ],
+      "categoria": "fuori"
+    },
+    {
+      "id": "toast-prosciutto-e-formaggio",
+      "nome": "Toast prosciutto e formaggio",
+      "kcal": 350,
+      "intervallo": [
+        280,
+        450
+      ],
+      "categoria": "fuori"
+    },
+    {
+      "id": "aperitivo-con-stuzzichini",
+      "nome": "Aperitivo con stuzzichini",
+      "kcal": 600,
+      "intervallo": [
+        420,
+        850
+      ],
+      "categoria": "fuori"
+    },
+    {
+      "id": "aperitivo-rinforzato",
+      "nome": "Aperitivo rinforzato",
+      "kcal": 900,
+      "intervallo": [
+        700,
+        1200
+      ],
+      "categoria": "fuori"
+    },
+    {
+      "id": "un-primo-al-ristorante",
+      "nome": "Un primo al ristorante",
+      "kcal": 700,
+      "intervallo": [
+        550,
+        950
+      ],
+      "categoria": "fuori"
+    },
+    {
+      "id": "fritto-misto-di-paranza",
+      "nome": "Fritto misto di paranza",
+      "kcal": 800,
+      "intervallo": [
+        620,
+        1050
+      ],
+      "categoria": "fuori"
+    },
+    {
+      "id": "tagliere-di-salumi-e-formaggi",
+      "nome": "Tagliere di salumi e formaggi",
+      "kcal": 800,
+      "intervallo": [
+        600,
+        1100
+      ],
+      "categoria": "fuori"
+    },
+    {
+      "id": "pranzo-di-lavoro-completo",
+      "nome": "Pranzo di lavoro completo",
+      "kcal": 900,
+      "intervallo": [
+        700,
+        1200
+      ],
+      "categoria": "fuori"
+    },
+    {
+      "id": "cena-di-pesce-al-ristorante",
+      "nome": "Cena di pesce al ristorante",
+      "kcal": 1100,
+      "intervallo": [
+        850,
+        1450
+      ],
+      "categoria": "fuori"
+    },
+    {
+      "id": "cena-di-carne-al-ristorante",
+      "nome": "Cena di carne al ristorante",
+      "kcal": 1300,
+      "intervallo": [
+        1000,
+        1700
+      ],
+      "categoria": "fuori"
+    },
+    {
+      "id": "hamburger-con-patatine",
+      "nome": "Hamburger con patatine",
+      "kcal": 1100,
+      "intervallo": [
+        880,
+        1400
+      ],
+      "categoria": "fuori"
+    },
+    {
+      "id": "sushi-all-you-can-eat",
+      "nome": "Sushi, all you can eat",
+      "kcal": 1400,
+      "intervallo": [
+        1000,
+        1900
+      ],
+      "categoria": "fuori"
+    },
+    {
+      "id": "cena-cinese-completa",
+      "nome": "Cena cinese completa",
+      "kcal": 1200,
+      "intervallo": [
+        900,
+        1600
+      ],
+      "categoria": "fuori"
+    },
+    {
+      "id": "sfogliatella-riccia",
+      "nome": "Sfogliatella riccia",
+      "kcal": 420,
+      "intervallo": [
+        340,
+        520
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "sfogliatella-frolla",
+      "nome": "Sfogliatella frolla",
+      "kcal": 400,
+      "intervallo": [
+        320,
+        500
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "baba",
+      "nome": "Baba",
+      "kcal": 380,
+      "intervallo": [
+        300,
+        480
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "baba-con-la-crema",
+      "nome": "Baba con la crema",
+      "kcal": 480,
+      "intervallo": [
+        380,
+        600
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "pastiera-una-fetta",
+      "nome": "Pastiera, una fetta",
+      "kcal": 450,
+      "intervallo": [
+        350,
+        570
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "zeppola-di-san-giuseppe",
+      "nome": "Zeppola di San Giuseppe",
+      "kcal": 520,
+      "intervallo": [
+        400,
+        650
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "delizia-al-limone",
+      "nome": "Delizia al limone",
+      "kcal": 450,
+      "intervallo": [
+        350,
+        560
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "struffoli-un-piattino",
+      "nome": "Struffoli, un piattino",
+      "kcal": 400,
+      "intervallo": [
+        300,
+        520
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "roccoco-o-mostacciolo",
+      "nome": "Roccoco o mostacciolo",
+      "kcal": 250,
+      "intervallo": [
+        190,
+        320
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "chiacchiere-un-piattino",
+      "nome": "Chiacchiere, un piattino",
+      "kcal": 350,
+      "intervallo": [
+        260,
+        460
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "cornetto-e-cappuccino",
+      "nome": "Cornetto e cappuccino",
+      "kcal": 380,
+      "intervallo": [
+        300,
+        480
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "cornetto-alla-crema",
+      "nome": "Cornetto alla crema",
+      "kcal": 320,
+      "intervallo": [
+        250,
+        410
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "gelato-cono-da-due-gusti",
+      "nome": "Gelato, cono da due gusti",
+      "kcal": 300,
+      "intervallo": [
+        230,
+        390
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "gelato-coppa-da-tre-gusti",
+      "nome": "Gelato, coppa da tre gusti",
+      "kcal": 420,
+      "intervallo": [
+        330,
+        530
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "coppa-di-gelato-con-panna",
+      "nome": "Coppa di gelato con panna",
+      "kcal": 550,
+      "intervallo": [
+        430,
+        700
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "granita-con-la-brioche",
+      "nome": "Granita con la brioche",
+      "kcal": 500,
+      "intervallo": [
+        390,
+        640
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "tiramisu",
+      "nome": "Tiramisu",
+      "kcal": 450,
+      "intervallo": [
+        350,
+        570
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "profiterole",
+      "nome": "Profiterole",
+      "kcal": 500,
+      "intervallo": [
+        390,
+        640
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "panna-cotta",
+      "nome": "Panna cotta",
+      "kcal": 350,
+      "intervallo": [
+        270,
+        450
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "crostata-una-fetta",
+      "nome": "Crostata, una fetta",
+      "kcal": 350,
+      "intervallo": [
+        270,
+        450
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "torta-di-compleanno-una-fetta",
+      "nome": "Torta di compleanno, una fetta",
+      "kcal": 400,
+      "intervallo": [
+        300,
+        540
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "panettone-o-colomba-una-fetta",
+      "nome": "Panettone o colomba, una fetta",
+      "kcal": 400,
+      "intervallo": [
+        310,
+        510
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "cannolo",
+      "nome": "Cannolo",
+      "kcal": 350,
+      "intervallo": [
+        270,
+        450
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "semifreddo",
+      "nome": "Semifreddo",
+      "kcal": 400,
+      "intervallo": [
+        310,
+        510
+      ],
+      "categoria": "dolce"
+    },
+    {
+      "id": "un-bicchiere-di-vino",
+      "nome": "Un bicchiere di vino",
+      "kcal": 120,
+      "intervallo": [
+        90,
+        160
+      ],
+      "categoria": "bevanda"
+    },
+    {
+      "id": "mezza-bottiglia-di-vino",
+      "nome": "Mezza bottiglia di vino",
+      "kcal": 300,
+      "intervallo": [
+        240,
+        380
+      ],
+      "categoria": "bevanda"
+    },
+    {
+      "id": "birra-piccola",
+      "nome": "Birra piccola",
+      "kcal": 130,
+      "intervallo": [
+        100,
+        170
+      ],
+      "categoria": "bevanda"
+    },
+    {
+      "id": "birra-media",
+      "nome": "Birra media",
+      "kcal": 200,
+      "intervallo": [
+        160,
+        260
+      ],
+      "categoria": "bevanda"
+    },
+    {
+      "id": "birra-grande",
+      "nome": "Birra grande",
+      "kcal": 400,
+      "intervallo": [
+        320,
+        500
+      ],
+      "categoria": "bevanda"
+    },
+    {
+      "id": "uno-spritz",
+      "nome": "Uno spritz",
+      "kcal": 180,
+      "intervallo": [
+        140,
+        240
+      ],
+      "categoria": "bevanda"
+    },
+    {
+      "id": "un-cocktail",
+      "nome": "Un cocktail",
+      "kcal": 250,
+      "intervallo": [
+        190,
+        340
+      ],
+      "categoria": "bevanda"
+    },
+    {
+      "id": "un-amaro-o-un-limoncello",
+      "nome": "Un amaro o un limoncello",
+      "kcal": 130,
+      "intervallo": [
+        100,
+        170
+      ],
+      "categoria": "bevanda"
+    },
+    {
+      "id": "bicchiere-di-bibita-gassata",
+      "nome": "Bicchiere di bibita gassata",
+      "kcal": 140,
+      "intervallo": [
+        100,
+        190
+      ],
+      "categoria": "bevanda"
+    },
+    {
+      "id": "succo-di-frutta",
+      "nome": "Succo di frutta",
+      "kcal": 110,
+      "intervallo": [
+        80,
+        150
+      ],
+      "categoria": "bevanda"
+    },
+    {
+      "id": "caffe-corretto",
+      "nome": "Caffe corretto",
+      "kcal": 90,
+      "intervallo": [
+        60,
+        130
+      ],
+      "categoria": "bevanda"
+    },
+    {
+      "id": "cioccolata-calda-con-panna",
+      "nome": "Cioccolata calda con panna",
+      "kcal": 400,
+      "intervallo": [
+        310,
+        510
+      ],
+      "categoria": "bevanda"
+    },
+    {
+      "id": "pranzo-della-domenica-in-famiglia",
+      "nome": "Pranzo della domenica in famiglia",
+      "kcal": 1600,
+      "intervallo": [
+        1200,
+        2100
+      ],
+      "categoria": "famiglia"
+    },
+    {
+      "id": "cena-dai-suoceri",
+      "nome": "Cena dai suoceri",
+      "kcal": 1200,
+      "intervallo": [
+        900,
+        1600
+      ],
+      "categoria": "famiglia"
+    },
+    {
+      "id": "grigliata-con-gli-amici",
+      "nome": "Grigliata con gli amici",
+      "kcal": 1400,
+      "intervallo": [
+        1050,
+        1850
+      ],
+      "categoria": "famiglia"
+    },
+    {
+      "id": "buffet-di-compleanno",
+      "nome": "Buffet di compleanno",
+      "kcal": 1200,
+      "intervallo": [
+        900,
+        1600
+      ],
+      "categoria": "famiglia"
+    },
+    {
+      "id": "pranzo-di-pasqua",
+      "nome": "Pranzo di Pasqua",
+      "kcal": 1800,
+      "intervallo": [
+        1400,
+        2400
+      ],
+      "categoria": "famiglia"
+    },
+    {
+      "id": "pranzo-di-natale",
+      "nome": "Pranzo di Natale",
+      "kcal": 2200,
+      "intervallo": [
+        1700,
+        2900
+      ],
+      "categoria": "famiglia"
+    },
+    {
+      "id": "cenone-di-capodanno",
+      "nome": "Cenone di Capodanno",
+      "kcal": 2000,
+      "intervallo": [
+        1500,
+        2600
+      ],
+      "categoria": "famiglia"
+    },
+    {
+      "id": "pranzo-di-comunione-o-battesimo",
+      "nome": "Pranzo di comunione o battesimo",
+      "kcal": 2000,
+      "intervallo": [
+        1500,
+        2600
+      ],
+      "categoria": "famiglia"
+    },
+    {
+      "id": "un-pacchetto-di-patatine",
+      "nome": "Un pacchetto di patatine",
+      "kcal": 280,
+      "intervallo": [
+        220,
+        360
+      ],
+      "categoria": "casa"
+    },
+    {
+      "id": "mezza-tavoletta-di-cioccolato",
+      "nome": "Mezza tavoletta di cioccolato",
+      "kcal": 270,
+      "intervallo": [
+        210,
+        350
+      ],
+      "categoria": "casa"
+    },
+    {
+      "id": "qualche-biscotto-in-piu",
+      "nome": "Qualche biscotto in piu",
+      "kcal": 250,
+      "intervallo": [
+        180,
+        340
+      ],
+      "categoria": "casa"
+    },
+    {
+      "id": "pane-in-piu-a-tavola",
+      "nome": "Pane in piu a tavola",
+      "kcal": 200,
+      "intervallo": [
+        150,
+        280
+      ],
+      "categoria": "casa"
+    },
+    {
+      "id": "un-bis-di-primo",
+      "nome": "Un bis di primo",
+      "kcal": 350,
+      "intervallo": [
+        270,
+        460
+      ],
+      "categoria": "casa"
+    },
+    {
+      "id": "una-manciata-di-frutta-secca",
+      "nome": "Una manciata di frutta secca",
+      "kcal": 200,
+      "intervallo": [
+        150,
+        270
+      ],
+      "categoria": "casa"
+    },
+    {
+      "id": "qualche-cucchiaiata-di-crema-alle-nocciole",
+      "nome": "Qualche cucchiaiata di crema alle nocciole",
+      "kcal": 300,
+      "intervallo": [
+        220,
+        400
+      ],
+      "categoria": "casa"
+    },
+    {
+      "id": "formaggio-in-piu",
+      "nome": "Formaggio in piu",
+      "kcal": 250,
+      "intervallo": [
+        190,
+        330
+      ],
+      "categoria": "casa"
+    },
+    {
+      "id": "un-pezzo-di-focaccia",
+      "nome": "Un pezzo di focaccia",
+      "kcal": 350,
+      "intervallo": [
+        270,
+        450
+      ],
+      "categoria": "casa"
+    },
+    {
+      "id": "salatini-e-stuzzichini",
+      "nome": "Salatini e stuzzichini",
+      "kcal": 300,
+      "intervallo": [
+        230,
+        390
+      ],
+      "categoria": "casa"
+    },
+    {
+      "id": "popcorn-davanti-alla-televisione",
+      "nome": "Popcorn davanti alla televisione",
+      "kcal": 250,
+      "intervallo": [
+        190,
+        330
+      ],
+      "categoria": "casa"
+    },
+    {
+      "id": "un-panino-a-tarda-sera",
+      "nome": "Un panino a tarda sera",
+      "kcal": 450,
+      "intervallo": [
+        350,
+        580
+      ],
+      "categoria": "casa"
+    }
   ]
 }

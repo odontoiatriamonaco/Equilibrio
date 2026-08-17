@@ -142,6 +142,45 @@ function rendiRiferimento() {
   nota.querySelector('div').innerHTML = righe.join(' ');
 }
 
+/**
+ * Arrivare dritti alla riga giusta, quando si viene da Oggi.
+ *
+ * Da Oggi si tocca l'icona del piatto perche' quel piatto non va: qui si apre
+ * il giorno, si porta la riga sotto gli occhi e la si accende un momento. Il
+ * dialogo dello scambio NON si apre da solo — dopo un cambio di pagina una
+ * finestra che compare da sola disorienta, e il pulsante e' li' accanto.
+ */
+function vaiAllaRiga() {
+  const dove = new URLSearchParams(location.search).get('vai');
+  if (!dove) return;
+
+  // Niente CSS.escape: serve agli identificatori, non a un valore fra
+  // virgolette — e trasformerebbe «0|colazione|0» in «0\|colazione\|0», che non
+  // combacia con niente. Si convalida invece la forma, che arriva da un indirizzo.
+  if (!/^\d+\|[a-z-]+\|\d+$/.test(dove)) return;
+
+  const bersaglio = $(`#settimana [data-scambia="${dove}"]`);
+  if (!bersaglio) return;
+
+  const riga = bersaglio.closest('.voce-piano');
+  const giorno = bersaglio.closest('details.giorno');
+  if (giorno) giorno.open = true;
+  riga?.setAttribute('open', '');
+
+  // Dopo l'apertura del <details>, altrimenti si scorre a un punto che sta per
+  // spostarsi. Con un timer e non con requestAnimationFrame: quello non scatta
+  // se la pagina si apre in una scheda in secondo piano, e chi ci torna sopra
+  // non troverebbe ne' lo scorrimento ne' la riga accesa.
+  setTimeout(() => {
+    riga.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    riga.classList.add('appena-arrivato');
+    setTimeout(() => riga.classList.remove('appena-arrivato'), 2400);
+  }, 0);
+
+  // L'indirizzo torna pulito: ricaricando non si riaccende una riga a caso.
+  history.replaceState(null, '', location.pathname);
+}
+
 /* --- Disegno --------------------------------------------------------------- */
 
 function disegna() {
@@ -190,6 +229,9 @@ function disegna() {
     await salvaSettimana(profilo.id, settimana);
     disegna();
   }));
+
+  // In fondo, e non prima: le righe devono esistere per poterle raggiungere.
+  vaiAllaRiga();
 }
 
 function cartaGiorno(giorno, indice, eOggi) {
@@ -350,9 +392,15 @@ async function apriScambio(giorno, pasto, indice) {
 /* --- Sgarro ---------------------------------------------------------------- */
 
 function apriSgarro() {
+  // Raggruppate per categoria: novantasette righe di fila non si scorrono, e
+  // chi cerca la pizza non deve passare per i gelati.
   $('#sgarro-catalogo').innerHTML = '<option value="">— scegli o scrivi le calorie —</option>'
-    + sgarriCatalogo.sgarri.map((s) =>
-      `<option value="${s.id}">${s.nome} — ${s.kcal} kcal</option>`).join('');
+    + sgarriCatalogo.categorie.map((c) => {
+      const voci = sgarriCatalogo.sgarri.filter((s) => s.categoria === c.id);
+      if (!voci.length) return '';
+      return `<optgroup label="${c.nome}">${voci.map((s) =>
+        `<option value="${s.id}">${s.nome} — ${s.kcal} kcal</option>`).join('')}</optgroup>`;
+    }).join('');
 
   $('#sgarro-giorno').innerHTML = settimana.giorni.map((g, i) => {
     const d = new Date(g.data);

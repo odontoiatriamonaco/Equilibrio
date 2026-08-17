@@ -224,6 +224,9 @@ function disegnaPasti() {
   }
 
   const fatte = new Set(diario.consumato || []);
+  // Serve a mandare il collegamento alla riga giusta del piano: la posizione di
+  // oggi dentro la settimana.
+  const indice = indiceOggi(settimana);
 
   $('#pasti-oggi').innerHTML = Object.entries(giorno.pasti).map(([pasto, voci]) => `
     <section class="scheda">
@@ -249,10 +252,13 @@ function disegnaPasti() {
             </span>
             <button class="bottone-icona" data-quantita="${chiave}"
                     aria-label="Cambia la quantità di ${nomeVoce(voce)}">
-              ${icona('bilancia', 'icona icona-sm')}
+              ${icona('matita', 'icona icona-sm')}
             </button>
             ${voce.tipo === 'piatto'
-              ? `<a class="bottone-icona" href="/ricette.html" aria-label="Vedi la ricetta di ${nomeVoce(voce)}">
+              ? `<a class="bottone-icona" href="/piano.html?vai=${indice}|${pasto}|${i}"
+                    aria-label="Scegli qualcosa al posto di ${nomeVoce(voce)}">
+                   ${icona('scambia', 'icona icona-sm')}</a>
+                 <a class="bottone-icona" href="/ricette.html" aria-label="Vedi la ricetta di ${nomeVoce(voce)}">
                    ${icona(iconaPiatto(oggetto || {}), 'icona icona-sm')}</a>`
               : ''}
           </label>`;
