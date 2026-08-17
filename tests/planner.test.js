@@ -35,7 +35,7 @@ describe('casualità riproducibile', () => {
   });
 
   it('un testo dà un seme stabile', () => {
-    expect(semeDaTesto('carmela')).toBe(semeDaTesto('carmela'));
+    expect(semeDaTesto('renata')).toBe(semeDaTesto('renata'));
   });
 });
 

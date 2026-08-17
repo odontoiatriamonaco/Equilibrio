@@ -225,11 +225,11 @@ decise a mano e i propri sostituti.
 
 Di chi decide si prendono i **piatti**, non le sue quantità: le porzioni ripartono
 dalle dosi del ricettario e si ricalibrano sul fabbisogno di chi segue con
-`ribilanciaGiorno`. I 600 g di pollo che si è pesato Maurizio restano nel piatto
-di Maurizio.
+`ribilanciaGiorno`. I 600 g di pollo che si è pesato Tommaso restano nel piatto
+di Tommaso.
 
 L'ostacolo era il ricettario, tenuto in **stato globale di modulo**: caricare
-quello di Gaia sovrascriveva quello di Carmela per tutta la pagina, in silenzio.
+quello di Nina sovrascriveva quello di Renata per tutta la pagina, in silenzio.
 `lenteRicettario()` in `js/alimenti.js` è ora il nucleo puro che restituisce una
 lente senza assegnare niente; `registraPiattiUtente` ne è solo il primo
 consumatore, e `alternativePiatto` accetta un ricettario iniettato. Il primo test

@@ -103,8 +103,8 @@ export let piattiScartati = [];
  * i suoi alimenti sgraditi tolti dai piatti.
  *
  * Pura di proposito, e non tocca `piatti`: a tavola ci sono piu' persone, e per
- * sapere cosa puo' mangiare Gaia non si deve sporcare il ricettario in uso di
- * Carmela. Il globale qui sotto e' solo il suo primo consumatore.
+ * sapere cosa puo' mangiare Nina non si deve sporcare il ricettario in uso di
+ * Renata. Il globale qui sotto e' solo il suo primo consumatore.
  *
  * @param {Array} deiUtente pietanze di casa
  * @param {Iterable<string>} idOmessi alimenti da non mettere nei piatti

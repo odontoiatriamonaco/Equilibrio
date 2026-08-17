@@ -34,15 +34,15 @@ async function pulisci() {
 const LUNEDI = new Date('2026-08-17T12:00:00');
 
 const CARMELA = {
-  nome: 'Carmela', sesso: 'donna', dataNascita: '1978-01-01',
+  nome: 'Renata', sesso: 'donna', dataNascita: '1978-01-01',
   altezzaCm: 165, pesoKg: 73, attivita: 'sedentaria', pesoObiettivoKg: 65,
 };
 const GAIA = {
-  nome: 'Gaia', sesso: 'donna', dataNascita: '2008-04-10',
+  nome: 'Nina', sesso: 'donna', dataNascita: '2008-04-10',
   altezzaCm: 160, pesoKg: 50, attivita: 'moderata',
 };
 const MAURIZIO = {
-  nome: 'Maurizio', sesso: 'uomo', dataNascita: '1975-05-05',
+  nome: 'Tommaso', sesso: 'uomo', dataNascita: '1975-05-05',
   altezzaCm: 178, pesoKg: 88, attivita: 'leggera', pesoObiettivoKg: 80,
 };
 
@@ -67,12 +67,12 @@ describe('il ricettario non è più uno solo', () => {
   beforeEach(pulisci);
 
   it('costruire la lente di una persona non sporca il ricettario in uso', () => {
-    // E' IL test: prima, caricare il ricettario di Gaia sovrascriveva quello
-    // di Carmela per tutta la pagina, in silenzio.
+    // E' IL test: prima, caricare il ricettario di Nina sovrascriveva quello
+    // di Renata per tutta la pagina, in silenzio.
     const prima = inUso.length;
-    const gaia = lenteRicettario([], ['uova', 'latte']);
+    const nina = lenteRicettario([], ['uova', 'latte']);
 
-    expect(gaia.piatti.length).not.toBe(0);
+    expect(nina.piatti.length).not.toBe(0);
     expect(inUso.length).toBe(prima);
     expect(inUso).toBe(inUso);           // il legame vivo non e' stato riassegnato
   });
@@ -114,15 +114,15 @@ describe('chi segue chi', () => {
     const g = await creaProfilo(GAIA);
     await scrivi('profili', { ...(await leggi('profili', g.id)), seguo: c.id });
 
-    const perCarmela = await possibiliRiferimenti(c.id);
-    // Gaia segue Carmela: Carmela non puo' seguire Gaia (sarebbe un ciclo).
-    expect(perCarmela.map((p) => p.id)).not.toContain(g.id);
-    expect(perCarmela.map((p) => p.id)).not.toContain(c.id);
+    const perRenata = await possibiliRiferimenti(c.id);
+    // Nina segue Renata: Renata non puo' seguire Nina (sarebbe un ciclo).
+    expect(perRenata.map((p) => p.id)).not.toContain(g.id);
+    expect(perRenata.map((p) => p.id)).not.toContain(c.id);
 
     const m = await creaProfilo(MAURIZIO);
-    // Maurizio non segue nessuno: puo' fare da riferimento.
+    // Tommaso non segue nessuno: puo' fare da riferimento.
     expect((await possibiliRiferimenti(c.id)).map((p) => p.id)).toContain(m.id);
-    // Ma per Maurizio, Gaia non e' un riferimento valido: segue gia' Carmela.
+    // Ma per Tommaso, Nina non e' un riferimento valido: segue gia' Renata.
     expect((await possibiliRiferimenti(m.id)).map((p) => p.id)).not.toContain(g.id);
   });
 
@@ -134,7 +134,7 @@ describe('chi segue chi', () => {
       await scrivi('profili', { ...(await leggi('profili', p.id)), seguo: c.id });
     }
     const nomi = (await tavola(c.id)).map((p) => p.nome);
-    expect(nomi).toEqual(['Carmela', 'Gaia', 'Maurizio']);
+    expect(nomi).toEqual(['Renata', 'Nina', 'Tommaso']);
   });
 
   it('cancellare il riferimento stacca chi lo seguiva, invece di lasciarlo nel vuoto', async () => {
@@ -144,14 +144,14 @@ describe('chi segue chi', () => {
 
     const esito = await eliminaProfilo(c.id);
 
-    expect(esito.staccati).toEqual(['Gaia']);
+    expect(esito.staccati).toEqual(['Nina']);
     expect((await leggi('profili', g.id)).seguo).toBeNull();
   });
 
   it('un fascicolo importato non porta dentro un legame pendente', async () => {
     const importato = await importaFascicolo({
       schema: 1,
-      profilo: { id: 'p_altrove', nome: 'Gaia', pesoKg: 50, seguo: 'p_che_non_esiste' },
+      profilo: { id: 'p_altrove', nome: 'Nina', pesoKg: 50, seguo: 'p_che_non_esiste' },
       archivi: {},
     });
     expect(importato.seguo).toBeNull();
@@ -187,7 +187,7 @@ describe('la settimana come la vede chi segue', () => {
     const idDi = (s) => s.giorni.flatMap((x) => tutteLeVoci(x).map((v) => v.id));
     expect(idDi(mio)).toEqual(idDi(suo));
 
-    // Ma le calorie sono quelle di Gaia, non di Carmela.
+    // Ma le calorie sono quelle di Nina, non di Renata.
     expect(mio.target).not.toBe(suo.target);
     expect(kcalGiorno(mio.giorni[0])).not.toBe(kcalGiorno(suo.giorni[0]));
   });
@@ -202,7 +202,7 @@ describe('la settimana come la vede chi segue', () => {
 
   it('un allergene di chi segue viene segnalato, non nascosto', async () => {
     const { c, g } = await famiglia();
-    // Gaia e' allergica a qualcosa che c'e' di sicuro nel menu'.
+    // Nina e' allergica a qualcosa che c'e' di sicuro nel menu'.
     const dentro = tutteLeVoci((await settimanaPer(c, LUNEDI)).settimana.giorni[0])
       .filter((v) => v.tipo === 'piatto')
       .map((v) => piattiDiSerie.find((p) => p.id === v.id))
@@ -238,7 +238,7 @@ describe('la settimana come la vede chi segue', () => {
 
     const mio = (await settimanaPer(g, LUNEDI)).settimana;
     expect(mio.giorni[0].pasti[pasto][i].id).toBe(alt.id);
-    // Carmela non se ne accorge nemmeno.
+    // Renata non se ne accorge nemmeno.
     expect((await settimanaPer(c, LUNEDI)).settimana.giorni[0].pasti[pasto][i].id)
       .toBe(originale);
   });
@@ -257,7 +257,7 @@ describe('la settimana come la vede chi segue', () => {
   });
 
   it('le quantità decise dal riferimento restano nel suo piatto', async () => {
-    // Se Antonio si pesa 600 g di pollo, quei 600 g non finiscono nel piatto
+    // Se Bruno si pesa 600 g di pollo, quei 600 g non finiscono nel piatto
     // di chi lo segue: dal riferimento si prendono i piatti, non le sue dosi.
     const c = await creaProfilo(MAURIZIO);
     const g = await creaProfilo({ ...GAIA, seguo: c.id });
@@ -275,11 +275,11 @@ describe('la settimana come la vede chi segue', () => {
     // sedentaria (1200): il caso peggiore possibile. Se il riequilibrio non
     // arrivasse, la bambina si ritroverebbe il piatto di suo padre.
     const grande = await creaProfilo({
-      nome: 'Maurizio', sesso: 'uomo', dataNascita: '1990-05-05',
+      nome: 'Tommaso', sesso: 'uomo', dataNascita: '1990-05-05',
       altezzaCm: 195, pesoKg: 110, attivita: 'moltoIntensa',
     });
     const piccola = await creaProfilo({
-      nome: 'Gaia', sesso: 'donna', dataNascita: '2012-04-10',
+      nome: 'Nina', sesso: 'donna', dataNascita: '2012-04-10',
       altezzaCm: 140, pesoKg: 35, attivita: 'sedentaria', seguo: grande.id,
     });
     await menuDi(grande);
@@ -327,7 +327,7 @@ describe('la spesa di famiglia', () => {
 
     expect(daOggetto).toHaveLength(2);
     expect(daId).toHaveLength(2);
-    expect(daOggetto.map((m) => m.profilo.nome)).toEqual(['Carmela', 'Gaia']);
+    expect(daOggetto.map((m) => m.profilo.nome)).toEqual(['Renata', 'Nina']);
     expect(daOggetto.every((m) => m.settimana?.giorni?.length === 7)).toBe(true);
   });
 

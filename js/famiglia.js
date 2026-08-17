@@ -127,7 +127,7 @@ export async function settimanaPer(profilo, data = new Date()) {
     // Del riferimento si prendono i PIATTI, non le sue quantita': quelle sono
     // il suo pasto. Si riparte dalle dosi del ricettario e si ricalibra sul
     // fabbisogno di chi segue — altrimenti i 600 g di pollo che si e' pesato
-    // Antonio finirebbero pari pari nel piatto di Gaia, e i secondi non si
+    // Bruno finirebbero pari pari nel piatto di Nina, e i secondi non si
     // riequilibrano per progetto.
     for (const x of vociConChiave(giorno)) {
       x.voce.porzioni = 1;

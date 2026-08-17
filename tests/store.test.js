@@ -22,14 +22,14 @@ beforeEach(async () => {
 
 describe('profili', () => {
   it('crea un profilo e lo rende attivo se è il primo', async () => {
-    const p = await store.creaProfilo({ nome: 'Carmela', pesoKg: 78 });
+    const p = await store.creaProfilo({ nome: 'Renata', pesoKg: 78 });
     expect(p.id).toMatch(/^p_/);
     expect((await store.profiloAttivo()).id).toBe(p.id);
   });
 
   it('non cambia il profilo attivo quando se ne aggiunge un secondo', async () => {
-    const a = await store.creaProfilo({ nome: 'Carmela' });
-    await store.creaProfilo({ nome: 'Maurizio' });
+    const a = await store.creaProfilo({ nome: 'Renata' });
+    await store.creaProfilo({ nome: 'Tommaso' });
     expect((await store.profiloAttivo()).id).toBe(a.id);
     expect(await store.profili()).toHaveLength(2);
   });
@@ -37,8 +37,8 @@ describe('profili', () => {
 
 describe('partizione fra profili', () => {
   it('i dati di un profilo non finiscono mai in quelli di un altro', async () => {
-    const a = await store.creaProfilo({ nome: 'Carmela' });
-    const b = await store.creaProfilo({ nome: 'Maurizio' });
+    const a = await store.creaProfilo({ nome: 'Renata' });
+    const b = await store.creaProfilo({ nome: 'Tommaso' });
 
     await store.scrivi('diario', { id: `${a.id}:2026-07-28`, profiloId: a.id, kcal: 1680 });
     await store.scrivi('diario', { id: `${a.id}:2026-07-29`, profiloId: a.id, kcal: 1720 });
@@ -52,7 +52,7 @@ describe('partizione fra profili', () => {
   });
 
   it('ogni scrittura porta la data di aggiornamento', async () => {
-    const p = await store.creaProfilo({ nome: 'Carmela' });
+    const p = await store.creaProfilo({ nome: 'Renata' });
     const r = await store.scrivi('dispensa', { id: `${p.id}:ricotta`, profiloId: p.id, grammi: 150 });
     expect(r.aggiornatoIl).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
@@ -60,8 +60,8 @@ describe('partizione fra profili', () => {
 
 describe('cancellazione di un profilo', () => {
   it('porta via TUTTI i suoi dati e lascia intatti gli altri', async () => {
-    const a = await store.creaProfilo({ nome: 'Carmela' });
-    const b = await store.creaProfilo({ nome: 'Maurizio' });
+    const a = await store.creaProfilo({ nome: 'Renata' });
+    const b = await store.creaProfilo({ nome: 'Tommaso' });
 
     for (const archivio of store.ARCHIVI_PROFILO) {
       await store.scrivi(archivio, { id: `${a.id}:x`, profiloId: a.id });
@@ -78,8 +78,8 @@ describe('cancellazione di un profilo', () => {
   });
 
   it('se cancello il profilo attivo, ne subentra un altro', async () => {
-    const a = await store.creaProfilo({ nome: 'Carmela' });
-    const b = await store.creaProfilo({ nome: 'Maurizio' });
+    const a = await store.creaProfilo({ nome: 'Renata' });
+    const b = await store.creaProfilo({ nome: 'Tommaso' });
     await store.eliminaProfilo(a.id);
     expect((await store.profiloAttivo()).id).toBe(b.id);
   });
@@ -87,21 +87,21 @@ describe('cancellazione di un profilo', () => {
 
 describe('fascicolo di export/import', () => {
   it('esporta profilo e archivi', async () => {
-    const p = await store.creaProfilo({ nome: 'Carmela', pesoKg: 78 });
+    const p = await store.creaProfilo({ nome: 'Renata', pesoKg: 78 });
     await store.scrivi('diario', { id: `${p.id}:2026-07-28`, profiloId: p.id, kcal: 1680 });
 
     const f = await store.esportaFascicolo(p.id);
     expect(f.schema).toBe(store.VERSIONE_SCHEMA);
-    expect(f.profilo.nome).toBe('Carmela');
+    expect(f.profilo.nome).toBe('Renata');
     expect(f.archivi.diario).toHaveLength(1);
   });
 
   it('reimporta con un id nuovo, senza sovrascrivere il profilo già presente', async () => {
-    const p = await store.creaProfilo({ nome: 'Carmela', pesoKg: 78 });
+    const p = await store.creaProfilo({ nome: 'Renata', pesoKg: 78 });
     await store.scrivi('diario', { id: `${p.id}:2026-07-28`, profiloId: p.id, kcal: 1680 });
     const f = await store.esportaFascicolo(p.id);
 
-    const importato = await store.importaFascicolo(f, { nuovoNome: 'Carmela (dal telefono)' });
+    const importato = await store.importaFascicolo(f, { nuovoNome: 'Renata (dal telefono)' });
 
     expect(importato.id).not.toBe(p.id);
     expect(await store.profili()).toHaveLength(2);

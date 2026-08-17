@@ -7,7 +7,7 @@ import {
 const FASCICOLO = {
   schema: 1,
   esportatoIl: '2026-07-29T10:00:00.000Z',
-  profilo: { id: 'p_1', nome: 'Carmela', pesoKg: 78, vitaCm: 92, bandiere: { tiroide: true } },
+  profilo: { id: 'p_1', nome: 'Renata', pesoKg: 78, vitaCm: 92, bandiere: { tiroide: true } },
   archivi: {
     diario: [{ id: 'p_1:2026-07-28', profiloId: 'p_1', kcal: 1680 }],
     dispensa: [{ id: 'p_1:ricotta', profiloId: 'p_1', grammi: 150 }],
@@ -24,7 +24,7 @@ describe('file di profilo cifrato', () => {
   it('il file non contiene i dati in chiaro', async () => {
     const byte = await cifra(FASCICOLO, 'zuppa-di-cicoria-42');
     const testo = new TextDecoder().decode(byte);
-    expect(testo).not.toContain('Carmela');
+    expect(testo).not.toContain('Renata');
     expect(testo).not.toContain('tiroide');
     expect(testo).not.toContain('78');
     // L'intestazione resta riconoscibile: serve a migrare i file vecchi.
@@ -49,7 +49,7 @@ describe('file di profilo cifrato', () => {
   });
 
   it('rifiuta un file che non è di Equilibrio', async () => {
-    const finto = new TextEncoder().encode('{"peso":78,"nome":"Carmela"} ancora testo a caso');
+    const finto = new TextEncoder().encode('{"peso":78,"nome":"Renata"} ancora testo a caso');
     await expect(decifra(finto, 'qualunque')).rejects.toBeInstanceOf(FormatoNonValido);
     expect(ispeziona(finto).valido).toBe(false);
   });
@@ -70,8 +70,8 @@ describe('file di profilo cifrato', () => {
   });
 
   it('costruisce un nome file leggibile e senza accenti', () => {
-    const n = nomeFile({ nome: 'Carmela Rüsso' }, new Date('2026-07-29T10:00:00Z'));
-    expect(n).toBe('equilibrio-carmela-russo-2026-07-29.equilibrio');
+    const n = nomeFile({ nome: 'Renata Rüsso' }, new Date('2026-07-29T10:00:00Z'));
+    expect(n).toBe('equilibrio-renata-russo-2026-07-29.equilibrio');
     expect(/^[\x20-\x7e]+$/.test(n)).toBe(true);
   });
 });

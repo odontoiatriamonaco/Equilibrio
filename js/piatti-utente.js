@@ -1,7 +1,7 @@
 /* Equilibrio — le pietanze di casa.
    Il ricettario di serie non si modifica mai: le variazioni diventano pietanze
    proprie del profilo, salvate su questo dispositivo. Cosi' un aggiornamento
-   dell'app non cancella la pasta e patate come la fa Carmela, e resta sempre
+   dell'app non cancella la pasta e patate come la fa Renata, e resta sempre
    possibile tornare all'originale.
 
    Una variante «copre» il piatto da cui nasce: nel ricettario in uso compare

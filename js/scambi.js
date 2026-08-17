@@ -56,7 +56,7 @@ function arrotondaGrammi(g) {
  * dalle preferenze, di stagione, ordinati per somiglianza calorica e gradimento.
  *
  * `piatti` e' iniettabile perche' a tavola c'e' piu' di una persona: cercare
- * un'alternativa per Gaia vuol dire cercarla nel SUO ricettario, non in quello
+ * un'alternativa per Nina vuol dire cercarla nel SUO ricettario, non in quello
  * in uso — che porta le pietanze di casa e le omissioni di qualcun altro.
  *
  * @param {object} voce  la voce del piano da sostituire

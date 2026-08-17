@@ -19,8 +19,8 @@ async function pulisci() {
   await apri();
 }
 
-const CARMELA = { nome: 'Carmela', sesso: 'donna', pesoKg: 73, altezzaCm: 165 };
-const ANTONIO = { nome: 'Antonio', sesso: 'uomo', pesoKg: 88, altezzaCm: 178 };
+const CARMELA = { nome: 'Renata', sesso: 'donna', pesoKg: 73, altezzaCm: 165 };
+const ANTONIO = { nome: 'Bruno', sesso: 'uomo', pesoKg: 88, altezzaCm: 178 };
 
 describe('più profili sullo stesso dispositivo', () => {
   beforeEach(pulisci);
@@ -56,10 +56,10 @@ describe('più profili sullo stesso dispositivo', () => {
     const secondo = await creaProfilo(ANTONIO);
 
     await impostaProfiloAttivo(secondo.id);
-    expect((await profiloAttivo()).nome).toBe('Antonio');
+    expect((await profiloAttivo()).nome).toBe('Bruno');
 
     await impostaProfiloAttivo(primo.id);
-    expect((await profiloAttivo()).nome).toBe('Carmela');
+    expect((await profiloAttivo()).nome).toBe('Renata');
   });
 
   it('salvare un profilo non ne perde i campi già scritti', async () => {

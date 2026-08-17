@@ -264,8 +264,8 @@ describe('ripristino', () => {
   });
 
   it('non tocca le pietanze di un altro profilo', async () => {
-    await salvaPietanza(P, comeVariante(originale, { nome: 'Di Carmela' }));
-    await salvaPietanza('p_altro', comeVariante(originale, { nome: 'Di Maurizio' }));
+    await salvaPietanza(P, comeVariante(originale, { nome: 'Di Renata' }));
+    await salvaPietanza('p_altro', comeVariante(originale, { nome: 'Di Tommaso' }));
 
     await ripristinaRicettario(P);
     expect(await pietanzeDiCasa(P)).toHaveLength(0);
