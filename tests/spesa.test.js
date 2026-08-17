@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generaSettimana } from '../js/planner.js';
+import { generaSettimana, kcalGiorno } from '../js/planner.js';
 import { vuote } from '../js/preferenze.js';
 import {
   aggregaSettimana, costruisciLista, quantitaLeggibile, fondiSpunte,
@@ -10,7 +10,7 @@ import {
   sprecoTotale, RESIDUO_MINIMO_G,
 } from '../js/packaging.js';
 import { alternativeAlimento, alternativePiatto, scambiaPiatto } from '../js/scambi.js';
-import { alimento, piatti, valoriVoce } from '../js/alimenti.js';
+import { alimento, piatti, valoriVoce, valoriPiatto } from '../js/alimenti.js';
 
 const PREF = vuote('p_test');
 const settimana = generaSettimana({
@@ -248,5 +248,60 @@ describe('fusione delle spunte', () => {
     // La modifica dell'altro non deve cancellare la propria.
     expect(fusa.find((v) => v.alimentoId === 'pane').spuntato).toBe(true);
     expect(fusa).toHaveLength(2);
+  });
+});
+
+/* --- Lo scambio non deve lasciare indietro il totale del giorno -------------
+   Le porzioni si adattano per conservare le calorie, ma fra 0,6 e 1,5 c'e' un
+   limite: scambiando un piatto leggero con uno molto piu' pesante il giorno
+   cambia davvero. Se `quota` restasse quella di prima mentirebbe alla fascia
+   della settimana e al motore dello sgarro, che su quel numero calcola quanto
+   si puo' recuperare.
+   -------------------------------------------------------------------------- */
+
+describe('scambio e totale del giorno', () => {
+  const settimanaFinta = (idPiatto) => ({
+    inizio: '2026-08-17',
+    target: 1600,
+    floor: 1400,
+    giorni: [{
+      data: '2026-08-17', etichetta: 'lun', quota: 999,
+      pasti: { pranzo: [{ tipo: 'piatto', id: idPiatto, porzioni: 1 }] },
+    }],
+  });
+
+  it('ricalcola la quota dopo lo scambio', () => {
+    const leggero = piatti.find((p) => p.tipo === 'primo');
+    const s = settimanaFinta(leggero.id);
+    const altro = piatti.find((p) => p.tipo === 'primo' && p.id !== leggero.id);
+
+    const dopo = scambiaPiatto(s, { giorno: 0, pasto: 'pranzo', indice: 0, nuovoId: altro.id });
+    expect(dopo.giorni[0].quota).not.toBe(999);
+    expect(dopo.giorni[0].quota).toBe(kcalGiorno(dopo.giorni[0]));
+  });
+
+  it('la quota resta vera anche quando il limite delle porzioni morde', () => {
+    // Il caso che il difetto lasciava passare: due piatti molto diversi.
+    const per = piatti.filter((p) => p.tipo === 'primo')
+      .map((p) => ({ p, kcal: valoriPiatto(p, 1).kcal }))
+      .sort((a, b) => a.kcal - b.kcal);
+    const leggero = per[0].p;
+    const pesante = per[per.length - 1].p;
+
+    const dopo = scambiaPiatto(settimanaFinta(leggero.id), {
+      giorno: 0, pasto: 'pranzo', indice: 0, nuovoId: pesante.id,
+    });
+    expect(dopo.giorni[0].quota).toBe(kcalGiorno(dopo.giorni[0]));
+  });
+
+  it('non tocca la quota di un giorno di sgarro, dove porta l’extra', () => {
+    const a = piatti.find((p) => p.tipo === 'primo');
+    const b = piatti.find((p) => p.tipo === 'primo' && p.id !== a.id);
+    const s = settimanaFinta(a.id);
+    s.giorni[0].stato = 'sgarro';
+    s.giorni[0].quota = 2600;
+
+    const dopo = scambiaPiatto(s, { giorno: 0, pasto: 'pranzo', indice: 0, nuovoId: b.id });
+    expect(dopo.giorni[0].quota).toBe(2600);
   });
 });

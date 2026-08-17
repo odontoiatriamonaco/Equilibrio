@@ -10,6 +10,7 @@ import {
   valoriPiatto, valoriVoce, diStagione,
 } from './alimenti.js';
 import { ammesso, peso as pesoPreferenza } from './preferenze.js';
+import { kcalGiorno } from './planner.js';
 
 /**
  * Alternative a un alimento, con i grammi che valgono la stessa porzione.
@@ -109,6 +110,16 @@ export function scambiaPiatto(settimana, { giorno, pasto, indice, nuovoId }) {
     : 1;
 
   voci[indice] = { tipo: 'piatto', id: nuovoId, porzioni, scambiato: true };
+
+  // Le porzioni si adattano per conservare le calorie, ma non sempre ci
+  // riescono: fra 0,6 e 1,5 c'e' un limite, e scambiando un piatto leggero con
+  // uno molto piu' pesante il giorno cambia davvero. Se `quota` restasse quella
+  // di prima mentirebbe alla fascia della settimana e, peggio, al motore dello
+  // sgarro, che su quel numero calcola quanto si puo' recuperare.
+  const g = copia.giorni[giorno];
+  // Un giorno di sgarro tiene l'extra dentro `quota`: li' non si tocca.
+  if (g.stato !== 'sgarro') g.quota = kcalGiorno(g);
+
   return copia;
 }
 
