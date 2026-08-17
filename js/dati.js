@@ -61,10 +61,19 @@ export async function caricaSpesa(profiloId, inizio) {
   return riga || null;
 }
 
-export async function salvaSpesa(profiloId, inizio, voci, codice = null) {
-  return scrivi('spesa', {
-    id: `${profiloId}:${inizio}`, profiloId, inizio, voci, codice,
-  });
+/**
+ * Salva le spunte della settimana.
+ *
+ * `codice` omesso vuol dire «non ne so nulla, lascia quello che c'e'»: chi
+ * segna una spunta non deve cancellare il codice con cui la lista e' stata
+ * condivisa. Passare `null` invece e' una scelta, e revoca la condivisione.
+ */
+export async function salvaSpesa(profiloId, inizio, voci, codice) {
+  const id = `${profiloId}:${inizio}`;
+  const tenuto = codice === undefined
+    ? ((await leggi('spesa', id))?.codice ?? null)
+    : codice;
+  return scrivi('spesa', { id, profiloId, inizio, voci, codice: tenuto });
 }
 
 /* --- Diario ---------------------------------------------------------------- */

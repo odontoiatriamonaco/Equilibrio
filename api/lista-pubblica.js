@@ -5,30 +5,26 @@
 // il server non e' in grado di sapere di chi sia una lista, ne' cosa mangi.
 //
 // Tre operazioni:
-//   POST   { voci }                  -> crea e restituisce un codice a 6 cifre
-//   GET    ?codice=123456           -> legge la lista
-//   PATCH  { codice, voci }         -> fonde le spunte, voce per voce
+//   POST   { voci }            -> crea e restituisce un codice
+//   GET    ?codice=ABCDE-FGHJK -> legge la lista
+//   PATCH  { codice, voci }    -> fonde le spunte, voce per voce
 //
-// La lista scade da sola dopo 48 ore (TTL nativo di KV).
+// La lista scade da sola dopo 48 ore (TTL nativo dell'archivio).
 
 const lib = require('./_lib.js');
+const { kv } = require('./_kv.js');
 
-async function kv() {
-    try {
-        // Import pigro: se l'integrazione non c'e', si risponde 503 invece di
-        // far cadere l'intera funzione.
-        const mod = await import('@vercel/kv');
-        if (!process.env.KV_REST_API_URL && !process.env.UPSTASH_REDIS_REST_URL) return null;
-        return mod.kv;
-    } catch (e) {
-        return null;
-    }
-}
+/** Liste create da uno stesso indirizzo in un'ora: e' un freno all'abuso. */
+const CREAZIONI_MAX = 30;
 
-module.exports = async function handler(req, res) {
+/**
+ * @param archivioDiProva usato solo dalle prove: Vercel chiama sempre e solo
+ *        con (req, res), quindi in produzione resta `undefined`.
+ */
+module.exports = async function handler(req, res, archivioDiProva) {
     lib.setNoCacheHeaders(res);
 
-    const archivio = await kv();
+    const archivio = archivioDiProva || await kv();
     if (!archivio) return lib.kvMancante(res);
 
     try {
@@ -49,8 +45,14 @@ async function crea(req, res, archivio) {
         return res.status(400).json({ ok: false, error: 'Lista vuota' });
     }
 
-    // Un solo tentativo di collisione: con un milione di codici e liste che
-    // vivono due giorni, ripetere e' improbabile ma non impossibile.
+    const ip = lib.ipDi(req);
+    if (await lib.troppiTentativi(archivio, 'crea', ip, CREAZIONI_MAX)) {
+        return lib.frenoRisposta(res);
+    }
+    await lib.segnaTentativo(archivio, 'crea', ip);
+
+    // Con 32^10 codici la collisione e' teorica, ma costa una lettura
+    // accorgersene e cancellerebbe la lista di qualcun altro.
     let codice = lib.nuovoCodice();
     if (await archivio.get(lib.chiaveLista(codice))) codice = lib.nuovoCodice();
 
@@ -63,31 +65,47 @@ async function crea(req, res, archivio) {
     return res.status(200).json({ ok: true, codice, scadeIn: lib.TTL_LISTA });
 }
 
-async function leggi(req, res, archivio) {
-    const codice = String(req.query?.codice || '').replace(/\D/g, '');
-    if (codice.length !== 6) {
-        return res.status(400).json({ ok: false, error: 'Codice non valido' });
+/**
+ * Il codice arrivato, se e' scritto bene e se da questo indirizzo si puo'
+ * ancora provare. Restituisce `null` avendo gia' risposto.
+ */
+async function codiceDa(grezzo, req, res, archivio) {
+    const codice = lib.normalizzaCodice(grezzo);
+    if (!lib.codiceValido(codice)) {
+        res.status(400).json({ ok: false, error: 'Codice non valido' });
+        return null;
     }
+    if (await lib.troppiTentativi(archivio, 'spesa', lib.ipDi(req))) {
+        lib.frenoRisposta(res);
+        return null;
+    }
+    return codice;
+}
+
+/** Codice inesistente: e' l'unico caso che alimenta il freno. */
+async function nonTrovato(req, res, archivio) {
+    await lib.segnaTentativo(archivio, 'spesa', lib.ipDi(req));
+    return res.status(404).json({ ok: false, error: 'Codice scaduto o inesistente' });
+}
+
+async function leggi(req, res, archivio) {
+    const codice = await codiceDa(req.query?.codice, req, res, archivio);
+    if (!codice) return;
 
     const riga = await archivio.get(lib.chiaveLista(codice));
-    if (!riga) {
-        return res.status(404).json({ ok: false, error: 'Codice scaduto o inesistente' });
-    }
+    if (!riga) return nonTrovato(req, res, archivio);
+
     return res.status(200).json({ ok: true, voci: riga.voci, creataIl: riga.creataIl });
 }
 
 async function aggiorna(req, res, archivio) {
     const body = await lib.parseBody(req);
-    const codice = String(body.codice || '').replace(/\D/g, '');
-    if (codice.length !== 6) {
-        return res.status(400).json({ ok: false, error: 'Codice non valido' });
-    }
+    const codice = await codiceDa(body.codice, req, res, archivio);
+    if (!codice) return;
 
     const chiave = lib.chiaveLista(codice);
     const riga = await archivio.get(chiave);
-    if (!riga) {
-        return res.status(404).json({ ok: false, error: 'Codice scaduto o inesistente' });
-    }
+    if (!riga) return nonTrovato(req, res, archivio);
 
     const fuse = lib.fondi(riga.voci, lib.sanifica(body.voci));
     await archivio.set(chiave, { ...riga, voci: fuse }, { ex: lib.TTL_LISTA });

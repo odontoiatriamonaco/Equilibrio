@@ -8,7 +8,10 @@ import { costruisciLista, quantitaLeggibile, comeTesto, residuiInDispensa } from
 import { suggerimentiAntispreco } from './packaging.js';
 import { caricaPreferenze } from './preferenze.js';
 import { alimento, gruppi } from './alimenti.js';
-import { pubblica, scarica, mandaSpunta } from './lista-condivisa.js';
+import {
+  pubblica, scarica, mandaSpunta, sincronizza,
+  normalizzaCodice, codiceValido, codiceLeggibile,
+} from './lista-condivisa.js';
 import { riferimentoDi, settimaneDellaTavola } from './famiglia.js';
 
 let codiceLista = null;
@@ -45,7 +48,7 @@ export async function inizializza() {
   codiceLista = salvata?.codice || null;
   if (codiceLista) {
     $('#riquadro-codice').hidden = false;
-    $('#codice-lista').textContent = codiceLista;
+    $('#codice-lista').textContent = codiceLeggibile(codiceLista);
   }
 
   $('#commensali').value = String(settimana.commensali || 1);
@@ -84,18 +87,29 @@ async function pubblicaLista() {
   codiceLista = esito.codice;
   await salvaSpesa(profilo.id, settimana.inizio, [...spunte.values()], codiceLista);
   $('#riquadro-codice').hidden = false;
-  $('#codice-lista').textContent = codiceLista;
+  $('#codice-lista').textContent = codiceLeggibile(codiceLista);
   nota.hidden = true;
 }
 
+/**
+ * Riallinea la copia condivisa, se ce n'e' una.
+ * Senza questo, chi e' al supermercato continua a vedere la lista com'era al
+ * momento della pubblicazione: cambiare i commensali o mettere qualcosa in
+ * dispensa non arrivava a destinazione.
+ */
+async function allineaCondivisa() {
+  if (!codiceLista || !lista) return;
+  await sincronizza(codiceLista, lista, spunte);
+}
+
 async function caricaRemota() {
-  const codice = String($('#codice-inserito').value).replace(/\D/g, '');
+  const codice = normalizzaCodice($('#codice-inserito').value);
   const nota = $('#esito-remota');
 
-  if (codice.length !== 6) {
+  if (!codiceValido(codice)) {
     nota.hidden = false;
     nota.className = 'avviso avviso-pericolo';
-    nota.textContent = 'Il codice è di sei cifre.';
+    nota.textContent = 'Il codice è di dieci caratteri, come ABCDE-FGHJK.';
     return;
   }
 
@@ -202,6 +216,7 @@ function ricostruisci() {
     lista = costruisciLista(settimana, { commensali, dispensa });
   }
   disegna();
+  allineaCondivisa();
 }
 
 /* --- Disegno --------------------------------------------------------------- */
@@ -368,6 +383,7 @@ async function copia() {
 
 async function persisti() {
   await salvaSpesa(profilo.id, settimana.inizio, [...spunte.values()]);
+  allineaCondivisa();
 }
 
 function euro(v) {

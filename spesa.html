@@ -103,9 +103,8 @@
       <section class="sezione non-stampare">
         <header><h2>Chi fa la spesa</h2></header>
         <div class="scheda pila">
-          <p class="morbido">Puoi passare la lista a chi va al supermercato: prende un codice
-            di sei cifre, la apre dal suo telefono e spunta camminando. Le spunte tornano
-            indietro.</p>
+          <p class="morbido">Puoi passare la lista a chi va al supermercato: prende un codice,
+            la apre dal suo telefono e spunta camminando. Le spunte tornano indietro.</p>
 
           <div class="avviso">
             <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#blocco"/></svg>
@@ -128,7 +127,8 @@
             <p class="occhiello">Codice della lista</p>
             <p class="dato-grande num" id="codice-lista" style="letter-spacing:.12em"></p>
             <p class="piccolo tenue">Dettalo a chi fa la spesa: lo inserisce in
-              «Apri con un codice». Scade fra due giorni.</p>
+              «Apri con un codice». Scade fra due giorni. Non ci sono I, L, O né U:
+              quello che sembra una O è uno zero.</p>
           </div>
 
           <p class="avviso" id="esito-condivisione" hidden></p>
@@ -160,10 +160,11 @@
       </header>
       <div class="dialogo-corpo pila">
         <div class="campo">
-          <label for="codice-inserito">Codice di sei cifre</label>
-          <input id="codice-inserito" type="text" inputmode="numeric" maxlength="6"
-                 autocomplete="off" placeholder="123456"
-                 style="font-size:var(--t-xl); letter-spacing:.2em; text-align:center">
+          <label for="codice-inserito">Codice della lista</label>
+          <input id="codice-inserito" type="text" maxlength="12" autocomplete="off"
+                 spellcheck="false" autocapitalize="characters" placeholder="ABCDE-FGHJK"
+                 style="font-size:var(--t-xl); letter-spacing:.2em; text-align:center;
+                        text-transform:uppercase">
         </div>
         <button class="bottone bottone-largo" id="carica-remota">Apri la lista</button>
         <p class="avviso" id="esito-remota" hidden></p>
