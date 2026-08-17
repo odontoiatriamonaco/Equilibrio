@@ -217,26 +217,62 @@ export async function esportaFascicolo(profiloId) {
 }
 
 /**
- * Reimporta un fascicolo. Assegna sempre un id NUOVO al profilo: cosi'
- * caricare il proprio profilo su un secondo dispositivo non sovrascrive
- * per sbaglio quello che c'e' gia'.
+ * L'identita' di un profilo attraverso i dispositivi.
+ *
+ * L'id locale cambia a ogni import, quindi da solo non basta a riconoscere «lo
+ * stesso profilo». `origine` e' l'id del dispositivo dove il profilo e' NATO, e
+ * si porta dietro a ogni esportazione: e' quello che permette di riconoscere il
+ * fascicolo di Renata come un aggiornamento di quello di Renata gia' presente,
+ * invece di ritrovarsi due Renate.
  */
-export async function importaFascicolo(fascicolo, { nuovoNome } = {}) {
+export function origineDi(profilo) {
+  return profilo?.origine || profilo?.id || null;
+}
+
+/** Il profilo gia' presente che questo fascicolo aggiornerebbe, se c'e'. */
+export async function gemelloDi(fascicolo) {
+  const origine = origineDi(fascicolo?.profilo);
+  if (!origine) return null;
+  return (await profili()).find((p) => origineDi(p) === origine) || null;
+}
+
+/**
+ * Reimporta un fascicolo.
+ *
+ * Senza `sovrascrivi` assegna un id NUOVO: caricare un profilo su un secondo
+ * dispositivo non deve poter cancellare quello che c'e' gia' per sbaglio.
+ *
+ * Con `sovrascrivi` prende il posto di quel profilo TENENDONE l'id, ed e' il
+ * modo in cui una famiglia resta allineata: chi segue Renata continua a
+ * seguirla anche dopo che lei ha rigenerato la settimana e ha rimandato il
+ * fascicolo, perche' l'id a cui punta non e' cambiato.
+ */
+export async function importaFascicolo(fascicolo, { nuovoNome, sovrascrivi } = {}) {
   if (!fascicolo || typeof fascicolo !== 'object') throw new Error('Fascicolo illeggibile');
   if (fascicolo.schema > VERSIONE_SCHEMA) {
     throw new Error('Questo file viene da una versione più recente di Equilibrio');
   }
 
-  const nuovoId = `p_${crypto.randomUUID()}`;
+  const vecchio = sovrascrivi ? await leggi('profili', sovrascrivi) : null;
+  if (sovrascrivi && !vecchio) throw new Error('Il profilo da sovrascrivere non esiste più');
+
+  const nuovoId = vecchio?.id || `p_${crypto.randomUUID()}`;
   const profilo = {
     ...fascicolo.profilo,
     id: nuovoId,
+    origine: origineDi(fascicolo.profilo),
     nome: nuovoNome || fascicolo.profilo?.nome || 'Profilo importato',
     // Il legame di famiglia punta a un id che su QUESTO dispositivo non esiste:
-    // portarselo dietro lascerebbe un riferimento pendente. Si ricollega a mano.
-    seguo: null,
+    // portarselo dietro lascerebbe un riferimento pendente. Sovrascrivendo si
+    // tiene invece quello gia' scelto qui, che e' valido.
+    seguo: vecchio?.seguo ?? null,
     importatoIl: new Date().toISOString(),
   };
+
+  // Sovrascrivere vuol dire prendere il posto, non mescolarsi: i vecchi record
+  // vanno via prima, o resterebbero settimane e diari di due versioni diverse.
+  if (vecchio) await svuotaArchiviDi(nuovoId);
+
   await scrivi('profili', profilo);
 
   const db = await apri();
@@ -254,4 +290,21 @@ export async function importaFascicolo(fascicolo, { nuovoNome } = {}) {
   }
 
   return profilo;
+}
+
+/** Cancella i dati di un profilo lasciando in piedi il profilo stesso. */
+async function svuotaArchiviDi(profiloId) {
+  const db = await apri();
+  const tx = db.transaction(ARCHIVI_PROFILO, 'readwrite');
+  for (const nome of ARCHIVI_PROFILO) {
+    const s = tx.objectStore(nome);
+    const req = s.index('profiloId').openKeyCursor(IDBKeyRange.only(profiloId));
+    req.onsuccess = () => {
+      const cursore = req.result;
+      if (!cursore) return;
+      s.delete(cursore.primaryKey);
+      cursore.continue();
+    };
+  }
+  await attesaTx(tx);
 }

@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import 'fake-indexeddb/auto';
 import {
   apri, chiudi, scrivi, creaProfilo, profili, leggi, eliminaProfilo, importaFascicolo,
-  esportaFascicolo, ARCHIVI_PROFILO,
+  esportaFascicolo, ARCHIVI_PROFILO, gemelloDi, tutti,
 } from '../js/store.js';
 import {
   lenteRicettario, piatti as inUso, registraPiattiUtente, piattiDiSerie, valoriPiatto,
@@ -392,5 +392,64 @@ describe('portare la famiglia su un altro dispositivo', () => {
   it('chi non seguiva nessuno non si porta dietro nomi inventati', async () => {
     const c = await creaProfilo(CARMELA);
     expect((await esportaFascicolo(c.id)).profilo.seguoNome).toBeUndefined();
+  });
+});
+
+describe('reimportare lo stesso profilo', () => {
+  beforeEach(pulisci);
+
+  it('riconosce il fascicolo di un profilo già presente', async () => {
+    const c = await creaProfilo(CARMELA);
+    const f = await esportaFascicolo(c.id);
+
+    const gemello = await gemelloDi(f);
+    expect(gemello?.id).toBe(c.id);
+  });
+
+  it('sovrascrivendo ne resta uno solo, e tiene il suo id', async () => {
+    // Tenere l'id e' il punto: chi segue questo profilo continua a seguirlo
+    // anche dopo che lui ha rigenerato la settimana e rimandato il fascicolo.
+    const c = await creaProfilo(CARMELA);
+    const g = await creaProfilo({ ...GAIA, seguo: c.id });
+    await menuDi(c);
+    const f = await esportaFascicolo(c.id);
+
+    const dopo = await importaFascicolo(f, { sovrascrivi: c.id });
+    expect(dopo.id).toBe(c.id);
+    expect(await profili()).toHaveLength(2);
+    // Il legame di chi lo seguiva non si e' rotto.
+    expect((await leggi('profili', g.id)).seguo).toBe(c.id);
+  });
+
+  it('senza sovrascrivere restano due profili distinti', async () => {
+    const c = await creaProfilo(CARMELA);
+    const f = await esportaFascicolo(c.id);
+
+    const secondo = await importaFascicolo(f);
+    expect(secondo.id).not.toBe(c.id);
+    expect(await profili()).toHaveLength(2);
+  });
+
+  it('sovrascrivere sostituisce i dati, non li mescola', async () => {
+    const c = await creaProfilo(CARMELA);
+    await menuDi(c);
+    const f = await esportaFascicolo(c.id);
+
+    // Sul dispositivo che riceve c'era una settimana diversa e una misura.
+    await scrivi('misure', { id: `${c.id}:2026-01-01`, profiloId: c.id, peso: 99 });
+    await importaFascicolo(f, { sovrascrivi: c.id });
+
+    // La misura locale se ne va col resto: il fascicolo prende il posto.
+    expect(await tutti('misure', c.id)).toHaveLength(0);
+    expect(await tutti('settimane', c.id)).toHaveLength(1);
+  });
+
+  it('l’identità sopravvive a un giro di andata e ritorno', async () => {
+    const c = await creaProfilo(CARMELA);
+    const primo = await importaFascicolo(await esportaFascicolo(c.id));
+    // Il profilo importato porta la stessa origine: riesportandolo e
+    // reimportandolo si riconosce ancora, invece di moltiplicarsi.
+    const gemello = await gemelloDi(await esportaFascicolo(primo.id));
+    expect(gemello).not.toBeNull();
   });
 });

@@ -3,7 +3,7 @@
 import { $, avvia, applicaTema, temaSalvato, num } from './guscio.js';
 import {
   profili, profiloAttivo, impostaProfiloAttivo, eliminaProfilo,
-  esportaFascicolo, importaFascicolo, leggi, scrivi,
+  esportaFascicolo, importaFascicolo, leggi, scrivi, gemelloDi,
 } from './store.js';
 import {
   cifra, decifra, nomeFile, scarica, leggiDaFile,
@@ -309,6 +309,22 @@ async function condividi() {
 
 /* --- Import ---------------------------------------------------------------- */
 
+/**
+ * Chiede prima di prendere il posto di un profilo che c'e' gia'.
+ *
+ * Non e' una formalita': sovrascrivere porta via il diario e le misure di
+ * questo dispositivo, che possono essere piu' recenti di quelli nel file.
+ */
+function confermaSovrascrittura(gemello) {
+  return window.confirm(
+    `«${gemello.nome}» è già su questo dispositivo.\n\n`
+    + 'Sostituirlo con il file aggiorna piano, preferenze e diario, e chi lo segue '
+    + 'continua a seguirlo.\n\n'
+    + 'Quello che c’è adesso su questo dispositivo — diario, misure, pesate — '
+    + 'viene sostituito da quello che c’è nel file. Procedo?',
+  );
+}
+
 async function importa() {
   const file = $('#file-import').files[0];
   const pass = $('#pass-import').value;
@@ -321,13 +337,23 @@ async function importa() {
 
   try {
     const fascicolo = await decifra(await leggiDaFile(file), pass);
-    const p = await importaFascicolo(fascicolo);
+
+    // Lo stesso profilo, di ritorno da un altro dispositivo: sovrascriverlo lo
+    // tiene uno solo e — cosa che conta di piu' — conserva il suo id, quindi
+    // chi lo segue continua a seguirlo. Duplicarlo spezzerebbe quel legame.
+    const gemello = await gemelloDi(fascicolo);
+    if (gemello && !confermaSovrascrittura(gemello)) return;
+
+    const p = await importaFascicolo(fascicolo, gemello ? { sovrascrivi: gemello.id } : {});
     esito.className = 'avviso avviso-ok';
     // Il legame di famiglia non si porta dietro: puntava a un id che qui non
     // esiste. Ma dire CHI seguiva risparmia di doverselo ricordare.
-    esito.innerHTML = `Importato come «${p.nome}», con preferenze, piano e diario. `
-      + 'Il profilo che era già qui non è stato toccato.'
-      + (p.seguoNome
+    esito.innerHTML = (gemello
+      ? `«${p.nome}» è stato <strong>aggiornato</strong> col contenuto del file: piano,
+         preferenze e diario sono quelli nuovi. Chi lo seguiva continua a seguirlo.`
+      : `Importato come «${p.nome}», con preferenze, piano e diario.
+         Gli altri profili non sono stati toccati.`)
+      + (!gemello && p.seguoNome
         ? ` <strong>Seguiva il menù di ${p.seguoNome}</strong>: se anche ${p.seguoNome}
             è su questo dispositivo, ricollegali dall'elenco qui sopra.`
         : '');
