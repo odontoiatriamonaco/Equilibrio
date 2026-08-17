@@ -1555,11 +1555,23 @@
 
 /* --- Tabella -------------------------------------------------------------- */
 
+/* Una tabella a piu' colonne non ci sta in 375 px: scorre dentro il suo
+   contenitore invece di far scorrere tutta la pagina di lato. */
+.tabella-contenitore {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .tabella {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--t-sm);
 }
+
+.tabella-contenitore .tabella { min-width: 22rem; }
+
+.tabella-contenitore .tabella td:first-child,
+.tabella-contenitore .tabella th:first-child { white-space: nowrap; padding-right: var(--sp-4); }
 
 .tabella th {
   text-align: left;

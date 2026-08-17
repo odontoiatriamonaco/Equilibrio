@@ -64,6 +64,37 @@
         <p class="occhiello" style="margin-bottom: var(--sp-3)">Una settimana in equilibrio</p>
         <div id="fascia-pulita"></div>
       </div>
+
+      <h3 style="margin-top: var(--sp-8)">Tre persone, per capirci</h3>
+
+      <p>In questa guida tornano sempre le stesse tre. Non esistono, ma i loro numeri sì:
+        sono usciti dal motore vero, non li ho inventati per far tornare il discorso.</p>
+
+      <div class="scheda scheda-piatta" style="margin-top: var(--sp-4)">
+        <dl class="glossario" style="margin-top:0">
+          <div>
+            <dt><strong>Carmela</strong>, 48 anni</dt>
+            <dd class="piccolo morbido">165 cm, 73 kg, lavoro da seduta. Vuole arrivare a 65.
+              Metabolismo basale <span class="num">1360</span> kcal, fabbisogno
+              <span class="num">1632</span>.</dd>
+          </div>
+          <div>
+            <dt><strong>Maurizio</strong>, 51 anni</dt>
+            <dd class="piccolo morbido">178 cm, 88 kg, cammina e ogni tanto nuota. Vuole
+              arrivare a 80. Basale <span class="num">1743</span>, fabbisogno
+              <span class="num">2396</span>.</dd>
+          </div>
+          <div>
+            <dt><strong>Gaia</strong>, 22 anni</dt>
+            <dd class="piccolo morbido">165 cm, 58 kg, si muove parecchio. Non deve perdere
+              niente: mangia con loro. Fabbisogno <span class="num">2077</span>.</dd>
+          </div>
+        </dl>
+      </div>
+
+      <p class="piccolo tenue" style="margin-top: var(--sp-3)">Fabbisogni molto diversi —
+        1632, 2396, 2077 — e una cucina sola. È il problema che questa app prova a
+        risolvere, ed è il filo di tutto quello che segue.</p>
     </article>
 
     <!-- ===== 02 ===== -->
@@ -130,6 +161,51 @@
         un margine stretto finirebbero tutti e tre sullo stesso piano, e la scelta non
         vorrebbe dire niente. Ogni linguetta porta scritto quanto pesa davvero, in kg a
         settimana.</p>
+
+      <div class="scheda scheda-piatta" style="margin-top: var(--sp-4)">
+        <p class="occhiello" style="margin-bottom: var(--sp-3)">Carmela sceglie il ritmo</p>
+        <div class="tabella-contenitore">
+          <table class="tabella">
+            <thead><tr><th>Ritmo</th><th class="num">Al giorno</th><th class="num">A settimana</th><th class="num">Arriva a 65 kg</th></tr></thead>
+            <tbody>
+              <tr><td>Con calma</td><td class="num">1496 kcal</td><td class="num">−0,12 kg</td><td class="num">novembre 2027</td></tr>
+              <tr><td>Regolare</td><td class="num">1428 kcal</td><td class="num">−0,19 kg</td><td class="num">giugno 2027</td></tr>
+              <tr><td>Deciso</td><td class="num">1360 kcal</td><td class="num">−0,25 kg</td><td class="num">aprile 2027</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="piccolo morbido" style="margin-top: var(--sp-3)">Sette mesi di differenza
+          fra la prima riga e l'ultima. Prima che il ritmo diventasse una quota del margine,
+          queste tre righe erano <strong>identiche</strong>: 1360 kcal e aprile 2027 tutte e
+          tre, e la scelta non serviva a niente.</p>
+      </div>
+
+      <h3 style="margin-top: var(--sp-6)">Il margine, e come si allarga</h3>
+
+      <p>Sotto le linguette c'è scritto quanto si può togliere <strong>al massimo</strong>, e
+        perché. Per Carmela sono <span class="num">272</span> kcal al giorno: sotto ci
+        sarebbe il suo metabolismo basale, 1360 kcal, e lì non si scende. Per Maurizio sono
+        <span class="num">599</span>, e il limite è un altro — il deficit non supera mai un
+        quarto del fabbisogno.</p>
+
+      <p>La riga sotto dice la cosa utile: <em>con un'attività leggera il margine salirebbe a
+        468 kcal</em>. Per Carmela è quasi il doppio, e vuol dire arrivare a
+        <strong>−0,43 kg a settimana</strong> invece di −0,25. La leva vera non è il ritmo:
+        è il movimento. L'app lo dice invece di lasciartelo indovinare.</p>
+
+      <div class="scheda scheda-piatta" style="margin-top: var(--sp-4)">
+        <p class="occhiello" style="margin-bottom: var(--sp-3)">Il margine di Carmela, se si muovesse di più</p>
+        <div class="tabella-contenitore">
+          <table class="tabella">
+            <tbody>
+              <tr><td>Sedentaria — com'è adesso</td><td class="num">272 kcal</td></tr>
+              <tr><td>Leggera — due camminate</td><td class="num">468 kcal</td></tr>
+              <tr><td>Moderata — 3-5 volte a settimana</td><td class="num">527 kcal</td></tr>
+              <tr><td>Intensa — quasi tutti i giorni</td><td class="num">587 kcal</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <h3 style="margin-top: var(--sp-6)">Parti piano</h3>
       <p>Con l'avvio graduale le prime quattro settimane il taglio cresce un poco alla
@@ -217,9 +293,8 @@
         decide il menù e la famiglia è collegata. Da quel momento c'è
         <strong>un piano solo</strong>: gli stessi piatti per tutti, ogni sera una pentola.</p>
 
-      <p>Le <strong>porzioni no</strong>: quelle si calcolano sul fabbisogno di ciascuno. Nello
-        stesso piatto di pasta e ceci ci sono 90 g di pasta per il papà e 45 per la figlia,
-        e ognuno vede i suoi grammi sul suo telefono. Chi segue non trova il pulsante
+      <p>Le <strong>porzioni no</strong>: quelle si calcolano sul fabbisogno di ciascuno, e
+        ognuno vede i suoi grammi sul suo telefono. Chi segue non trova il pulsante
         «Rigenera»: il menù lo decide una persona sola, altrimenti si tornerebbe a cucinare
         due volte.</p>
 
@@ -228,10 +303,28 @@
         cercata nel <em>suo</em> ricettario. La sceglie lui, cambia solo nel suo piatto, e
         gli altri non se ne accorgono.</p>
 
+      <div class="scheda scheda-piatta" style="margin-top: var(--sp-4)">
+        <p class="occhiello" style="margin-bottom: var(--sp-3)">Lunedì, pranzo — una pentola sola</p>
+        <div class="tabella-contenitore">
+          <table class="tabella">
+            <thead><tr><th></th><th class="num">Pasta e cozze</th><th class="num">Pollo</th><th class="num">Spinaci</th><th class="num">Giornata</th></tr></thead>
+            <tbody>
+              <tr><td>Carmela</td><td class="num">40 g di pasta</td><td class="num">128 g</td><td class="num">240 g</td><td class="num">1430 kcal</td></tr>
+              <tr><td>Gaia</td><td class="num">48 g di pasta</td><td class="num">160 g</td><td class="num">300 g</td><td class="num">1743 kcal</td></tr>
+              <tr><td>Maurizio</td><td class="num">56 g di pasta</td><td class="num">160 g</td><td class="num">300 g</td><td class="num">1919 kcal</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="piccolo morbido" style="margin-top: var(--sp-3)">Stessa pasta e cozze, stesso
+          pollo, stessi spinaci: si cucina <strong>una volta</strong>. Cambia quanto finisce
+          in ciascun piatto. E se apri la riga, la ricetta è tutta scalata — per Carmela
+          40 g di pasta e 175 g di cozze, per Maurizio 56 e 245.</p>
+      </div>
+
       <div class="avviso" style="margin-top: var(--sp-4)">
         <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#info"/></svg>
-        <div>Le quantità che uno si pesa a mano restano <strong>nel suo piatto</strong>. Se il
-          papà si fa 200 g di pasta, alla figlia non arrivano 200 g: il suo piatto riparte
+        <div>Le quantità che uno si pesa a mano restano <strong>nel suo piatto</strong>. Se
+          Maurizio si fa 200 g di pasta, a Gaia non arrivano 200 g: il suo piatto riparte
           dalle dosi della ricetta e si ricalcola su di lei.</div>
       </div>
 
@@ -284,6 +377,12 @@
         con le spunte — chi mangia fuori questa settimana lo togli, e il carrello cala di
         conseguenza.</p>
 
+      <p class="piccolo morbido">Per la settimana di Carmela da sola il carrello è di
+        <strong>64 articoli e circa 150 €</strong>. Con Maurizio e Gaia gli articoli
+        restano <strong>64</strong> — sono gli stessi piatti — e il conto sale a
+        <strong>251 €</strong>. Cambiano le quantità, non la lista: è esattamente la
+        differenza fra cucinare per uno e cucinare per tre.</p>
+
       <div class="avviso" style="margin-top: var(--sp-4)">
         <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#info"/></svg>
         <div>La lista si rifà da capo ogni volta che la apri, quindi rispecchia sempre le
@@ -318,6 +417,32 @@
         <p class="piccolo tenue" style="margin-top: var(--sp-2)">
           Tocca i pulsanti: la fascia qui sopra è quella vera dell'app.</p>
       </div>
+
+      <h3 style="margin-top: var(--sp-8)">Perché «prima» conviene davvero</h3>
+
+      <p>La stessa pizza, le stesse 700 kcal, per Maurizio. Cambia solo <em>quando</em> lo dice.</p>
+
+      <div class="scheda scheda-piatta" style="margin-top: var(--sp-4)">
+        <div class="tabella-contenitore">
+          <table class="tabella">
+            <thead><tr><th>La pizza di sabato</th><th class="num">Recuperate</th><th class="num">Come</th><th class="num">Traguardo</th></tr></thead>
+            <tbody>
+              <tr><td>La dice il lunedì</td><td class="num">700 su 700</td><td class="num">−140 kcal per 5 giorni</td><td class="num">non si sposta</td></tr>
+              <tr><td>La registra la domenica</td><td class="num">219 su 700</td><td class="num">−219 in un giorno solo</td><td class="num">+2 giorni</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="piccolo morbido" style="margin-top: var(--sp-3)">Non è una punizione per chi
+          se ne ricorda tardi: è aritmetica. Il lunedì ci sono cinque giorni su cui spalmare,
+          la domenica ne resta uno, e da un giorno solo non si può togliere più di tanto —
+          il pavimento resta dov'è.</p>
+      </div>
+
+      <p style="margin-top: var(--sp-5)">Per Carmela lo stesso conto va diversamente, e vale
+        la pena saperlo. Il suo margine è di 272 kcal e le sue giornate sono già vicine al
+        pavimento: di quelle 700 kcal l'app ne recupera <strong>53</strong>, e lo dice —
+        <em>«il resto sposta il traguardo di 4 giorni, e va bene così»</em>. Non la fa
+        digiunare per far tornare un numero, e non finge che il conto torni.</p>
 
       <div class="avviso avviso-sgarro" style="margin-top: var(--sp-4)">
         <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#sgarro"/></svg>
@@ -358,6 +483,17 @@
             onestamente di quanti giorni si sposta il traguardo.</div>
         </li>
       </ul>
+
+      <h3 style="margin-top: var(--sp-8)">Come si vede, in concreto</h3>
+
+      <p>Il muro non è un'idea astratta: per Carmela è a <strong>1360 kcal</strong>, che è
+        esattamente il suo metabolismo basale. Chiedendo il ritmo più deciso il piano si
+        ferma lì — non a 1300, non a 1200 — e il margine si esaurisce a 272 kcal al giorno.
+        Per Maurizio il muro che morde per primo è un altro: il suo basale è 1743, ma prima
+        ancora scatta il tetto del 25%, che gli lascia 599 kcal.</p>
+
+      <p>Due persone, due limiti diversi, e l'app scrive quale dei due sta comandando invece
+        di limitarsi ad arrotondare il numero.</p>
 
       <div class="avviso avviso-pericolo" style="margin-top: var(--sp-4)">
         <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#avviso"/></svg>
