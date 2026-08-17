@@ -24,6 +24,16 @@ export const NOMI_TETTI = {
   formaggi: 'Formaggi',
 };
 
+/** L'icona di ogni tetto. Sei righe di solo testo si leggono a fatica. */
+export const ICONE_TETTI = {
+  pesce: 'pesce',
+  'carne-bianca': 'carne-bianca',
+  'carne-rossa': 'carne',
+  salumi: 'salumi',
+  uova: 'uovo',
+  formaggi: 'latticini',
+};
+
 function chiave(profiloId) {
   return `${profiloId}:preferenze`;
 }

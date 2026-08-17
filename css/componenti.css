@@ -1336,6 +1336,46 @@
   color: var(--testo-morbido);
 }
 
+/* --- La targhetta del momento ----------------------------------------------
+   Colazione, spuntino, pranzo e cena erano quattro sezioni identiche: cambiava
+   una sola parola in maiuscoletto. L'icona basta gia' a distinguerle; la tinta
+   aggiunge l'ora del giorno.
+
+   Il fondo resta tenuissimo di proposito (vedi tokens.css): qui il colore dice
+   «quando», non «bene» o «male».
+   -------------------------------------------------------------------------- */
+
+.targhetta-pasto {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3) var(--sp-1) var(--sp-2);
+  border-radius: var(--r-pill);
+  background: var(--momento-velo, var(--sfondo-alt));
+  color: var(--momento-segno, var(--testo-tenue));
+  margin-bottom: var(--sp-3);
+}
+
+.targhetta-pasto .occhiello { color: inherit; }
+.targhetta-pasto .icona { color: inherit; }
+
+.targhetta-pasto[data-momento='colazione'] {
+  --momento-velo: var(--momento-colazione-velo);
+  --momento-segno: var(--momento-colazione-segno);
+}
+.targhetta-pasto[data-momento='spuntino'] {
+  --momento-velo: var(--momento-spuntino-velo);
+  --momento-segno: var(--momento-spuntino-segno);
+}
+.targhetta-pasto[data-momento='pranzo'] {
+  --momento-velo: var(--momento-pranzo-velo);
+  --momento-segno: var(--momento-pranzo-segno);
+}
+.targhetta-pasto[data-momento='cena'] {
+  --momento-velo: var(--momento-cena-velo);
+  --momento-segno: var(--momento-cena-segno);
+}
+
 /* --- Da dove si comincia ---------------------------------------------------
    Non un tour che illumina bottoni: un elenco che sa a che punto sei. Il passo
    da fare e' l'unico acceso, quelli fatti restano visibili ma spenti — vedere

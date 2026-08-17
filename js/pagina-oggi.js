@@ -24,12 +24,23 @@ import {
   ATTRIBUZIONE,
 } from './off-client.js';
 
+/* I cinque momenti della giornata. Le chiavi sono cinque ma i momenti quattro:
+   i due spuntini condividono icona e tinta — sono la stessa cosa a due ore
+   diverse, e inventare due colori per distinguerli sarebbe rumore. */
 const NOMI_PASTO = {
   colazione: 'Colazione',
   'spuntino-mattina': 'Spuntino del mattino',
   pranzo: 'Pranzo',
   'spuntino-pomeriggio': 'Spuntino del pomeriggio',
   cena: 'Cena',
+};
+
+const MOMENTO = {
+  colazione: 'colazione',
+  'spuntino-mattina': 'spuntino',
+  pranzo: 'pranzo',
+  'spuntino-pomeriggio': 'spuntino',
+  cena: 'cena',
 };
 
 const BICCHIERI = 8;
@@ -216,7 +227,10 @@ function disegnaPasti() {
 
   $('#pasti-oggi').innerHTML = Object.entries(giorno.pasti).map(([pasto, voci]) => `
     <section class="scheda">
-      <p class="occhiello" style="margin-bottom: var(--sp-2)">${NOMI_PASTO[pasto]}</p>
+      <p class="targhetta-pasto" data-momento="${MOMENTO[pasto]}">
+        ${icona(MOMENTO[pasto], 'icona icona-sm')}
+        <span class="occhiello">${NOMI_PASTO[pasto]}</span>
+      </p>
       ${voci.map((voce, i) => {
         const chiave = `${pasto}|${i}`;
         const oggetto = vociOggetto(voce);

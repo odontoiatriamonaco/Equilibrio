@@ -202,6 +202,30 @@
           <button role="tab" aria-selected="false">Grammi</button>
         </div>
 
+        <!-- Le targhette dei momenti. Colazione, spuntino, pranzo e cena erano
+             quattro sezioni identiche: cambiava una parola in maiuscoletto.
+             La tinta viene dalla LUCE — alba, giorno, sera — non dalla semantica:
+             una colazione ocra sarebbe uno sgarro, un pranzo oliva un obiettivo
+             raggiunto. Vale solo come fondo tenuissimo, mai su numeri o stati. -->
+        <div class="col" style="display:flex; flex-direction:column; gap:var(--sp-2); align-items:flex-start; margin-bottom: var(--sp-5)">
+          <p class="targhetta-pasto" data-momento="colazione" style="margin:0">
+            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#colazione"/></svg>
+            <span class="occhiello">Colazione</span>
+          </p>
+          <p class="targhetta-pasto" data-momento="spuntino" style="margin:0">
+            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spuntino"/></svg>
+            <span class="occhiello">Spuntino del mattino</span>
+          </p>
+          <p class="targhetta-pasto" data-momento="pranzo" style="margin:0">
+            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#pranzo"/></svg>
+            <span class="occhiello">Pranzo</span>
+          </p>
+          <p class="targhetta-pasto" data-momento="cena" style="margin:0">
+            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#cena"/></svg>
+            <span class="occhiello">Cena</span>
+          </p>
+        </div>
+
         <!-- Righe di gusto. Il colore dell'icona dice la famiglia di cibo e non
              giudica: la tavolozza è separata da quella semantica, perché verde
              qui vorrebbe dire «va bene» e non è quello che si intende.

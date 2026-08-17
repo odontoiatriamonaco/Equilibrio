@@ -300,7 +300,7 @@ const FAMIGLIA_PER_ICONA = {
   verdura: 'verdura', foglia: 'verdura',
   ortofrutta: 'frutta', 'frutta-secca': 'frutta', dolce: 'frutta',
   pesce: 'pesce',
-  carne: 'carne', uovo: 'carne',
+  carne: 'carne', uovo: 'carne', 'carne-bianca': 'carne', salumi: 'carne',
   latticini: 'latticini', latte: 'latticini',
   legumi: 'legumi', olio: 'legumi',
   bevande: 'bevande', caffe: 'bevande', acqua: 'bevande',

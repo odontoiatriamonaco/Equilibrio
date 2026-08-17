@@ -12,7 +12,7 @@ import {
 import {
   caricaPreferenze, salvaPreferenze, gustoPiatto, gustoAlimento, eAllergene,
   motivoEsclusione, prossimoGusto, imposta, alternaAllergia, impostaTetto,
-  riepilogo, omessi, NOMI_TETTI,
+  riepilogo, omessi, NOMI_TETTI, ICONE_TETTI,
 } from './preferenze.js';
 
 let pref = null;
@@ -194,7 +194,12 @@ async function cambia(tipo, id, valore) {
 function disegnaTetti() {
   $('#tetti').innerHTML = Object.entries(pref.tetti).map(([g, v]) => `
     <div class="riga-tra" style="padding-block: var(--sp-2)">
-      <span>${NOMI_TETTI[g] || g}</span>
+      <span class="riga" style="gap: var(--sp-3); min-width:0">
+        <span class="sigillo-mini" data-cibo="${famigliaCibo(ICONE_TETTI[g])}">
+          ${icona(ICONE_TETTI[g] || 'piano', 'icona icona-sm')}
+        </span>
+        ${NOMI_TETTI[g] || g}
+      </span>
       <div class="riga" style="gap: var(--sp-1)">
         <button class="bottone-icona" data-tetto="${g}" data-d="-1" aria-label="Meno">
           ${icona('meno', 'icona icona-sm')}

@@ -210,6 +210,29 @@
   --cibo-altro-velo:     var(--creta-100);
   --cibo-altro-segno:    var(--creta-600);
 
+  /* --- I momenti della giornata --------------------------------------------
+     Asse a parte, come le famiglie di cibo e per lo stesso motivo: una
+     colazione ocra diventerebbe uno sgarro, un pranzo oliva un obiettivo
+     raggiunto. Queste tinte vengono dalla LUCE — alba, giorno, sera — non dalla
+     semantica dell'app.
+
+     Vincolo d'uso, non negoziabile: valgono solo come fondo tenuissimo della
+     targhetta e della sua icona. Mai su numeri, stati, bordi di avviso o
+     qualunque cosa leggibile come un giudizio, o si ricrea la collisione che
+     si sta evitando.
+
+     I pasti sono cinque ma i momenti quattro: i due spuntini condividono tinta
+     e icona.
+     -------------------------------------------------------------------------- */
+  --momento-colazione-velo:  #fdeadf;
+  --momento-colazione-segno: #9c5626;
+  --momento-spuntino-velo:   #eaf2e0;
+  --momento-spuntino-segno:  #4f6a30;
+  --momento-pranzo-velo:     #fbf0d2;
+  --momento-pranzo-segno:    #7f6015;
+  --momento-cena-velo:       #e6eaf5;
+  --momento-cena-segno:      #3f4d7a;
+
   --ombra-1: 0 1px 2px rgba(61, 40, 24, 0.06), 0 1px 1px rgba(61, 40, 24, 0.04);
   --ombra-2: 0 2px 4px rgba(61, 40, 24, 0.06), 0 4px 12px rgba(61, 40, 24, 0.07);
   --ombra-3: 0 6px 16px rgba(61, 40, 24, 0.09), 0 16px 40px rgba(61, 40, 24, 0.10);
@@ -301,6 +324,34 @@
 
   --cibo-altro-segno: var(--creta-400);
 
+
+
+  /* I momenti della giornata — ricalcolati per il fondo scuro, non invertiti. */
+
+
+  --momento-colazione-velo: #352014;
+
+
+  --momento-colazione-segno: #edb08a;
+
+
+  --momento-spuntino-velo: #232d1c;
+
+
+  --momento-spuntino-segno: #adc78e;
+
+
+  --momento-pranzo-velo: #322913;
+
+
+  --momento-pranzo-segno: #e0c07d;
+
+
+  --momento-cena-velo: #1c2033;
+
+
+  --momento-cena-segno: #a3b0dc;
+
   --ombra-1: 0 1px 2px rgba(0, 0, 0, 0.5);
   --ombra-2: 0 2px 6px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.4);
   --ombra-3: 0 8px 24px rgba(0, 0, 0, 0.6), 0 20px 48px rgba(0, 0, 0, 0.45);
@@ -389,6 +440,34 @@
     --cibo-altro-velo: var(--creta-800);
 
     --cibo-altro-segno: var(--creta-400);
+
+
+
+    /* I momenti della giornata — ricalcolati per il fondo scuro, non invertiti. */
+
+
+    --momento-colazione-velo: #352014;
+
+
+    --momento-colazione-segno: #edb08a;
+
+
+    --momento-spuntino-velo: #232d1c;
+
+
+    --momento-spuntino-segno: #adc78e;
+
+
+    --momento-pranzo-velo: #322913;
+
+
+    --momento-pranzo-segno: #e0c07d;
+
+
+    --momento-cena-velo: #1c2033;
+
+
+    --momento-cena-segno: #a3b0dc;
 
     --ombra-1: 0 1px 2px rgba(0, 0, 0, 0.5);
     --ombra-2: 0 2px 6px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.4);
