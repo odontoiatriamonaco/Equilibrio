@@ -285,16 +285,27 @@
 
 /* --- Avvisi --------------------------------------------------------------- */
 
+/* Gli avvisi portano quasi sempre la cosa piu' importante della schermata — il
+   vincolo di sicurezza, il perche' di un numero, quello che l'app non fara'.
+   Si leggono alla stessa dimensione del testo intorno: rimpicciolirli era il
+   modo piu' rapido per farli saltare proprio a chi doveva leggerli.
+   Il contrasto era gia' oltre 14:1; il problema era il corpo. */
 .avviso {
   display: flex;
   gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4);
+  padding: var(--sp-4);
   border-radius: var(--r-2);
   border-left: 3px solid var(--dato);
   background: var(--dato-tenue);
   color: var(--testo);
-  font-size: var(--t-sm);
+  font-size: var(--t-base);
+  line-height: var(--lh-base);
 }
+
+/* La riga lunga stanca: il testo dell'avviso si ferma prima del bordo. */
+.avviso > div { max-width: 62ch; }
+
+.avviso .icona { margin-top: 0.15em; flex: none; }
 
 .avviso .icona { color: var(--dato-testo); }
 .avviso-ok      { border-left-color: var(--verde);   background: var(--verde-tenue); }
