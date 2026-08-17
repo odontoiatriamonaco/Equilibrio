@@ -1299,6 +1299,88 @@
   color: var(--testo-morbido);
 }
 
+/* --- Da dove si comincia ---------------------------------------------------
+   Non un tour che illumina bottoni: un elenco che sa a che punto sei. Il passo
+   da fare e' l'unico acceso, quelli fatti restano visibili ma spenti — vedere
+   cio' che si e' gia' fatto e' meta' del motivo per cui si va avanti.
+   -------------------------------------------------------------------------- */
+
+.percorso { margin-bottom: var(--sp-5); }
+
+.passi-percorso {
+  list-style: none;
+  margin: var(--sp-4) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.passo {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  padding: var(--sp-3);
+  border-radius: var(--r-2);
+}
+
+/* Solo il passo da fare ha un fondo: gli altri non devono chiamare. */
+.passo[data-stato='ora'] { background: var(--accento-velo); }
+
+.passo .segno {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--r-pill);
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--bordo-forte);
+  color: var(--testo-tenue);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.passo[data-stato='fatto'] .segno {
+  background: var(--verde);
+  border-color: var(--verde);
+  color: var(--su-verde);
+}
+
+.passo[data-stato='ora'] .segno {
+  background: var(--accento);
+  border-color: var(--accento);
+  color: var(--su-accento);
+}
+
+.passo .corpo { flex: 1; min-width: 0; }
+
+.passo .titolo {
+  font-weight: 650;
+  line-height: var(--lh-snug);
+}
+
+.passo[data-stato='fatto'] .titolo { color: var(--testo-morbido); }
+
+.passo .perche {
+  display: block;
+  font-size: var(--t-sm);
+  color: var(--testo-morbido);
+  line-height: var(--lh-snug);
+  margin-top: 2px;
+}
+
+.passo .azioni {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: var(--sp-3);
+}
+
+@media (max-width: 26rem) {
+  .passo .azioni .bottone { width: 100%; justify-content: center; }
+}
+
 /* --- Di chi è questo piano -------------------------------------------------
    Con piu' profili sullo stesso dispositivo — e con la dieta di famiglia — la
    domanda «di chi sono questi numeri» deve avere risposta senza cercarla.

@@ -202,6 +202,30 @@
           <button role="tab" aria-selected="false">Grammi</button>
         </div>
 
+        <!-- I primi passi. Non un tour che illumina bottoni: un elenco che sa a
+             che punto sei, letto dai dati. Il passo da fare è l'unico acceso. -->
+        <ol class="passi-percorso" style="margin-bottom: var(--sp-5)">
+          <li class="passo" data-stato="fatto">
+            <span class="segno"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spunta"/></svg></span>
+            <span class="corpo"><span class="titolo">I tuoi dati</span></span>
+          </li>
+          <li class="passo" data-stato="ora">
+            <span class="segno">2</span>
+            <span class="corpo">
+              <span class="titolo">Cosa ti piace</span>
+              <span class="perche">Segna quello che non mangi e le allergie, così il menù non te lo propone.</span>
+              <span class="azioni">
+                <a class="bottone" href="#">Scegli i gusti</a>
+                <button class="bottone bottone-fantasma">Non mi serve</button>
+              </span>
+            </span>
+          </li>
+          <li class="passo" data-stato="dopo">
+            <span class="segno">3</span>
+            <span class="corpo"><span class="titolo">Il menù della settimana</span></span>
+          </li>
+        </ol>
+
         <!-- Chi sta guardando: sta in cima a ogni pagina. Con più profili sullo
              stesso dispositivo, «di chi sono questi numeri» deve avere risposta
              senza doverla cercare. -->

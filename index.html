@@ -137,6 +137,27 @@
 
     <!-- ===== Giornata: mostrata quando il profilo esiste ===== -->
     <div id="giornata" hidden>
+      <!-- Da dove si comincia: c'è finché c'è un passo da fare, poi sparisce. -->
+      <section class="scheda scheda-alta percorso" id="percorso" hidden>
+        <div class="riga-tra" style="align-items:baseline">
+          <p class="occhiello">Da dove si comincia</p>
+          <span class="riga" style="gap:var(--sp-3); align-items:baseline">
+            <span class="piccolo tenue num" id="percorso-conta"></span>
+            <button class="bottone-icona" id="chiudi-percorso" aria-label="Nascondi i primi passi">
+              <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#chiudi"/></svg>
+            </button>
+          </span>
+        </div>
+        <ol class="passi-percorso" id="percorso-passi"></ol>
+        <p class="piccolo tenue" style="margin-top: var(--sp-3)">
+          Vuoi capire come funziona davvero? <a href="/guida.html">La guida in otto capitoli</a>.
+        </p>
+      </section>
+
+      <p class="piccolo tenue" id="riapri-percorso" hidden style="margin-bottom: var(--sp-4)">
+        <a href="#" id="mostra-percorso">Rivedi i primi passi</a>
+      </p>
+
       <div class="avviso" id="nota-riferimento" hidden style="margin-bottom: var(--sp-4)">
         <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#famiglia"/></svg>
         <div></div>

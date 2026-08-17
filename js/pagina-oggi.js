@@ -1,13 +1,14 @@
 /* Equilibrio — la home: i pasti di oggi, la spunta, l'acqua, la settimana. */
 
 import { avvia, alternaTema, icona, $, $$, num } from './guscio.js';
-import { profiloAttivo } from './store.js';
+import { profiloAttivo, scrivi } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import { riepilogo as riepilogoEnergia } from './energia.js';
 import {
   caricaSettimana, salvaSettimana, caricaDiario, salvaDiario,
 } from './dati.js';
 import { settimanaPer } from './famiglia.js';
+import { statoPercorso, conSaltato, conChiuso } from './percorso.js';
 import {
   kcalGiorno, indiceOggi, iso,
   ribilanciaGiorno, applicaRibilanciamento, vociConChiave,
@@ -39,6 +40,62 @@ let settimana = null;
 let diario = null;
 let giorno = null;
 let riferimento = null;
+
+/* --- Da dove si comincia ----------------------------------------------------
+   Compare finché resta un passo da fare, e quando sono tutti fatti se ne va da
+   solo. Non spiega i bottoni: dice a che punto sei e ti ci porta.
+   -------------------------------------------------------------------------- */
+
+async function rendiPercorso() {
+  const stato = await statoPercorso(profilo);
+  const scheda = $('#percorso');
+  const riapri = $('#riapri-percorso');
+
+  // Finito o messo via: sparisce. Chi ha già tutto in ordine non lo vede mai.
+  const daMostrare = !stato.completo && !stato.chiuso;
+  scheda.hidden = !daMostrare;
+  riapri.hidden = stato.completo || !stato.chiuso;
+  if (!daMostrare) return;
+
+  $('#percorso-conta').textContent = `${stato.fatti} di ${stato.totale}`;
+
+  $('#percorso-passi').innerHTML = stato.passi.map((p, i) => {
+    const ora = p.id === stato.prossimo?.id;
+    const stato_ = p.fatto ? 'fatto' : ora ? 'ora' : 'dopo';
+    return `
+      <li class="passo" data-stato="${stato_}">
+        <span class="segno" aria-hidden="true">${p.fatto ? icona('spunta', 'icona icona-sm') : i + 1}</span>
+        <span class="corpo">
+          <span class="titolo">${p.titolo}${p.saltato ? ' <span class="piccolo tenue">— saltato</span>' : ''}</span>
+          ${ora ? `<span class="perche">${p.perche}</span>` : ''}
+          ${ora ? `<span class="azioni">
+              <a class="bottone" href="${p.dove}">${p.azione}</a>
+              ${p.saltabile ? `<button class="bottone bottone-fantasma" data-salta="${p.id}">Non mi serve</button>` : ''}
+            </span>` : ''}
+        </span>
+      </li>`;
+  }).join('');
+
+  $$('#percorso-passi [data-salta]').forEach((b) => b.addEventListener('click', async () => {
+    profilo = conSaltato(profilo, b.dataset.salta);
+    await scrivi('profili', profilo);
+    await rendiPercorso();
+  }));
+}
+
+function collegaPercorso() {
+  $('#chiudi-percorso').addEventListener('click', async () => {
+    profilo = conChiuso(profilo, true);
+    await scrivi('profili', profilo);
+    await rendiPercorso();
+  });
+  $('#mostra-percorso').addEventListener('click', async (e) => {
+    e.preventDefault();
+    profilo = conChiuso(profilo, false);
+    await scrivi('profili', profilo);
+    await rendiPercorso();
+  });
+}
 
 /** Chi decide il menù, quando non sei tu. Va detto, non lasciato indovinare. */
 function rendiRiferimento() {
@@ -82,6 +139,8 @@ export async function inizializza() {
 
   collegaProdotto();
   collegaQuantita();
+  collegaPercorso();
+  await rendiPercorso();
   disegna(i);
 }
 
