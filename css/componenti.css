@@ -1138,11 +1138,22 @@
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: var(--sp-2) 0;
+  padding: var(--sp-2) var(--sp-3);
+  margin-inline: calc(var(--sp-3) * -1);
   border-bottom: 1px solid var(--bordo);
+  border-radius: var(--r-2);
+  transition: background-color var(--d-veloce) var(--e-standard);
 }
 
 .riga-gusto:last-child { border-bottom: none; }
+
+/* Una scelta fatta si vede a colpo d'occhio scorrendo la lista. «Indifferente»
+   non e' una scelta — e' l'assenza di una — e infatti non tinge niente:
+   altrimenti sarebbe tutta la pagina a essere evidenziata. */
+.riga-gusto[data-gusto='amato']   { background: var(--accento-velo); }
+.riga-gusto[data-gusto='omesso'],
+.riga-gusto[data-gusto='escluso'] { background: var(--pericolo-tenue); }
+.riga-gusto[data-allergica='si']  { background: var(--pericolo-tenue); }
 
 .riga-gusto .nome {
   flex: 1;
@@ -1161,9 +1172,22 @@
   height: 2rem;
   flex: none;
   border-radius: var(--r-1);
-  background: var(--sfondo-alt);
-  color: var(--testo-tenue);
+  background: var(--cibo-altro-velo);
+  color: var(--cibo-altro-segno);
 }
+
+/* Il colore della famiglia di cibo: la pasta dorata, il pesce blu, la verdura
+   verde. Serve a riconoscere, non a giudicare — per questo la tavolozza e'
+   separata da quella semantica (vedi tokens.css). */
+.sigillo-mini[data-cibo='cereali']   { background: var(--cibo-cereali-velo);   color: var(--cibo-cereali-segno); }
+.sigillo-mini[data-cibo='verdura']   { background: var(--cibo-verdura-velo);   color: var(--cibo-verdura-segno); }
+.sigillo-mini[data-cibo='frutta']    { background: var(--cibo-frutta-velo);    color: var(--cibo-frutta-segno); }
+.sigillo-mini[data-cibo='pesce']     { background: var(--cibo-pesce-velo);     color: var(--cibo-pesce-segno); }
+.sigillo-mini[data-cibo='carne']     { background: var(--cibo-carne-velo);     color: var(--cibo-carne-segno); }
+.sigillo-mini[data-cibo='latticini'] { background: var(--cibo-latticini-velo); color: var(--cibo-latticini-segno); }
+.sigillo-mini[data-cibo='legumi']    { background: var(--cibo-legumi-velo);    color: var(--cibo-legumi-segno); }
+.sigillo-mini[data-cibo='bevande']   { background: var(--cibo-bevande-velo);   color: var(--cibo-bevande-segno); }
+.sigillo-mini[data-cibo='altro']     { background: var(--cibo-altro-velo);     color: var(--cibo-altro-segno); }
 
 .riga-gusto [data-allergia][aria-pressed='true'] {
   background: var(--pericolo-tenue);
@@ -1197,9 +1221,22 @@
   box-shadow: var(--ombra-1);
 }
 
-.gusti button[data-gusto-val='amato'][aria-pressed='true'] { color: var(--accento-testo); }
+/* La scelta fatta e' PIENA, non solo colorata: su una lista di centocinquanta
+   righe la differenza fra un'icona tinta e una no si perde, quella fra un
+   cerchio pieno e uno vuoto no. «Indifferente» resta in sordina perche' e' lo
+   stato di partenza di tutto: accenderlo vorrebbe dire accendere ogni riga. */
+.gusti button[data-gusto-val='amato'][aria-pressed='true'] {
+  background: var(--accento);
+  color: var(--su-accento);
+}
+
 .gusti button[data-gusto-val='neutro'][aria-pressed='true'] { color: var(--testo); }
-.gusti button[data-gusto-val='escluso'][aria-pressed='true'] { color: var(--pericolo-testo); }
+
+.gusti button[data-gusto-val='omesso'][aria-pressed='true'],
+.gusti button[data-gusto-val='escluso'][aria-pressed='true'] {
+  background: var(--pericolo);
+  color: var(--su-pericolo);
+}
 
 .gusti button[disabled] { opacity: 0.3; pointer-events: none; }
 

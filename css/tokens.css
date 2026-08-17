@@ -184,6 +184,32 @@
   --pericolo-testo: var(--allarme-600);
   --pericolo-tenue: #fbe9e7;
 
+  /* --- Famiglie di cibo ----------------------------------------------------
+     Tavolozza a parte, e di proposito: i colori semantici hanno gia' un
+     significato — ocra e' lo sgarro, verde e' «va bene», rosso e' la sicurezza.
+     Tingere di verde l'icona della verdura direbbe «questo piatto e' buono per
+     te», che non e' quello che si intende. Questi servono solo a far
+     riconoscere una categoria con la coda dell'occhio: pastello, mai squillanti.
+     -------------------------------------------------------------------------- */
+  --cibo-cereali-velo:   #f6ecd8;
+  --cibo-cereali-segno:  #7a5a17;
+  --cibo-verdura-velo:   #e4efd4;
+  --cibo-verdura-segno:  #4a6327;
+  --cibo-frutta-velo:    #fbe3d5;
+  --cibo-frutta-segno:   #a04a22;
+  --cibo-pesce-velo:     #d9e9f3;
+  --cibo-pesce-segno:    #235a78;
+  --cibo-carne-velo:     #f6dcdc;
+  --cibo-carne-segno:    #8d3b3b;
+  --cibo-latticini-velo: #f3ecdd;
+  --cibo-latticini-segno:#6d5c38;
+  --cibo-legumi-velo:    #e6e6cd;
+  --cibo-legumi-segno:   #5e5c2c;
+  --cibo-bevande-velo:   #dceceb;
+  --cibo-bevande-segno:  #2c605d;
+  --cibo-altro-velo:     var(--creta-100);
+  --cibo-altro-segno:    var(--creta-600);
+
   --ombra-1: 0 1px 2px rgba(61, 40, 24, 0.06), 0 1px 1px rgba(61, 40, 24, 0.04);
   --ombra-2: 0 2px 4px rgba(61, 40, 24, 0.06), 0 4px 12px rgba(61, 40, 24, 0.07);
   --ombra-3: 0 6px 16px rgba(61, 40, 24, 0.09), 0 16px 40px rgba(61, 40, 24, 0.10);
@@ -236,6 +262,45 @@
   --pericolo-testo: #f2a49b;
   --pericolo-tenue: #331714;
 
+
+  /* Famiglie di cibo — ricalcolate per il fondo scuro, non invertite. */
+
+  --cibo-cereali-velo: #33280f;
+
+  --cibo-cereali-segno: #e2c07a;
+
+  --cibo-verdura-velo: #24301a;
+
+  --cibo-verdura-segno: #b3cb84;
+
+  --cibo-frutta-velo: #3a2118;
+
+  --cibo-frutta-segno: #eda283;
+
+  --cibo-pesce-velo: #172c39;
+
+  --cibo-pesce-segno: #8fc4e0;
+
+  --cibo-carne-velo: #37201f;
+
+  --cibo-carne-segno: #e3a0a0;
+
+  --cibo-latticini-velo: #302a1e;
+
+  --cibo-latticini-segno: #d9c69c;
+
+  --cibo-legumi-velo: #2b2b18;
+
+  --cibo-legumi-segno: #c6c489;
+
+  --cibo-bevande-velo: #172c2b;
+
+  --cibo-bevande-segno: #8ec5c1;
+
+  --cibo-altro-velo: var(--creta-800);
+
+  --cibo-altro-segno: var(--creta-400);
+
   --ombra-1: 0 1px 2px rgba(0, 0, 0, 0.5);
   --ombra-2: 0 2px 6px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.4);
   --ombra-3: 0 8px 24px rgba(0, 0, 0, 0.6), 0 20px 48px rgba(0, 0, 0, 0.45);
@@ -285,6 +350,45 @@
     --su-pericolo: #2b0d0a;
     --pericolo-testo: #f2a49b;
     --pericolo-tenue: #331714;
+
+
+    /* Famiglie di cibo — ricalcolate per il fondo scuro, non invertite. */
+
+    --cibo-cereali-velo: #33280f;
+
+    --cibo-cereali-segno: #e2c07a;
+
+    --cibo-verdura-velo: #24301a;
+
+    --cibo-verdura-segno: #b3cb84;
+
+    --cibo-frutta-velo: #3a2118;
+
+    --cibo-frutta-segno: #eda283;
+
+    --cibo-pesce-velo: #172c39;
+
+    --cibo-pesce-segno: #8fc4e0;
+
+    --cibo-carne-velo: #37201f;
+
+    --cibo-carne-segno: #e3a0a0;
+
+    --cibo-latticini-velo: #302a1e;
+
+    --cibo-latticini-segno: #d9c69c;
+
+    --cibo-legumi-velo: #2b2b18;
+
+    --cibo-legumi-segno: #c6c489;
+
+    --cibo-bevande-velo: #172c2b;
+
+    --cibo-bevande-segno: #8ec5c1;
+
+    --cibo-altro-velo: var(--creta-800);
+
+    --cibo-altro-segno: var(--creta-400);
 
     --ombra-1: 0 1px 2px rgba(0, 0, 0, 0.5);
     --ombra-2: 0 2px 6px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.4);

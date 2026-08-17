@@ -7,6 +7,7 @@ import { profiloAttivo } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import {
   piatti, piattiScartati, alimenti, alimento, gruppi, iconaPiatto, TIPI,
+  iconaAlimento, famigliaCibo,
 } from './alimenti.js';
 import {
   caricaPreferenze, salvaPreferenze, gustoPiatto, gustoAlimento, eAllergene,
@@ -122,9 +123,10 @@ function rigaPiatto(p) {
   const nota = motivo && motivo.tipo !== 'piatto-escluso'
     ? `<span class="piccolo ${motivo.tipo === 'allergia' ? 'pericolo-testo' : 'tenue'}">${motivo.testo}</span>`
     : '';
+  const ic = iconaPiatto(p);
   return `
-    <div class="riga-gusto">
-      <span class="sigillo-mini">${icona(iconaPiatto(p), 'icona icona-sm')}</span>
+    <div class="riga-gusto" data-gusto="${g}">
+      <span class="sigillo-mini" data-cibo="${famigliaCibo(ic)}">${icona(ic, 'icona icona-sm')}</span>
       <span class="nome">${p.nome}${nota ? `<br>${nota}` : ''}</span>
       ${controllo('piatti', p.id, g)}
     </div>`;
@@ -133,8 +135,12 @@ function rigaPiatto(p) {
 function rigaAlimento(a) {
   const g = gustoAlimento(pref, a.id);
   const allergia = eAllergene(pref, a.id);
+  // Anche gli alimenti hanno la loro icona: una lista di sole parole si legge
+  // molto piu' lentamente di una dove il pesce si riconosce da lontano.
+  const ic = iconaAlimento(a);
   return `
-    <div class="riga-gusto" ${allergia ? 'data-allergica="si"' : ''}>
+    <div class="riga-gusto" data-gusto="${g}" ${allergia ? 'data-allergica="si"' : ''}>
+      <span class="sigillo-mini" data-cibo="${famigliaCibo(ic)}">${icona(ic, 'icona icona-sm')}</span>
       <span class="nome">${a.nome}
         ${a.sinonimi?.length ? `<br><span class="piccolo tenue">${a.sinonimi.join(', ')}</span>` : ''}
       </span>

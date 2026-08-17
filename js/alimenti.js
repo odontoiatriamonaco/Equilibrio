@@ -279,12 +279,35 @@ const PER_GRUPPO = {
   dolci: 'dolce', bevande: 'bevande',
 };
 
-function iconaAlimento(a) {
+export function iconaAlimento(a) {
   if (!a) return 'piano';
   // Il gruppo non distingue il pollo dal pesce: il banco del supermercato si.
   if (a.reparto === 'banco-pesce') return 'pesce';
   if (a.reparto === 'banco-carne') return 'carne';
   return PER_GRUPPO[a.gruppo] || 'piano';
+}
+
+/**
+ * A quale famiglia di colore appartiene un'icona.
+ *
+ * Serve solo a far riconoscere una categoria con la coda dell'occhio, e per
+ * questo la tavolozza e' separata da quella semantica: verde vuol dire «va
+ * bene», ocra vuol dire sgarro, rosso vuol dire sicurezza. Tingere di verde
+ * l'insalata direbbe una cosa che qui non si intende dire.
+ */
+const FAMIGLIA_PER_ICONA = {
+  pasta: 'cereali', riso: 'cereali', panetteria: 'cereali',
+  verdura: 'verdura', foglia: 'verdura',
+  ortofrutta: 'frutta', 'frutta-secca': 'frutta', dolce: 'frutta',
+  pesce: 'pesce',
+  carne: 'carne', uovo: 'carne',
+  latticini: 'latticini', latte: 'latticini',
+  legumi: 'legumi', olio: 'legumi',
+  bevande: 'bevande', caffe: 'bevande', acqua: 'bevande',
+};
+
+export function famigliaCibo(nomeIcona) {
+  return FAMIGLIA_PER_ICONA[nomeIcona] || 'altro';
 }
 
 /**

@@ -202,6 +202,53 @@
           <button role="tab" aria-selected="false">Grammi</button>
         </div>
 
+        <!-- Righe di gusto. Il colore dell'icona dice la famiglia di cibo e non
+             giudica: la tavolozza è separata da quella semantica, perché verde
+             qui vorrebbe dire «va bene» e non è quello che si intende.
+             La riga si tinge solo quando una scelta è stata fatta davvero —
+             «indifferente» è l'assenza di una scelta e non tinge niente. -->
+        <div class="scheda" style="padding-block: var(--sp-2); margin-bottom: var(--sp-5)">
+          <div class="riga-gusto" data-gusto="amato">
+            <span class="sigillo-mini" data-cibo="cereali"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#pasta"/></svg></span>
+            <span class="nome">Pasta di semola</span>
+            <div class="gusti" role="group">
+              <button data-gusto-val="amato" aria-pressed="true"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#cuore"/></svg></button>
+              <button data-gusto-val="neutro" aria-pressed="false"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#meno"/></svg></button>
+              <button data-gusto-val="omesso" aria-pressed="false"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#chiudi"/></svg></button>
+            </div>
+          </div>
+          <div class="riga-gusto" data-gusto="neutro">
+            <span class="sigillo-mini" data-cibo="pesce"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#pesce"/></svg></span>
+            <span class="nome">Alici</span>
+            <div class="gusti" role="group">
+              <button data-gusto-val="amato" aria-pressed="false"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#cuore"/></svg></button>
+              <button data-gusto-val="neutro" aria-pressed="true"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#meno"/></svg></button>
+              <button data-gusto-val="omesso" aria-pressed="false"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#chiudi"/></svg></button>
+            </div>
+          </div>
+          <div class="riga-gusto" data-gusto="omesso">
+            <span class="sigillo-mini" data-cibo="frutta"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#dolce"/></svg></span>
+            <span class="nome">Miele</span>
+            <div class="gusti" role="group">
+              <button data-gusto-val="amato" aria-pressed="false"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#cuore"/></svg></button>
+              <button data-gusto-val="neutro" aria-pressed="false"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#meno"/></svg></button>
+              <button data-gusto-val="omesso" aria-pressed="true"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#chiudi"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo" style="margin-bottom: var(--sp-5)">
+          <span class="sigillo-mini" data-cibo="cereali"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#pasta"/></svg></span>
+          <span class="sigillo-mini" data-cibo="verdura"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#verdura"/></svg></span>
+          <span class="sigillo-mini" data-cibo="frutta"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#ortofrutta"/></svg></span>
+          <span class="sigillo-mini" data-cibo="pesce"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#pesce"/></svg></span>
+          <span class="sigillo-mini" data-cibo="carne"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#carne"/></svg></span>
+          <span class="sigillo-mini" data-cibo="latticini"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#latticini"/></svg></span>
+          <span class="sigillo-mini" data-cibo="legumi"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#legumi"/></svg></span>
+          <span class="sigillo-mini" data-cibo="bevande"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#caffe"/></svg></span>
+          <span class="sigillo-mini" data-cibo="altro"><svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#piano"/></svg></span>
+        </div>
+
         <!-- I primi passi. Non un tour che illumina bottoni: un elenco che sa a
              che punto sei, letto dai dati. Il passo da fare è l'unico acceso. -->
         <ol class="passi-percorso" style="margin-bottom: var(--sp-5)">
