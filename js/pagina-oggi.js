@@ -7,7 +7,9 @@ import { riepilogo as riepilogoEnergia } from './energia.js';
 import {
   caricaSettimana, salvaSettimana, caricaDiario, salvaDiario,
 } from './dati.js';
-import { settimanaPer } from './famiglia.js';
+import { settimanaPer, lenteDi, salvaPersonalizzazione } from './famiglia.js';
+import { caricaPreferenze } from './preferenze.js';
+import { alternativePiatto, scambiaPiatto } from './scambi.js';
 import { statoPercorso, conSaltato, conChiuso } from './percorso.js';
 import {
   kcalGiorno, indiceOggi, iso,
@@ -16,7 +18,7 @@ import {
 import { calcolaRecupero, applicaRecupero, racconta } from './sgarro.js';
 import {
   nomeVoce, valoriVoce, iconaPiatto, vociOggetto, TIPI, dosiVoce,
-  dosePrincipale, porzioniPerGrammi,
+  dosePrincipale, porzioniPerGrammi, piatto,
 } from './alimenti.js';
 import { rendiFascia } from './ui-budget.js';
 import {
@@ -51,6 +53,7 @@ let settimana = null;
 let diario = null;
 let giorno = null;
 let riferimento = null;
+let pref = null;
 
 /* --- Da dove si comincia ----------------------------------------------------
    Compare finché resta un passo da fare, e quando sono tutti fatti se ne va da
@@ -148,8 +151,11 @@ export async function inizializza() {
   const i = settimana ? indiceOggi(settimana, oggi) : -1;
   giorno = i >= 0 ? settimana.giorni[i] : null;
 
+  pref = await caricaPreferenze(profilo.id);
+
   collegaProdotto();
   collegaQuantita();
+  collegaScambio();
   collegaPercorso();
   await rendiPercorso();
   disegna(i);
@@ -255,15 +261,22 @@ function disegnaPasti() {
               ${icona('matita', 'icona icona-sm')}
             </button>
             ${voce.tipo === 'piatto'
-              ? `<a class="bottone-icona" href="/piano.html?vai=${indice}|${pasto}|${i}"
-                    aria-label="Scegli qualcosa al posto di ${nomeVoce(voce)}">
-                   ${icona('scambia', 'icona icona-sm')}</a>
+              ? `<button class="bottone-icona" data-scambia="${chiave}"
+                         aria-label="Scegli qualcosa al posto di ${nomeVoce(voce)}">
+                   ${icona('scambia', 'icona icona-sm')}</button>
                  <a class="bottone-icona" href="/ricette.html" aria-label="Vedi la ricetta di ${nomeVoce(voce)}">
                    ${icona(iconaPiatto(oggetto || {}), 'icona icona-sm')}</a>`
               : ''}
           </label>`;
       }).join('')}
     </section>`).join('');
+
+  $$('#pasti-oggi [data-scambia]').forEach((b) => b.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const [pasto, i] = b.dataset.scambia.split('|');
+    apriScambio(pasto, Number(i));
+  }));
 
   $$('#pasti-oggi [data-quantita]').forEach((b) => b.addEventListener('click', (e) => {
     // Il bottone sta dentro la <label> della spunta: senza questo, cambiare la
@@ -284,6 +297,94 @@ function disegnaPasti() {
       await salvaDiario(diario);
       disegnaAnello(giorno?.quota ?? energia.fabbisogno.target);
     }));
+}
+
+/* --- Scegliere qualcosa al posto di un piatto -------------------------------
+   Si apre qui e non sul Piano: cambiare pagina per uno scambio e' un giro
+   inutile, e chi guarda i pasti di oggi vuole decidere ora.
+   -------------------------------------------------------------------------- */
+
+let scambioAperto = null;
+
+function collegaScambio() {
+  $('#chiudi-scambio').addEventListener('click', () => $('#scambio').close());
+}
+
+async function apriScambio(pasto, indice) {
+  const voce = giorno?.pasti?.[pasto]?.[indice];
+  if (!voce || voce.tipo !== 'piatto') return;
+  scambioAperto = { pasto, indice };
+
+  // Chi segue il menu' di un altro cerca nel PROPRIO ricettario: le sue
+  // pietanze di casa, i suoi alimenti tolti.
+  const lente = riferimento ? await lenteDi(profilo.id) : null;
+
+  // Niente di gia' in tavola questa settimana: scambiare per ritrovarsi lo
+  // stesso piatto due giorni dopo non serve.
+  const usati = new Set(settimana.giorni
+    .flatMap((g) => Object.values(g.pasti).flat())
+    .map((v) => v.id));
+
+  const alternative = alternativePiatto(voce, {
+    preferenze: pref,
+    mese: new Date().getMonth() + 1,
+    esclusiIds: usati,
+    quanti: 10,
+    ...(lente ? { piatti: lente.piatti } : {}),
+  });
+
+  $('#scambio-titolo').textContent = riferimento
+    ? `Al posto di «${nomeVoce(voce)}», solo per te`
+    : `Al posto di «${nomeVoce(voce)}»`;
+
+  $('#scambio-elenco').innerHTML = alternative.length
+    ? alternative.map((a) => `
+        <button class="carta-piatto" data-nuovo="${a.id}">
+          <span class="sigillo">${icona(iconaPiatto(piatto(a.id) || {}))}</span>
+          <span class="corpo">
+            <span class="titolo">${a.nome}</span>
+            <span class="meta">
+              <span class="num">${num(a.kcal)} kcal</span>
+              <span>${a.tempo} min</span>
+              ${a.stagione ? '<span>di stagione</span>' : ''}
+            </span>
+          </span>
+        </button>`).join('')
+    : '<div class="vuoto"><p>Non ci sono alternative disponibili con le tue preferenze.</p></div>';
+
+  $$('#scambio-elenco [data-nuovo]').forEach((b) => b.addEventListener('click', async () => {
+    await confermaScambio(b.dataset.nuovo);
+  }));
+
+  $('#scambio').showModal();
+}
+
+async function confermaScambio(nuovoId) {
+  const { pasto, indice } = scambioAperto;
+  const i = indiceOggi(settimana);
+
+  if (riferimento) {
+    // Il menu' e' di un altro: si cambia solo nel proprio piatto.
+    await salvaPersonalizzazione(profilo.id, settimana.inizio,
+      `${giorno.etichetta}|${pasto}|${indice}`, { sostituto: nuovoId });
+    const derivata = await settimanaPer(profilo);
+    settimana = derivata.settimana;
+  } else {
+    settimana = scambiaPiatto(settimana, { giorno: i, pasto, indice, nuovoId });
+    await salvaSettimana(profilo.id, settimana);
+  }
+
+  giorno = settimana.giorni[i];
+  // Il piatto non e' piu' quello: se era spuntato, quella spunta non vale piu'.
+  const chiave = `${pasto}|${indice}`;
+  if ((diario.consumato || []).includes(chiave)) {
+    diario.consumato = diario.consumato.filter((c) => c !== chiave);
+    diario.kcalTotali = kcalConsumate();
+    await salvaDiario(diario);
+  }
+
+  $('#scambio').close();
+  disegna(i);
 }
 
 /* --- Quanto ne ho mangiato davvero ------------------------------------------

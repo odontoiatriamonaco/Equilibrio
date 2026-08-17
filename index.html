@@ -276,6 +276,24 @@
     </div>
   </dialog>
 
+  <!-- Scegliere qualcosa al posto di un piatto, senza cambiare pagina -->
+  <dialog id="scambio" class="dialogo" aria-labelledby="scambio-titolo">
+    <div class="dialogo-riquadro">
+      <header class="dialogo-testa">
+        <span class="sigillo"><svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#scambia"/></svg></span>
+        <h2 id="scambio-titolo" style="flex:1; min-width:0"></h2>
+        <button class="bottone-icona" id="chiudi-scambio" aria-label="Chiudi">
+          <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#chiudi"/></svg>
+        </button>
+      </header>
+      <div class="dialogo-corpo">
+        <p class="piccolo morbido" style="margin-bottom: var(--sp-3)">
+          Le porzioni si adattano da sole, così il conto del giorno non cambia.</p>
+        <div class="pila" id="scambio-elenco"></div>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Quanto ne ho mangiato davvero -->
   <dialog id="dialogo-quantita" class="dialogo" aria-labelledby="titolo-quantita">
     <div class="dialogo-riquadro">

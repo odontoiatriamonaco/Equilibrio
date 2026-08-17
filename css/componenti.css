@@ -1353,6 +1353,46 @@
   color: var(--testo-morbido);
 }
 
+/* --- Scelta a pastiglie ----------------------------------------------------
+   Per scegliere fra poche categorie: si vedono tutte insieme e si prende con un
+   tocco solo. Un menu' a tendina costringe ad aprirlo, scorrerlo e richiuderlo
+   — tre gesti dove ne basta uno.
+   -------------------------------------------------------------------------- */
+
+.chip-scelta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.chip-scelta button {
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-pill);
+  background: var(--superficie);
+  color: var(--testo-morbido);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  line-height: 1.2;
+  transition: background-color var(--d-veloce) var(--e-standard),
+              border-color var(--d-veloce) var(--e-standard),
+              color var(--d-veloce) var(--e-standard);
+}
+
+.chip-scelta button:hover { border-color: var(--bordo-forte); color: var(--testo); }
+
+.chip-scelta button[aria-pressed='true'] {
+  background: var(--accento);
+  border-color: var(--accento);
+  color: var(--su-accento);
+}
+
+.chip-scelta button .conta {
+  font-weight: 500;
+  opacity: 0.65;
+  font-variant-numeric: tabular-nums;
+}
+
 /* --- La targhetta del momento ----------------------------------------------
    Colazione, spuntino, pranzo e cena erano quattro sezioni identiche: cambiava
    una sola parola in maiuscoletto. L'icona basta gia' a distinguerle; la tinta
