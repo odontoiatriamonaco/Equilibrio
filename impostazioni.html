@@ -134,6 +134,44 @@
       </div>
     </section>
 
+    <!-- ===== Spazio famiglia ===== -->
+    <section class="sezione">
+      <header><h2>Lo spazio della famiglia</h2></header>
+      <div class="scheda pila">
+        <p class="morbido">Chi decide il menù lo pubblica una volta sola. Sugli altri
+          telefoni arriva da sé, ogni settimana, senza doversi rimandare un file.
+          Ognuno tiene le sue porzioni, e chi cucina le vede tutte: sa quanto mettere
+          in pentola.</p>
+
+        <div class="avviso">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#blocco"/></svg>
+          <div>Di qui escono <strong>le pietanze, le porzioni e i nomi</strong>. Non
+            escono peso, altezza, età, patologie né calorie: quelle restano su questo
+            dispositivo, e le porzioni le ricalcola ogni telefono per conto suo.</div>
+        </div>
+
+        <div id="spazio-stato"></div>
+
+        <div class="riga" style="flex-wrap:wrap">
+          <button class="bottone" id="apri-spazio" hidden>
+            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#famiglia"/></svg>
+            Apri lo spazio della famiglia
+          </button>
+          <button class="bottone bottone-2" id="entra-spazio" hidden>
+            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#importa"/></svg>
+            Entra con un codice
+          </button>
+          <button class="bottone bottone-2" id="pubblica-menu" hidden>
+            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#condividi"/></svg>
+            Pubblica il menù di questa settimana
+          </button>
+          <button class="bottone bottone-fantasma" id="esci-spazio" hidden>Esci dallo spazio</button>
+        </div>
+
+        <p class="avviso" id="esito-spazio" hidden></p>
+      </div>
+    </section>
+
     <!-- ===== Ripristino ===== -->
     <section class="sezione">
       <header><h2>Rimettere le cose come stavano</h2></header>
@@ -197,14 +235,44 @@
       <div class="scheda pila">
         <p class="morbido">Peso, misure, patologie e diario alimentare <strong>restano su questo
           dispositivo</strong>: non esiste un account, non c'è una email, non parte nessuna statistica.</p>
-        <p class="morbido">L'unica cosa che potrà uscire da qui è la <strong>lista della spesa</strong>,
-          quando sceglierai di condividerla: un codice temporaneo che porta con sé solo alimenti
-          e quantità — nessun nome, nessun peso, nessuna caloria.</p>
+        <p class="morbido">Da qui possono uscire due cose, e solo se le condividi tu. La
+          <strong>lista della spesa</strong>: un codice temporaneo con dentro alimenti e
+          quantità — nessun nome, nessun peso, nessuna caloria. E lo <strong>spazio della
+          famiglia</strong>: le pietanze della settimana, le porzioni e i nomi di battesimo.</p>
+        <p class="morbido">Peso, altezza, età e patologie <strong>non escono in nessuno dei
+          due casi</strong>. Le porzioni viaggiano come porzioni, non come calorie, e ogni
+          telefono le ricalcola sul proprio fabbisogno.</p>
         <p class="piccolo tenue">Equilibrio è uno strumento di organizzazione familiare. Non è un
           dispositivo medico e non sostituisce il parere di un nutrizionista o del medico curante.</p>
       </div>
     </section>
   </main>
+
+  <!-- Entra in uno spazio famiglia -->
+  <dialog id="dialogo-spazio" class="dialogo" aria-labelledby="titolo-spazio">
+    <div class="dialogo-riquadro">
+      <header class="dialogo-testa">
+        <span class="sigillo"><svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#famiglia"/></svg></span>
+        <h2 id="titolo-spazio" style="flex:1; min-width:0">Entra nello spazio</h2>
+        <button class="bottone-icona" id="chiudi-spazio" aria-label="Chiudi">
+          <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#chiudi"/></svg>
+        </button>
+      </header>
+      <div class="dialogo-corpo pila">
+        <p class="morbido">Fattelo dettare da chi ha aperto lo spazio. Non ci sono
+          I, L, O né U: quello che sembra una O è uno zero.</p>
+        <div class="campo">
+          <label for="codice-spazio">Codice della famiglia</label>
+          <input id="codice-spazio" type="text" maxlength="12" autocomplete="off"
+                 spellcheck="false" autocapitalize="characters" placeholder="ABCDE-FGHJK"
+                 style="font-size:var(--t-xl); letter-spacing:.2em; text-align:center;
+                        text-transform:uppercase">
+        </div>
+        <button class="bottone bottone-largo" id="conferma-spazio">Entra</button>
+        <p class="avviso" id="esito-dialogo-spazio" hidden></p>
+      </div>
+    </div>
+  </dialog>
 
   <script type="module">
     import { inizializza } from '/js/pagina-impostazioni.js';

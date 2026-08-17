@@ -79,8 +79,11 @@ quindi l'uso offline si prova dal sito su Vercel, non da `localhost`.
 ## Com'è fatto
 
 MPA in JavaScript senza framework, costruita con Vite, PWA installabile,
-**tutto lato client**. Nessun account, nessuna telemetria. L'unica funzione
-serverless e' quella che condivide la lista della spesa, ed e' facoltativa.
+**tutto lato client**. Nessun account, nessuna telemetria. Le due funzioni
+serverless — la lista della spesa e lo spazio famiglia — sono **facoltative**:
+senza archivio remoto l'app funziona per intero, dicendolo. Da entrambe escono
+solo alimenti, pietanze, porzioni e nomi: peso, altezza, eta', patologie e
+calorie non lasciano mai il dispositivo.
 
 ```
 index.html … stile.html   una pagina per schermata
@@ -104,7 +107,12 @@ js/editor-pietanza.js     editor degli ingredienti
 js/off-client.js          barcode via Open Food Facts, con cache
 js/grafico-peso.js        grafico del peso di tendenza, SVG senza librerie
 js/ui-budget.js           la fascia del budget settimanale
-api/lista-pubblica.js     condivisione della sola lista della spesa (Vercel KV)
+js/spazio-famiglia.js     il menu' comune in rete: porzioni di ciascuno, richieste
+api/_lib.js               codici, freno ai tentativi, ripulitura di cio' che esce
+api/_kv.js                l'unica porta verso l'archivio remoto (Upstash Redis)
+api/_spazio.js            cosa puo' entrare nello spazio famiglia, e cosa no
+api/lista-pubblica.js     condivisione della sola lista della spesa
+api/famiglia.js           lo spazio famiglia: menu', porzioni, proposte
 public/assets/icons.svg   sprite delle icone su misura
 scripts/genera-icone.mjs  rigenera le icone PWA dal marchio
 tests/                    Vitest sui moduli puri
@@ -353,6 +361,21 @@ Il primo collegamento a Vercel si fa una volta sola: Add New → Project → Imp
 dal repository. Framework, comando di build e cartella di output li legge dal
 `vercel.json`; la Root Directory resta `./`.
 
+### L'archivio remoto
+
+Le funzioni in `api/` parlano con **Upstash Redis**. Servono due variabili
+d'ambiente, e servono **entrambe**, o la condivisione resta spenta:
+
+| coppia | variabili |
+|---|---|
+| integrazione Vercel | `KV_REST_API_URL` + `KV_REST_API_TOKEN` |
+| Upstash diretto | `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` |
+
+Si collega da Vercel → Storage → Upstash Redis, che scrive le variabili da solo.
+Senza, l'app **funziona lo stesso**: le pagine dicono «la condivisione non è
+attiva» invece di mostrare un errore. Tutto il resto vive su IndexedDB e non
+tocca la rete.
+
 **Installare sul telefono:** apri l'indirizzo in Chrome o Safari e usa "Aggiungi a
 schermata Home". Da lì funziona anche senza rete.
 
@@ -370,5 +393,6 @@ schermata Home". Da lì funziona anche senza rete.
 | ✅ | Generatore della settimana, scambi e lista della spesa |
 | ✅ | Motore dello sgarro, retroattivo e preventivo |
 | ✅ | Antispreco e dispensa, porzioni per commensali, peso di tendenza, TDEE adattivo |
-| ✅ | Condivisione della lista con un codice (serve l’integrazione KV su Vercel) |
+| ✅ | Condivisione della lista con un codice (serve l’archivio remoto, vedi sopra) |
+| ✅ | Spazio famiglia: il menù arriva da sé sugli altri telefoni, con le richieste di scambio |
 | ✅ | Barcode dei prodotti confezionati via Open Food Facts |

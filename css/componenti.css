@@ -1353,6 +1353,35 @@
   color: var(--testo-morbido);
 }
 
+/* --- Quanto va in pentola --------------------------------------------------
+   Chi cucina per la famiglia non pesa la propria porzione: pesa il totale. Il
+   numero grande e' quello, e la divisione per persona sta sotto, piu' piccola —
+   serve a controllare, non a cucinare.
+   -------------------------------------------------------------------------- */
+
+.in-pentola {
+  margin: 0 0 var(--sp-2) calc(var(--sp-3) + 1.75rem);
+  padding: var(--sp-2) var(--sp-3);
+  border-left: 3px solid var(--accento);
+  border-radius: 0 var(--r-2) var(--r-2) 0;
+  background: var(--superficie-incavo);
+  font-size: var(--t-sm);
+  color: var(--testo-morbido);
+}
+
+.in-pentola strong {
+  color: var(--testo);
+}
+
+/* La divisione e' piu' piccola, non piu' pallida: a 12 px `--testo-tenue`
+   scendeva a 4,4 di contrasto, sotto la soglia. La gerarchia la fa la
+   dimensione, e il totale in grassetto a piena tinta. */
+.in-pentola .quote {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--t-xs);
+}
+
 /* --- Scelta a pastiglie ----------------------------------------------------
    Per scegliere fra poche categorie: si vedono tutte insieme e si prende con un
    tocco solo. Un menu' a tendina costringe ad aprirlo, scorrerlo e richiuderlo

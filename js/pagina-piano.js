@@ -1,10 +1,16 @@
 /* Equilibrio — pagina Piano: la settimana, gli scambi, lo sgarro. */
 
 import { avvia, icona, $, $$, num } from './guscio.js';
-import { profiloAttivo } from './store.js';
+import { profiloAttivo, profili, origineDi } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import { riepilogo as riepilogoEnergia } from './energia.js';
-import { settimanaPer, salvaPersonalizzazione, lenteDi } from './famiglia.js';
+import {
+  settimanaPer, salvaPersonalizzazione, lenteDi, settimaneDellaTavola,
+} from './famiglia.js';
+import {
+  allinea, porzioniDellaTavola, pubblicaMenu, spazioLocale, leggiSpazio,
+  proponiScambio, decidiProposte, proposteInAttesa, raccontaArrivo,
+} from './spazio-famiglia.js';
 import { caricaPreferenze } from './preferenze.js';
 import { caricaSettimana, salvaSettimana } from './dati.js';
 import {
@@ -37,6 +43,8 @@ let settimana = null;
 let scambioAperto = null;
 let riferimento = null;
 let avvisiFamiglia = [];
+/** Chi mangia quanto, voce per voce. Vuoto per chi non cucina per altri. */
+let divisione = [];
 
 export async function inizializza() {
   avvia({ nav: 'piano' });
@@ -52,10 +60,15 @@ export async function inizializza() {
   await caricaRicettario(profilo.id);
   pref = await caricaPreferenze(profilo.id);
 
+  // Prima di disegnare: se dallo spazio famiglia è arrivato un menù nuovo va
+  // messo in casa adesso, o si guarderebbe la settimana scorsa.
+  const arrivo = await allinea(profilo);
+
   const derivata = await settimanaPer(profilo);
   settimana = derivata.settimana;
   riferimento = derivata.riferimento;
   avvisiFamiglia = derivata.avvisi;
+  divisione = await preparaDivisione();
 
   // Chi segue non rigenera: il menu' lo decide il riferimento, altrimenti
   // la settimana si sdoppierebbe e non si cucinerebbe piu' una volta sola.
@@ -81,6 +94,8 @@ export async function inizializza() {
   $('#sgarro-giorno').addEventListener('change', aggiornaAnteprimaSgarro);
 
   disegna();
+  rendiArrivo(arrivo);
+  if (arrivo.spazio) await rendiProposte(arrivo.spazio);
 }
 
 /* --- Generazione ----------------------------------------------------------- */
@@ -100,7 +115,17 @@ async function rigenera() {
     vincoli: energia.vincoliSalute,
   });
   await salvaSettimana(profilo.id, settimana);
+  divisione = await preparaDivisione();
   disegna();
+
+  // Chi ha aperto lo spazio ha appena cambiato la cena a tutta la famiglia:
+  // il menù parte subito, senza un secondo pulsante da ricordarsi di premere.
+  if ((await spazioLocale())?.chiave) {
+    const esito = await pubblicaMenu(profilo, settimana);
+    rendiArrivo(esito.ok
+      ? { attivo: true, mandato: true }
+      : { attivo: true, messaggio: esito.messaggio });
+  }
 }
 
 /**
@@ -143,6 +168,102 @@ function rendiRiferimento() {
 
   nota.className = avvisiFamiglia.length ? 'avviso avviso-sgarro' : 'avviso';
   nota.querySelector('div').innerHTML = righe.join(' ');
+}
+
+/* --- Lo spazio della famiglia ----------------------------------------------- */
+
+/**
+ * Chi mangia quanto, per chi cucina.
+ *
+ * Serve a chi decide il menù: sono le sue pentole. A chi segue non serve —
+ * sapere quanto mangia il fratello non lo aiuta a mangiare il suo piatto.
+ */
+async function preparaDivisione() {
+  if (riferimento || !settimana) return [];
+
+  const membri = await settimaneDellaTavola(profilo);
+  const loc = await spazioLocale();
+  const dallaRete = loc?.codice ? await leggiSpazio(loc.codice) : null;
+
+  const tavola = porzioniDellaTavola(dallaRete?.ok ? dallaRete : null, membri);
+  // Con una persona sola non c'e' niente da dividere.
+  return tavola.length > 1 ? tavola : [];
+}
+
+/**
+ * Il menù è cambiato: si dice, con chi e quando.
+ * Automatico ma mai silenzioso — ritrovarsi una cena diversa senza spiegazione
+ * è peggio che doverla chiedere.
+ */
+function rendiArrivo(arrivo) {
+  const nota = $('#nota-spazio');
+  const testo = raccontaArrivo(arrivo, nomeDiId);
+  nota.hidden = !testo;
+  if (testo) nota.querySelector('div').innerHTML = testo;
+}
+
+/** Il nome di un piatto, o il suo id se qui non lo si conosce. */
+function nomeDiId(id) {
+  return piatto(id)?.nome || id;
+}
+
+/**
+ * Le richieste ancora da decidere, per chi cucina.
+ *
+ * Accettando, il sostituto entra nello strato personale di chi l'ha chiesto:
+ * il menù comune non cambia per gli altri, e qui si sa che per quella persona
+ * quel piatto è un altro — che è esattamente quello che serve per cucinare.
+ */
+async function rendiProposte(spazio) {
+  const scheda = $('#proposte');
+  const attesa = proposteInAttesa(spazio, profilo);
+  scheda.hidden = !attesa.length;
+  if (!attesa.length) return;
+
+  $('#proposte-elenco').innerHTML = attesa.map((p) => `
+    <div class="riga-tra" style="gap:var(--sp-3); padding-block:var(--sp-2);
+                border-bottom:1px solid var(--bordo); flex-wrap:wrap">
+      <span>
+        <strong>${p.nome}</strong> chiede <strong>${nomeDiId(p.nuovoId)}</strong>
+        ${p.alPostoDi ? `al posto di ${nomeDiId(p.alPostoDi)}` : ''}
+        <br><span class="piccolo tenue">${etichettaChiave(p.chiave)}</span>
+      </span>
+      <span class="riga" style="gap:var(--sp-2)">
+        <button class="bottone bottone-2" data-decide="${p.id}" data-stato="accettata">Va bene</button>
+        <button class="bottone bottone-fantasma" data-decide="${p.id}" data-stato="rifiutata">No</button>
+      </span>
+    </div>`).join('');
+
+  $$('#proposte-elenco [data-decide]').forEach((b) => b.addEventListener('click', async () => {
+    const p = attesa.find((x) => x.id === b.dataset.decide);
+    const esito = await decidiProposte([{ id: p.id, stato: b.dataset.stato }]);
+    if (!esito.ok) return rendiArrivo({ attivo: true, messaggio: esito.messaggio });
+
+    // Accettando si scrive anche qui: il piano e la spesa di casa devono
+    // sapere che per quella persona quel piatto è un altro.
+    if (b.dataset.stato === 'accettata' && p.inizio) {
+      const suo = (await profili()).find((x) => origineDi(x) === p.da);
+      if (suo) await salvaPersonalizzazione(suo.id, p.inizio, p.chiave, { sostituto: p.nuovoId });
+    }
+
+    divisione = await preparaDivisione();
+    await rendiProposte(esito);
+    disegna();
+    return rendiArrivo({
+      attivo: true,
+      messaggio: b.dataset.stato === 'accettata'
+        ? `Detto a ${p.nome}. Nella spesa entra ${nomeDiId(p.nuovoId)} al posto del suo piatto.`
+        : `Detto a ${p.nome}: resta il piatto di prima.`,
+    });
+  }));
+}
+
+/** «lun|pranzo|0» detto in italiano. */
+function etichettaChiave(chiave) {
+  const [g, pasto] = String(chiave).split('|');
+  const giorno = { lun: 'lunedì', mar: 'martedì', mer: 'mercoledì', gio: 'giovedì',
+    ven: 'venerdì', sab: 'sabato', dom: 'domenica' }[g] || g;
+  return `${giorno}, ${(NOMI_PASTO[pasto] || pasto).toLowerCase()}`;
 }
 
 /* --- Disegno --------------------------------------------------------------- */
@@ -245,6 +366,31 @@ function cartaGiorno(giorno, indice, eOggi) {
     </details>`;
 }
 
+/**
+ * Quanto ne va in pentola in tutto, e quanto ne tocca a ciascuno.
+ *
+ * E' il numero che serve davvero a chi cucina: «144 g di pasta» si pesa, tre
+ * porzioni diverse no. Si divide sull'ingrediente che fa il piatto, lo stesso
+ * che si mostra nella pillola: due numeri sulla stessa cosa si confrontano.
+ */
+function divisioneVoce(voce, chiave) {
+  if (!divisione.length || voce.tipo !== 'piatto') return null;
+
+  const quote = divisione
+    .map((m) => ({
+      nome: m.nome,
+      dose: dosePrincipale({ ...voce, porzioni: m.porzioni[chiave] ?? voce.porzioni ?? 1 }),
+    }))
+    .filter((q) => q.dose?.grammi > 0);
+  if (quote.length < 2) return null;
+
+  return {
+    totale: quote.reduce((s, q) => s + q.dose.grammi, 0),
+    alimento: quote[0].dose.alimento.nome,
+    quote,
+  };
+}
+
 function rigaVoce(voce, giorno, pasto, indice) {
   const oggetto = vociOggetto(voce);
   const kcal = valoriVoce(voce).kcal;
@@ -293,7 +439,18 @@ function rigaVoce(voce, giorno, pasto, indice) {
           </button>` : ''}
       </summary>
       ${elenco ? `<ul class="dosi">${elenco}</ul>` : ''}
+      ${rendiDivisione(divisioneVoce(voce, `${settimana.giorni[giorno].etichetta}|${pasto}|${indice}`))}
     </details>`;
+}
+
+function rendiDivisione(d) {
+  if (!d) return '';
+  return `
+    <p class="in-pentola">
+      <strong class="num">${num(d.totale)} g</strong> di ${d.alimento.toLowerCase()} in tutto
+      <span class="quote">${d.quote
+    .map((q) => `${q.nome} <span class="num">${num(q.dose.grammi)}</span>`).join(' · ')}</span>
+    </p>`;
 }
 
 /* --- Scambio --------------------------------------------------------------- */
@@ -338,11 +495,29 @@ async function apriScambio(giorno, pasto, indice) {
 
   $$('#scambio-elenco [data-nuovo]').forEach((b) => b.addEventListener('click', async () => {
     if (riferimento) {
-      // Il menù è di un altro: si cambia solo nel proprio piatto, e resta
-      // scritto nello strato personale. Gli altri non se ne accorgono.
       const g = settimana.giorni[scambioAperto.giorno];
-      await salvaPersonalizzazione(profilo.id, settimana.inizio,
-        `${g.etichetta}|${scambioAperto.pasto}|${scambioAperto.indice}`,
+      const chiave = `${g.etichetta}|${scambioAperto.pasto}|${scambioAperto.indice}`;
+
+      // Con lo spazio famiglia attivo il menù lo cucina qualcuno che sta su un
+      // altro telefono: cambiarselo da soli vorrebbe dire trovarsi in tavola un
+      // piatto che nessuno ha comprato. Si chiede, e si aspetta.
+      if (await spazioLocale()) {
+        const esito = await proponiScambio(profilo, {
+          inizio: settimana.inizio,
+          chiave,
+          nuovoId: b.dataset.nuovo,
+          alPostoDi: voce.id,
+        });
+        $('#scambio').close();
+        rendiArrivo(esito.ok
+          ? { attivo: true, chiesto: riferimento.nome }
+          : { attivo: true, messaggio: esito.messaggio });
+        return;
+      }
+
+      // Tutti sullo stesso dispositivo: si cambia solo nel proprio piatto, e
+      // resta scritto nello strato personale. Gli altri non se ne accorgono.
+      await salvaPersonalizzazione(profilo.id, settimana.inizio, chiave,
         { sostituto: b.dataset.nuovo });
       const derivata = await settimanaPer(profilo);
       settimana = derivata.settimana;

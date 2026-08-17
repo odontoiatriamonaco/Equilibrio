@@ -8,6 +8,9 @@ import {
   caricaSettimana, salvaSettimana, caricaDiario, salvaDiario,
 } from './dati.js';
 import { settimanaPer, lenteDi, salvaPersonalizzazione } from './famiglia.js';
+import {
+  allinea, spazioLocale, proponiScambio, raccontaArrivo,
+} from './spazio-famiglia.js';
 import { caricaPreferenze } from './preferenze.js';
 import { alternativePiatto, scambiaPiatto } from './scambi.js';
 import { statoPercorso, conSaltato, conChiuso } from './percorso.js';
@@ -122,6 +125,14 @@ function rendiRiferimento() {
     calcolate sul tuo fabbisogno.`;
 }
 
+function rendiArrivo(arrivo) {
+  const nota = $('#nota-spazio');
+  if (!nota) return;
+  const testo = raccontaArrivo(arrivo, (id) => piatto(id)?.nome || id);
+  nota.hidden = !testo;
+  if (testo) nota.querySelector('div').innerHTML = testo;
+}
+
 export async function inizializza() {
   avvia({ nav: 'oggi' });
   $('#cambia-tema').addEventListener('click', alternaTema);
@@ -140,6 +151,10 @@ export async function inizializza() {
   await caricaRicettario(profilo.id);
   energia = riepilogoEnergia(profilo, oggi);
 
+  // Se dallo spazio famiglia e' arrivato un menu' nuovo va messo in casa
+  // adesso, o si guarderebbe la cena della settimana scorsa.
+  const arrivo = await allinea(profilo, oggi);
+
   // Chi segue il menu' di un altro vede i suoi piatti, con le proprie porzioni.
   const derivata = await settimanaPer(profilo, oggi);
   settimana = derivata.settimana;
@@ -147,6 +162,7 @@ export async function inizializza() {
   diario = await caricaDiario(profilo.id, oggi);
 
   rendiRiferimento();
+  rendiArrivo(arrivo);
 
   const i = settimana ? indiceOggi(settimana, oggi) : -1;
   giorno = i >= 0 ? settimana.giorni[i] : null;
@@ -364,9 +380,29 @@ async function confermaScambio(nuovoId) {
   const i = indiceOggi(settimana);
 
   if (riferimento) {
-    // Il menu' e' di un altro: si cambia solo nel proprio piatto.
-    await salvaPersonalizzazione(profilo.id, settimana.inizio,
-      `${giorno.etichetta}|${pasto}|${indice}`, { sostituto: nuovoId });
+    const chiave = `${giorno.etichetta}|${pasto}|${indice}`;
+
+    // Con lo spazio famiglia attivo chi cucina sta su un altro telefono:
+    // cambiarselo da soli vorrebbe dire trovarsi in tavola un piatto che
+    // nessuno ha comprato. Si chiede, e il piatto resta quello finché non
+    // arriva il sì.
+    if (await spazioLocale()) {
+      const esito = await proponiScambio(profilo, {
+        inizio: settimana.inizio,
+        chiave,
+        nuovoId,
+        alPostoDi: giorno.pasti[pasto][indice]?.id,
+      });
+      $('#scambio').close();
+      rendiArrivo(esito.ok
+        ? { attivo: true, chiesto: riferimento.nome }
+        : { attivo: true, messaggio: esito.messaggio });
+      return;
+    }
+
+    // Il menu' e' di un altro, ma si e' tutti sullo stesso dispositivo: si
+    // cambia solo nel proprio piatto.
+    await salvaPersonalizzazione(profilo.id, settimana.inizio, chiave, { sostituto: nuovoId });
     const derivata = await settimanaPer(profilo);
     settimana = derivata.settimana;
   } else {

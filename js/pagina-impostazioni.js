@@ -11,6 +11,12 @@ import {
 } from './profilo-file.js';
 import { pietanzeDiCasa, ripristinaRicettario, eliminaPietanza } from './piatti-utente.js';
 import { caricaPreferenze, azzeraPreferenze } from './preferenze.js';
+import { settimanaPer } from './famiglia.js';
+import {
+  spazioLocale, dimenticaSpazio, creaSpazio, entraNelloSpazio, leggiSpazio,
+  pubblicaMenu, porzioniDellaTavola,
+} from './spazio-famiglia.js';
+import { normalizzaCodice, codiceValido, codiceLeggibile } from './lista-condivisa.js';
 
 let attivo = null;
 let inAttesaDiConferma = null;
@@ -389,11 +395,159 @@ function montaTema() {
 
 /* --- Avvio ----------------------------------------------------------------- */
 
+/* --- Lo spazio della famiglia ----------------------------------------------- */
+
+function diciSpazio(testo, pericolo = false) {
+  const n = $('#esito-spazio');
+  n.hidden = !testo;
+  n.className = pericolo ? 'avviso avviso-pericolo' : 'avviso';
+  n.textContent = testo;
+}
+
+/** Da quanto non si fa vedere una persona: chi cucina deve poterlo capire. */
+function daQuando(iso) {
+  if (!iso) return 'non ha ancora pubblicato le sue porzioni';
+  const giorni = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (giorni <= 0) return 'aggiornata oggi';
+  if (giorni === 1) return 'aggiornata ieri';
+  return `aggiornata ${giorni} giorni fa`;
+}
+
+async function rendiSpazio() {
+  const loc = await spazioLocale();
+  const seguito = Boolean(attivo?.seguo);
+
+  // Lo spazio lo apre chi decide il menù. Chi segue qualcuno entra con il
+  // codice: aprirne un secondo vorrebbe dire due menù per una cucina sola.
+  $('#apri-spazio').hidden = Boolean(loc) || seguito || !attivo;
+  $('#entra-spazio').hidden = Boolean(loc) || !attivo;
+  $('#pubblica-menu').hidden = !loc?.chiave;
+  $('#esci-spazio').hidden = !loc;
+
+  if (!loc) {
+    $('#spazio-stato').innerHTML = attivo
+      ? ''
+      : '<p class="piccolo tenue">Serve prima un profilo su questo dispositivo.</p>';
+    return;
+  }
+
+  const esito = await leggiSpazio(loc.codice);
+  if (!esito.ok) {
+    $('#spazio-stato').innerHTML = `<p class="avviso avviso-pericolo">${esito.messaggio}</p>`;
+    return;
+  }
+
+  const elenco = await profili();
+  const tavola = porzioniDellaTavola(esito, elenco.map((p) => ({ profilo: p })));
+
+  $('#spazio-stato').innerHTML = `
+    <div class="scheda scheda-piatta">
+      <p class="occhiello">Codice della famiglia</p>
+      <p class="dato-grande num" style="letter-spacing:.12em">${codiceLeggibile(loc.codice)}</p>
+      <p class="piccolo tenue">${loc.chiave
+    ? 'Dettalo a chi è in famiglia: da lì in poi il menù gli arriva da solo.'
+    : 'Sei entrato con questo codice. Il menù lo decide chi ha aperto lo spazio.'}</p>
+    </div>
+    ${esito.menu ? `<p class="piccolo morbido" style="margin-top:var(--sp-3)">
+      Menù della settimana del ${esito.menu.inizio}${esito.menu.da ? `, da ${esito.menu.da}` : ''}.</p>` : `
+      <p class="piccolo morbido" style="margin-top:var(--sp-3)">Nessun menù pubblicato per ora.</p>`}
+    <div class="pila" style="margin-top:var(--sp-3)">
+      ${tavola.map((m) => `
+        <div class="riga-tra" style="padding-block:var(--sp-2); border-bottom:1px solid var(--bordo)">
+          <span>${m.nome}${m.senzaProfilo
+    ? '<br><span class="piccolo tenue">non ha un profilo su questo dispositivo</span>' : ''}</span>
+          <span class="piccolo tenue">${daQuando(m.aggiornatoIl)}</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+async function apriSpazio() {
+  diciSpazio('');
+  const { settimana } = await settimanaPer(attivo);
+  if (!settimana) return diciSpazio('Genera prima il piano di questa settimana.', true);
+
+  const esito = await creaSpazio(attivo, settimana);
+  if (!esito.ok) return diciSpazio(esito.messaggio, true);
+
+  await rendiSpazio();
+  return diciSpazio(`Spazio aperto. Detta il codice ${codiceLeggibile(esito.codice)} a chi è `
+    + 'in famiglia: da lì in poi il menù gli arriva da solo, ogni settimana.');
+}
+
+async function confermaEntra() {
+  const codice = normalizzaCodice($('#codice-spazio').value);
+  const nota = $('#esito-dialogo-spazio');
+  nota.className = 'avviso avviso-pericolo';
+
+  if (!codiceValido(codice)) {
+    nota.hidden = false;
+    nota.textContent = 'Il codice è di dieci caratteri, come ABCDE-FGHJK.';
+    return;
+  }
+
+  const { settimana } = await settimanaPer(attivo);
+  const esito = await entraNelloSpazio(codice, attivo, settimana);
+  if (!esito.ok) {
+    nota.hidden = false;
+    nota.textContent = esito.messaggio;
+    return;
+  }
+
+  $('#dialogo-spazio').close();
+  await rendiSpazio();
+  diciSpazio('Ci sei. Il menù arriva da solo quando apri Oggi o il Piano.');
+}
+
+async function mandaMenu() {
+  diciSpazio('');
+  const { settimana } = await settimanaPer(attivo);
+  if (!settimana) return diciSpazio('Genera prima il piano di questa settimana.', true);
+
+  const esito = await pubblicaMenu(attivo, settimana);
+  if (!esito.ok) return diciSpazio(esito.messaggio, true);
+
+  await rendiSpazio();
+  return diciSpazio('Menù pubblicato: lo trovano gli altri alla prossima apertura.');
+}
+
+function collegaSpazio() {
+  $('#apri-spazio').addEventListener('click', apriSpazio);
+  $('#pubblica-menu').addEventListener('click', mandaMenu);
+  $('#entra-spazio').addEventListener('click', () => {
+    $('#esito-dialogo-spazio').hidden = true;
+    $('#dialogo-spazio').showModal();
+  });
+  $('#chiudi-spazio').addEventListener('click', () => $('#dialogo-spazio').close());
+  $('#conferma-spazio').addEventListener('click', confermaEntra);
+
+  // Uscire non porta via nessun dato: piano, gusti e pietanze restano qui.
+  // Ma per chi ha aperto lo spazio porta via la CHIAVE, che sta solo su questo
+  // dispositivo: senza, quel menù non si può più aggiornare per nessuno. Va
+  // detto prima, non scoperto dopo.
+  $('#esci-spazio').addEventListener('click', async (e) => {
+    const comanda = Boolean((await spazioLocale())?.chiave);
+    chiediConferma(
+      e.target, 'esci-spazio',
+      comanda ? 'Perdi la chiave: confermi?' : 'Esci davvero?',
+      async () => {
+        await dimenticaSpazio();
+        await rendiSpazio();
+        diciSpazio(comanda
+          ? 'Uscito. La chiave era solo qui: per rimettere in comune un menù '
+            + 'bisogna aprire un altro spazio e ridettare il codice.'
+          : 'Uscito dallo spazio. Il piano e i gusti restano dove sono: '
+            + 'smette solo di arrivare il menù nuovo.');
+      },
+    );
+  });
+}
+
 export async function inizializza() {
   avvia({ nav: 'altro' });
   montaTema();
   await rendiProfili();
   await rendiRipristino();
+  await rendiSpazio();
 
   $('#profili').addEventListener('click', gestisciProfili);
   $('#profili').addEventListener('change', cambiaRiferimento);
@@ -408,4 +562,5 @@ export async function inizializza() {
     $('#condividi-profilo').addEventListener('click', condividi);
   }
   collegaRipristino();
+  collegaSpazio();
 }
