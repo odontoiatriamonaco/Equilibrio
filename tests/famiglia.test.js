@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import 'fake-indexeddb/auto';
 import {
   apri, chiudi, scrivi, creaProfilo, profili, leggi, eliminaProfilo, importaFascicolo,
+  esportaFascicolo, ARCHIVI_PROFILO,
 } from '../js/store.js';
 import {
   lenteRicettario, piatti as inUso, registraPiattiUtente, piattiDiSerie, valoriPiatto,
@@ -356,5 +357,40 @@ describe('la spesa di famiglia', () => {
     for (const [id, g] of uno) {
       expect(somma.get(id), id).toBeCloseTo(g * 1.5, 4);
     }
+  });
+});
+
+describe('portare la famiglia su un altro dispositivo', () => {
+  beforeEach(pulisci);
+
+  it('l’export porta con sé le preferenze, non solo le misure', async () => {
+    const c = await creaProfilo(CARMELA);
+    await salvaPreferenze(imposta(alternaAllergia(vuote(c.id), 'noci'), 'piatti', 'genovese', 'amato'));
+
+    const f = await esportaFascicolo(c.id);
+    const pref = f.archivi.preferenze[0];
+    expect(pref.allergie).toContain('noci');
+    expect(pref.piatti.genovese).toBe('amato');
+    // E tutto il resto degli archivi partizionati, anche quando è vuoto.
+    expect(Object.keys(f.archivi).sort()).toEqual([...ARCHIVI_PROFILO].sort());
+  });
+
+  it('porta il NOME di chi si seguiva, così il legame si può rifare', async () => {
+    // L'id non si puo' portare — su un altro dispositivo non esiste — ma senza
+    // il nome chi importa non saprebbe nemmeno che c'era un legame.
+    const capo = await creaProfilo(CARMELA);
+    const seguace = await creaProfilo({ ...GAIA, seguo: capo.id });
+
+    const f = await esportaFascicolo(seguace.id);
+    expect(f.profilo.seguoNome).toBe(CARMELA.nome);
+
+    const importato = await importaFascicolo(f);
+    expect(importato.seguo).toBeNull();
+    expect(importato.seguoNome).toBe(CARMELA.nome);
+  });
+
+  it('chi non seguiva nessuno non si porta dietro nomi inventati', async () => {
+    const c = await creaProfilo(CARMELA);
+    expect((await esportaFascicolo(c.id)).profilo.seguoNome).toBeUndefined();
   });
 });

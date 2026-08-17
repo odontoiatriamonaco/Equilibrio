@@ -258,6 +258,55 @@ async function esporta() {
   }
 }
 
+/**
+ * Esporta e passa il file al foglio di condivisione del telefono.
+ *
+ * Ha senso perche' il file e' gia' cifrato: quello che viaggia e' illeggibile
+ * senza la passphrase. Ed e' esattamente per questo che la passphrase non deve
+ * viaggiare con lui — mandarle insieme e' come lasciare la chiave nella
+ * serratura, e l'interfaccia lo dice.
+ */
+function puoCondividereFile() {
+  try {
+    return Boolean(navigator.canShare
+      && navigator.canShare({ files: [new File(['x'], 'p.equilibrio')] }));
+  } catch {
+    return false;
+  }
+}
+
+async function condividi() {
+  const p1 = $('#pass1').value;
+  const p2 = $('#pass2').value;
+  const esito = $('#esito-export');
+  esito.hidden = false;
+  esito.className = 'avviso avviso-pericolo';
+
+  if (!attivo) { esito.textContent = 'Non c\'è nessun profilo da condividere.'; return; }
+  if (p1.length < 8) { esito.textContent = 'La passphrase deve avere almeno 8 caratteri.'; return; }
+  if (p1 !== p2) { esito.textContent = 'Le due passphrase non coincidono.'; return; }
+
+  try {
+    const byte = await cifra(await esportaFascicolo(attivo.id), p1);
+    const file = new File([byte], nomeFile(attivo), { type: 'application/octet-stream' });
+
+    await navigator.share({
+      files: [file],
+      title: `Equilibrio — ${attivo.nome}`,
+      text: 'Fascicolo cifrato di Equilibrio. La passphrase te la dico a parte.',
+    });
+
+    esito.className = 'avviso avviso-ok';
+    esito.textContent = `Fascicolo di ${attivo.nome} condiviso, cifrato. `
+      + 'Ricordati: la passphrase va detta su un altro canale, non insieme al file.';
+    $('#pass1').value = $('#pass2').value = '';
+  } catch (err) {
+    // L'utente che chiude il foglio di condivisione non e' un errore.
+    if (err?.name === 'AbortError') { esito.hidden = true; return; }
+    esito.textContent = `Condivisione non riuscita: ${err.message}. Puoi sempre esportare il file e mandarlo a mano.`;
+  }
+}
+
 /* --- Import ---------------------------------------------------------------- */
 
 async function importa() {
@@ -274,7 +323,14 @@ async function importa() {
     const fascicolo = await decifra(await leggiDaFile(file), pass);
     const p = await importaFascicolo(fascicolo);
     esito.className = 'avviso avviso-ok';
-    esito.textContent = `Importato come «${p.nome}». Il profilo che era già qui non è stato toccato.`;
+    // Il legame di famiglia non si porta dietro: puntava a un id che qui non
+    // esiste. Ma dire CHI seguiva risparmia di doverselo ricordare.
+    esito.innerHTML = `Importato come «${p.nome}», con preferenze, piano e diario. `
+      + 'Il profilo che era già qui non è stato toccato.'
+      + (p.seguoNome
+        ? ` <strong>Seguiva il menù di ${p.seguoNome}</strong>: se anche ${p.seguoNome}
+            è su questo dispositivo, ricollegali dall'elenco qui sopra.`
+        : '');
     $('#pass-import').value = '';
     $('#file-import').value = '';
     await rendiProfili();
@@ -317,5 +373,13 @@ export async function inizializza() {
   $('#profili').addEventListener('change', cambiaRiferimento);
   $('#esporta').addEventListener('click', esporta);
   $('#importa').addEventListener('click', importa);
+
+  // Il foglio di condivisione con i file non c'e' su tutti i browser: dove
+  // manca, resta l'esportazione, che fa la stessa cosa in due passi.
+  if (puoCondividereFile()) {
+    $('#condividi-profilo').hidden = false;
+    $('#nota-condivisione').hidden = false;
+    $('#condividi-profilo').addEventListener('click', condividi);
+  }
   collegaRipristino();
 }

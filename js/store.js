@@ -198,6 +198,11 @@ export async function esportaFascicolo(profiloId) {
   const profilo = await leggi('profili', profiloId);
   if (!profilo) throw new Error('Profilo inesistente');
 
+  // Il legame di famiglia punta a un id che sull'altro dispositivo non esiste,
+  // quindi all'import viene azzerato. Il NOME invece serve: senza, chi importa
+  // non sa nemmeno che quel profilo seguiva qualcuno e va ricollegato.
+  const capo = profilo.seguo ? await leggi('profili', profilo.seguo) : null;
+
   const archivi = {};
   for (const nome of ARCHIVI_PROFILO) {
     archivi[nome] = await tutti(nome, profiloId);
@@ -206,7 +211,7 @@ export async function esportaFascicolo(profiloId) {
   return {
     schema: VERSIONE_SCHEMA,
     esportatoIl: new Date().toISOString(),
-    profilo,
+    profilo: capo ? { ...profilo, seguoNome: capo.nome } : profilo,
     archivi,
   };
 }
