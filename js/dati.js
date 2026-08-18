@@ -70,10 +70,38 @@ export async function caricaSpesa(profiloId, inizio) {
  */
 export async function salvaSpesa(profiloId, inizio, voci, codice) {
   const id = `${profiloId}:${inizio}`;
-  const tenuto = codice === undefined
-    ? ((await leggi('spesa', id))?.codice ?? null)
-    : codice;
-  return scrivi('spesa', { id, profiloId, inizio, voci, codice: tenuto });
+  const prima = await leggi('spesa', id);
+  // Si riparte da quello che c'e' gia'. Elencare i campi uno per uno vuol dire
+  // che il primo che ci si dimentica sparisce in silenzio: e' successo col
+  // codice della lista, e succederebbe di nuovo al campo dopo.
+  return scrivi('spesa', {
+    ...prima,
+    id,
+    profiloId,
+    inizio,
+    voci,
+    codice: codice === undefined ? (prima?.codice ?? null) : codice,
+  });
+}
+
+/**
+ * Segna che gli avanzi di questa settimana sono gia' finiti in dispensa.
+ *
+ * Serve perche' e' un'azione che chiude la settimana, e va fatta una volta
+ * sola: rifarla ricalcolerebbe gli avanzi su una dispensa gia' avanzata, cioe'
+ * conterebbe due volte la stessa settimana.
+ */
+export async function segnaAvanzi(profiloId, inizio) {
+  const id = `${profiloId}:${inizio}`;
+  const prima = await leggi('spesa', id);
+  return scrivi('spesa', {
+    ...prima,
+    id,
+    profiloId,
+    inizio,
+    voci: prima?.voci || [],
+    avanziIl: new Date().toISOString().slice(0, 10),
+  });
 }
 
 /* --- Diario ---------------------------------------------------------------- */

@@ -112,6 +112,29 @@ describe('il codice della lista sopravvive alle spunte', () => {
     expect(riga.voci).toHaveLength(1);
   });
 
+  it('non porta via nemmeno gli altri campi del record', async () => {
+    // Il difetto era di forma, non del solo codice: salvaSpesa elencava i campi
+    // uno per uno, quindi il primo che ci si dimenticava spariva in silenzio.
+    // Ora riparte da quello che c'e', e questa prova lo tiene fermo.
+    await dati.salvaSpesa('p_1', '2026-08-17', [], 'ABCDEFGHJK');
+    await dati.segnaAvanzi('p_1', '2026-08-17');
+    expect((await dati.caricaSpesa('p_1', '2026-08-17')).avanziIl).toBeTruthy();
+
+    await dati.salvaSpesa('p_1', '2026-08-17', [{ alimentoId: 'pasta', spuntato: true }]);
+    const riga = await dati.caricaSpesa('p_1', '2026-08-17');
+    expect(riga.avanziIl).toBeTruthy();
+    expect(riga.codice).toBe('ABCDEFGHJK');
+  });
+
+  it('segnare gli avanzi non tocca le spunte né il codice', async () => {
+    await dati.salvaSpesa('p_1', '2026-08-17', [{ alimentoId: 'pasta', spuntato: true }], 'ABCDEFGHJK');
+    await dati.segnaAvanzi('p_1', '2026-08-17');
+    const riga = await dati.caricaSpesa('p_1', '2026-08-17');
+    expect(riga.voci).toHaveLength(1);
+    expect(riga.codice).toBe('ABCDEFGHJK');
+    expect(riga.avanziIl).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
+  });
+
   it('si cancella solo se glielo si chiede', async () => {
     await dati.salvaSpesa('p_1', '2026-08-17', [], 'ABCDEFGHJK');
     await dati.salvaSpesa('p_1', '2026-08-17', [], null);

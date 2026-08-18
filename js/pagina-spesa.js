@@ -3,7 +3,9 @@
 import { avvia, icona, $, $$, num, condividiTesto } from './guscio.js';
 import { profiloAttivo } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
-import { caricaSettimana, caricaDispensa, salvaScorta, caricaSpesa, salvaSpesa } from './dati.js';
+import {
+  caricaSettimana, caricaDispensa, salvaScorta, caricaSpesa, salvaSpesa, segnaAvanzi,
+} from './dati.js';
 import { costruisciLista, quantitaLeggibile, comeTesto, residuiInDispensa } from './spesa.js';
 import { suggerimentiAntispreco } from './packaging.js';
 import { caricaPreferenze } from './preferenze.js';
@@ -15,6 +17,7 @@ import {
 import { riferimentoDi, settimaneDellaTavola } from './famiglia.js';
 
 let codiceLista = null;
+let avanziIl = null;
 let profilo = null;
 let settimana = null;
 let membri = [];
@@ -46,6 +49,7 @@ export async function inizializza() {
   const salvata = await caricaSpesa(profilo.id, settimana.inizio);
   spunte = new Map((salvata?.voci || []).map((v) => [v.alimentoId, v]));
   codiceLista = salvata?.codice || null;
+  avanziIl = salvata?.avanziIl || null;
   if (codiceLista) {
     $('#riquadro-codice').hidden = false;
     $('#codice-lista').textContent = codiceLeggibile(codiceLista);
@@ -249,6 +253,7 @@ function disegna() {
 
   disegnaAntispreco();
   disegnaDispensa();
+  rendiAvanzi();
 }
 
 function rendiReparto(r) {
@@ -352,14 +357,43 @@ function disegnaDispensa() {
   }));
 }
 
+/**
+ * Mettere gli avanzi in dispensa CHIUDE la settimana, e si fa una volta sola.
+ *
+ * Premendolo due volte, prima, la lista impazziva: gli avanzi si ricalcolavano
+ * su una dispensa gia' avanzata di una settimana, quindi la stessa settimana
+ * veniva contata due volte. Su un piano da 1900 kcal la dispensa rimbalzava fra
+ * 18,7 kg e 2 kg e la spesa fra 159 e 40 euro, a ogni pressione.
+ */
 async function metteInDispensa() {
+  if (avanziIl) return rendiAvanzi();
+
   const scorte = residuiInDispensa(lista, profilo.id);
   for (const s of scorte) await salvaScorta(profilo.id, s.alimentoId, s.grammi);
+  await segnaAvanzi(profilo.id, settimana.inizio);
+  avanziIl = new Date().toISOString().slice(0, 10);
+
   dispensa = await caricaDispensa(profilo.id);
   ricostruisci();
+  rendiAvanzi();
   $('#esito').hidden = false;
   $('#esito').textContent = `${scorte.length} avanzi messi in dispensa. `
     + 'La settimana prossima li sottraggo dalla lista.';
+}
+
+/**
+ * Il pulsante dice da solo se il lavoro e' gia' fatto.
+ * Disattivarlo e basta lascerebbe chiedere perche'; e per correggere un avanzo
+ * sbagliato c'e' il cestino sulla riga, che e' il posto giusto.
+ */
+function rendiAvanzi() {
+  const b = $('#in-dispensa');
+  b.disabled = Boolean(avanziIl);
+  b.title = avanziIl
+    ? 'Gli avanzi di questa settimana sono già in dispensa. Per correggerne uno, '
+      + 'usa il cestino sulla sua riga.'
+    : '';
+  b.lastChild.textContent = avanziIl ? ' Avanzi già messi' : ' Metti gli avanzi';
 }
 
 /* --- Condivisione ---------------------------------------------------------- */
