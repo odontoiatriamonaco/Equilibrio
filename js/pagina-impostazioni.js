@@ -1,6 +1,6 @@
 /* Equilibrio — impostazioni: profili, export/import cifrato, tema. */
 
-import { $, avvia, applicaTema, temaSalvato, num } from './guscio.js';
+import { $, avvia, applicaTema, temaSalvato, num, condividiTesto } from './guscio.js';
 import {
   profili, profiloAttivo, impostaProfiloAttivo, eliminaProfilo,
   esportaFascicolo, importaFascicolo, leggi, scrivi, gemelloDi,
@@ -431,26 +431,37 @@ async function rendiSpazio() {
     return;
   }
 
+  // Il codice sta su questo dispositivo: si mostra SEMPRE, anche senza rete.
+  // Prima si andava a leggere lo spazio e, se non si raggiungeva, restava solo
+  // un messaggio d'errore — e chi voleva ridettare il proprio codice non
+  // riusciva più nemmeno a vederlo.
   const esito = await leggiSpazio(loc.codice);
-  if (!esito.ok) {
-    $('#spazio-stato').innerHTML = `<p class="avviso avviso-pericolo">${esito.messaggio}</p>`;
-    return;
-  }
-
   const elenco = await profili();
-  const tavola = porzioniDellaTavola(esito, elenco.map((p) => ({ profilo: p })));
+  const tavola = esito.ok
+    ? porzioniDellaTavola(esito, elenco.map((p) => ({ profilo: p })))
+    : [];
+
+  const menu = esito.ok
+    ? (esito.menu
+      ? `Menù della settimana del ${esito.menu.inizio}${esito.menu.da ? `, da ${esito.menu.da}` : ''}.`
+      : 'Nessun menù pubblicato per ora.')
+    : esito.messaggio;
 
   $('#spazio-stato').innerHTML = `
     <div class="scheda scheda-piatta">
       <p class="occhiello">Codice della famiglia</p>
       <p class="dato-grande num" style="letter-spacing:.12em">${codiceLeggibile(loc.codice)}</p>
+      <button class="bottone bottone-2" id="manda-spazio" style="margin-bottom:var(--sp-3)">
+        <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#condividi"/></svg>
+        Manda il codice
+      </button>
       <p class="piccolo tenue">${loc.chiave
-    ? 'Dettalo a chi è in famiglia: da lì in poi il menù gli arriva da solo.'
+    ? 'Oppure dettalo a chi è in famiglia: da lì in poi il menù gli arriva da solo. '
+      + 'La chiave che ti fa cambiare il menù resta qui e non si manda a nessuno.'
     : 'Sei entrato con questo codice. Il menù lo decide chi ha aperto lo spazio.'}</p>
     </div>
-    ${esito.menu ? `<p class="piccolo morbido" style="margin-top:var(--sp-3)">
-      Menù della settimana del ${esito.menu.inizio}${esito.menu.da ? `, da ${esito.menu.da}` : ''}.</p>` : `
-      <p class="piccolo morbido" style="margin-top:var(--sp-3)">Nessun menù pubblicato per ora.</p>`}
+    <p class="${esito.ok ? 'piccolo morbido' : 'avviso avviso-pericolo'}"
+       style="margin-top:var(--sp-3)">${menu}</p>
     <div class="pila" style="margin-top:var(--sp-3)">
       ${tavola.map((m) => `
         <div class="riga-tra" style="padding-block:var(--sp-2); border-bottom:1px solid var(--bordo)">
@@ -459,6 +470,35 @@ async function rendiSpazio() {
           <span class="piccolo tenue">${daQuando(m.aggiornatoIl)}</span>
         </div>`).join('')}
     </div>`;
+}
+
+/**
+ * Il messaggio che parte in chat.
+ *
+ * Dice il codice E cosa farne: chi lo riceve deve poter agire senza richiamare
+ * indietro per chiedere. La chiave non compare — quella non si manda a nessuno,
+ * ed e' l'unica cosa che distingue chi decide il menu' da chi lo segue.
+ */
+function messaggioSpazio(codice) {
+  return [
+    `${attivo?.nome || 'Io'} ti ha aggiunto allo spazio famiglia di Equilibrio.`,
+    '',
+    `Codice: ${codiceLeggibile(codice)}`,
+    '',
+    `Apri ${location.origin}, poi Altro → Impostazioni → «Entra con un codice».`,
+    'Da lì in poi il menù della settimana ti arriva da solo.',
+  ].join('\n');
+}
+
+async function mandaSpazio() {
+  const loc = await spazioLocale();
+  if (!loc?.codice) return;
+  const esito = await condividiTesto(messaggioSpazio(loc.codice), 'Spazio famiglia');
+
+  if (esito === 'copiato') diciSpazio('Messaggio copiato: incollalo dove vuoi.');
+  if (esito === 'niente') {
+    diciSpazio(`Non riesco a copiare da qui: detta il codice ${codiceLeggibile(loc.codice)}.`, true);
+  }
 }
 
 async function apriSpazio() {
@@ -512,6 +552,11 @@ async function mandaMenu() {
 
 function collegaSpazio() {
   $('#apri-spazio').addEventListener('click', apriSpazio);
+  // Il riquadro si ridisegna, quindi il pulsante e' nuovo ogni volta: si
+  // ascolta il contenitore, che invece resta.
+  $('#spazio-stato').addEventListener('click', (e) => {
+    if (e.target.closest('#manda-spazio')) mandaSpazio();
+  });
   $('#pubblica-menu').addEventListener('click', mandaMenu);
   $('#entra-spazio').addEventListener('click', () => {
     $('#esito-dialogo-spazio').hidden = true;

@@ -176,3 +176,34 @@ export function avvia({ nav, chiSei = true } = {}) {
     });
   }
 }
+
+/**
+ * Passa un testo a un'altra app: WhatsApp, i messaggi, la posta.
+ *
+ * Tre gradini, in ordine di comodita'. Il foglio di condivisione del sistema
+ * e' quello che serve davvero — un codice si detta male e si ricopia peggio,
+ * mentre incollato in chat arriva giusto. Dove non c'e' (i browser da
+ * scrivania non ce l'hanno quasi mai) si copia negli appunti. Se anche quello
+ * e' negato si dice, invece di lasciare un pulsante che non fa niente.
+ *
+ * @returns {Promise<'condiviso'|'copiato'|'niente'>}
+ */
+export async function condividiTesto(testo, titolo = 'Equilibrio') {
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: titolo, text: testo });
+      return 'condiviso';
+    }
+  } catch (e) {
+    // Annullare il foglio di condivisione non e' un errore: e' una scelta, e
+    // non deve far comparire un messaggio di ripiego.
+    if (e?.name === 'AbortError') return 'condiviso';
+  }
+
+  try {
+    await navigator.clipboard.writeText(testo);
+    return 'copiato';
+  } catch {
+    return 'niente';
+  }
+}

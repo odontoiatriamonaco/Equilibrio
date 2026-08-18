@@ -1,6 +1,6 @@
 /* Equilibrio — pagina Spesa: la lista per reparto, la dispensa, l'antispreco. */
 
-import { avvia, icona, $, $$, num } from './guscio.js';
+import { avvia, icona, $, $$, num, condividiTesto } from './guscio.js';
 import { profiloAttivo } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import { caricaSettimana, caricaDispensa, salvaScorta, caricaSpesa, salvaSpesa } from './dati.js';
@@ -67,6 +67,7 @@ export async function inizializza() {
   $('#apri-codice').addEventListener('click', () => $('#dialogo-remota').showModal());
   $('#chiudi-remota').addEventListener('click', () => $('#dialogo-remota').close());
   $('#carica-remota').addEventListener('click', caricaRemota);
+  $('#manda-codice').addEventListener('click', mandaCodice);
 
   ricostruisci();
 }
@@ -362,6 +363,38 @@ async function metteInDispensa() {
 }
 
 /* --- Condivisione ---------------------------------------------------------- */
+
+/**
+ * Il messaggio che parte in chat.
+ *
+ * Porta il codice E dove usarlo: un codice da solo, arrivato su WhatsApp fra
+ * altri venti messaggi, non dice a nessuno cosa farsene. L'indirizzo si prende
+ * da dove gira l'app, cosi' resta giusto anche se un giorno cambia.
+ */
+function messaggioCodice() {
+  return [
+    'Ecco la lista della spesa.',
+    '',
+    `Codice: ${codiceLeggibile(codiceLista)}`,
+    '',
+    `Aprila qui: ${location.origin}`,
+    'Vai su Spesa, poi «Apri con un codice». Le spunte tornano indietro.',
+    'Il codice scade fra due giorni.',
+  ].join('\n');
+}
+
+async function mandaCodice() {
+  if (!codiceLista) return;
+  const nota = $('#esito-condivisione');
+  const esito = await condividiTesto(messaggioCodice(), 'Lista della spesa');
+
+  nota.hidden = esito === 'condiviso';
+  nota.className = esito === 'niente' ? 'avviso avviso-pericolo' : 'avviso';
+  if (esito === 'copiato') nota.textContent = 'Messaggio copiato: incollalo dove vuoi.';
+  if (esito === 'niente') {
+    nota.textContent = `Non riesco a copiare da qui: detta il codice ${codiceLeggibile(codiceLista)}.`;
+  }
+}
 
 async function copia() {
   const testo = comeTesto(lista);
