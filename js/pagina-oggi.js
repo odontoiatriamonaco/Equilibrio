@@ -322,14 +322,44 @@ function disegnaPasti() {
 
 let scambioAperto = null;
 
+/**
+ * Il tetto di minuti scelto nel dialogo dello scambio.
+ *
+ * Vive solo finché il dialogo è aperto, e riparte da «qualsiasi» ogni volta:
+ * è la risposta a «stasera ho un imprevisto», non un'impostazione che uno si
+ * porta dietro senza accorgersene. Chi ha davvero poco tempo tutte le sere lo
+ * dice ai gusti, non a un cursore.
+ */
+let tempoScambio = 0;
+const SCAGLIONI = [
+  { min: 0, testo: 'Qualsiasi' },
+  { min: 15, testo: 'entro 15 min' },
+  { min: 30, testo: 'entro 30 min' },
+  { min: 45, testo: 'entro 45 min' },
+];
+
+function rendiScaglioni() {
+  $('#scambio-tempo').innerHTML = SCAGLIONI.map((s) => `
+    <button type="button" data-tempo="${s.min}" aria-pressed="${s.min === tempoScambio}">${s.testo}</button>
+  `).join('');
+}
+
 function collegaScambio() {
   $('#chiudi-scambio').addEventListener('click', () => $('#scambio').close());
+
+  // Le pastiglie si ridisegnano, quindi si ascolta il contenitore che resta.
+  $('#scambio-tempo').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-tempo]');
+    if (!b) return;
+    tempoScambio = Number(b.dataset.tempo);
+    rendiScaglioni();
+    disegnaAlternative();
+  });
 }
 
 async function apriScambio(pasto, indice) {
   const voce = giorno?.pasti?.[pasto]?.[indice];
   if (!voce || voce.tipo !== 'piatto') return;
-  scambioAperto = { pasto, indice };
 
   // Chi segue il menu' di un altro cerca nel PROPRIO ricettario: le sue
   // pietanze di casa, i suoi alimenti tolti.
@@ -341,17 +371,31 @@ async function apriScambio(pasto, indice) {
     .flatMap((g) => Object.values(g.pasti).flat())
     .map((v) => v.id));
 
+  // Il contesto resta a disposizione: cambiando il tetto dei minuti la lista
+  // si rifà senza dover riaprire il dialogo.
+  scambioAperto = { pasto, indice, voce, lente, usati };
+  tempoScambio = 0;
+  rendiScaglioni();
+
+  $('#scambio-titolo').textContent = riferimento
+    ? `Al posto di «${nomeVoce(voce)}», solo per te`
+    : `Al posto di «${nomeVoce(voce)}»`;
+
+  disegnaAlternative();
+  $('#scambio').showModal();
+}
+
+function disegnaAlternative() {
+  const { voce, lente, usati } = scambioAperto;
+
   const alternative = alternativePiatto(voce, {
     preferenze: pref,
     mese: new Date().getMonth() + 1,
     esclusiIds: usati,
     quanti: 10,
+    tempoMax: tempoScambio,
     ...(lente ? { piatti: lente.piatti } : {}),
   });
-
-  $('#scambio-titolo').textContent = riferimento
-    ? `Al posto di «${nomeVoce(voce)}», solo per te`
-    : `Al posto di «${nomeVoce(voce)}»`;
 
   $('#scambio-elenco').innerHTML = alternative.length
     ? alternative.map((a) => `
@@ -366,13 +410,13 @@ async function apriScambio(pasto, indice) {
             </span>
           </span>
         </button>`).join('')
-    : '<div class="vuoto"><p>Non ci sono alternative disponibili con le tue preferenze.</p></div>';
+    : `<div class="vuoto"><p>${tempoScambio
+    ? `Niente di adatto entro ${tempoScambio} minuti. Prova ad allargare il tempo.`
+    : 'Non ci sono alternative disponibili con le tue preferenze.'}</p></div>`;
 
   $$('#scambio-elenco [data-nuovo]').forEach((b) => b.addEventListener('click', async () => {
     await confermaScambio(b.dataset.nuovo);
   }));
-
-  $('#scambio').showModal();
 }
 
 async function confermaScambio(nuovoId) {

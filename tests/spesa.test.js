@@ -305,3 +305,37 @@ describe('scambio e totale del giorno', () => {
     expect(dopo.giorni[0].quota).toBe(2600);
   });
 });
+
+describe('il tetto di minuti nello scambio', () => {
+  const VOCE = { tipo: 'piatto', id: 'genovese', porzioni: 1 };
+
+  it('lascia passare solo quello che ci sta nel tempo', () => {
+    for (const max of [15, 30, 45]) {
+      const alt = alternativePiatto(VOCE, { preferenze: vuote(), mese: 6, quanti: 20, tempoMax: max });
+      expect(alt.length).toBeGreaterThan(0);
+      for (const a of alt) expect(a.tempo).toBeLessThanOrEqual(max);
+    }
+  });
+
+  it('senza tetto non toglie niente', () => {
+    const con = alternativePiatto(VOCE, { preferenze: vuote(), mese: 6, quanti: 50, tempoMax: 0 });
+    const senza = alternativePiatto(VOCE, { preferenze: vuote(), mese: 6, quanti: 50 });
+    expect(con.map((a) => a.id)).toEqual(senza.map((a) => a.id));
+  });
+
+  it('il tetto si applica prima del taglio ai primi N, non dopo', () => {
+    // È il punto: la funzione restituisce solo le migliori `quanti`, e le più
+    // desiderabili non sono quasi mai anche le più rapide. Filtrando a valle
+    // la lista sarebbe quasi sempre vuota proprio quando serve.
+    const dieci = alternativePiatto(VOCE, { preferenze: vuote(), mese: 6, quanti: 10 });
+    const rapideFraLeDieci = dieci.filter((a) => a.tempo <= 15).length;
+
+    const conTetto = alternativePiatto(VOCE, { preferenze: vuote(), mese: 6, quanti: 10, tempoMax: 15 });
+    expect(conTetto.length).toBeGreaterThan(rapideFraLeDieci);
+  });
+
+  it('stringendo troppo può non restare niente, e va bene così', () => {
+    const alt = alternativePiatto(VOCE, { preferenze: vuote(), mese: 6, quanti: 10, tempoMax: 1 });
+    expect(alt).toEqual([]);
+  });
+});

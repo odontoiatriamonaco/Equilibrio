@@ -61,11 +61,17 @@ function arrotondaGrammi(g) {
  * in uso — che porta le pietanze di casa e le omissioni di qualcun altro.
  *
  * @param {object} voce  la voce del piano da sostituire
+ * `tempoMax` e' un tetto ai minuti in cucina, e va applicato QUI dentro e non
+ * dopo: la funzione restituisce solo le prime `quanti` per punteggio, quindi
+ * filtrare a valle lascerebbe quasi sempre una lista vuota — le piu' desiderabili
+ * non sono quasi mai anche le piu' rapide.
+ *
  * @param {{preferenze:object, mese:number, esclusiIds?:Set<string>,
- *          quanti?:number, piatti?:Array}} ctx
+ *          quanti?:number, piatti?:Array, tempoMax?:number}} ctx
  */
 export function alternativePiatto(voce, {
   preferenze, mese, esclusiIds = new Set(), quanti = 8, piatti: catalogo = tuttiPiatti,
+  tempoMax = 0,
 }) {
   const attuale = catalogo.find((p) => p.id === voce.id);
   if (!attuale) return [];
@@ -78,6 +84,7 @@ export function alternativePiatto(voce, {
     .filter((p) => p.id !== attuale.id && p.tipo === attuale.tipo)
     .filter((p) => !esclusiIds.has(p.id))
     .filter((p) => ammesso(preferenze, p))
+    .filter((p) => !tempoMax || (p.tempo || 0) <= tempoMax)
     .map((p) => {
       const kcal = valoriPiatto(p).kcal;
       const scartoKcal = Math.abs(kcal - kcalAttuali);
