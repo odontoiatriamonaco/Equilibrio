@@ -395,7 +395,12 @@ function montaTema() {
 
 /* --- Avvio ----------------------------------------------------------------- */
 
-/* --- Lo spazio della famiglia ----------------------------------------------- */
+/* --- Lo spazio condiviso ----------------------------------------------------
+   Si chiama cosi' e non «della famiglia» perche' serve anche a chi vive da solo:
+   due apparecchi suoi sono gia' due apparecchi da tenere allineati. Il nome dei
+   moduli resta `spazio-famiglia`, che e' il caso principale e la storia del
+   codice; qui davanti conta che non escluda nessuno.
+   -------------------------------------------------------------------------- */
 
 function diciSpazio(testo, pericolo = false) {
   const n = $('#esito-spazio');
@@ -456,7 +461,8 @@ async function rendiSpazio() {
         Manda il codice
       </button>
       <p class="piccolo tenue">${loc.chiave
-    ? 'Oppure dettalo a chi è in famiglia: da lì in poi il menù gli arriva da solo. '
+    ? 'Oppure dettalo agli altri — o inseriscilo sul tuo secondo apparecchio: '
+      + 'da lì in poi il menù ci arriva da solo. '
       + 'La chiave che ti fa cambiare il menù resta qui e non si manda a nessuno.'
     : 'Sei entrato con questo codice. Il menù lo decide chi ha aperto lo spazio.'}</p>
     </div>
@@ -481,7 +487,7 @@ async function rendiSpazio() {
  */
 function messaggioSpazio(codice) {
   return [
-    `${attivo?.nome || 'Io'} ti ha aggiunto allo spazio famiglia di Equilibrio.`,
+    `${attivo?.nome || 'Io'} ti ha aggiunto al suo spazio condiviso su Equilibrio.`,
     '',
     `Codice: ${codiceLeggibile(codice)}`,
     '',

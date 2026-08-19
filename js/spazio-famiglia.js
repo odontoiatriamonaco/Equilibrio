@@ -166,7 +166,7 @@ async function interpreta(risposta) {
   dati = dati || {};
 
   const spiegazioni = {
-    'kv-assente': 'Lo spazio famiglia non è ancora attivo su questo indirizzo: '
+    'kv-assente': 'Lo spazio condiviso non è ancora attivo su questo indirizzo: '
       + "manca l'archivio sul server. Nel frattempo resta il file del profilo.",
     'troppi-tentativi': 'Troppi codici sbagliati da questo dispositivo. '
       + "Riprova fra un'ora, e controlla di averlo ricopiato bene.",
@@ -426,13 +426,21 @@ async function applicaMenu(spazio, profilo, data) {
   const capoOrigine = spazio.capo || trovaCapo(spazio);
   const elenco = await profili();
   const capo = elenco.find((p) => origineDi(p) === capoOrigine);
+  const loc = await spazioLocale();
 
-  // Sono io che l'ho pubblicato: la mia settimana e' gia' quella, e riscriverla
-  // dallo scheletro vorrebbe dire perdere le mie porzioni calibrate.
-  if (capo && capo.id === profilo.id) return { cambiato: false, mio: true };
+  // Il menu' l'ho pubblicato io DA QUESTO DISPOSITIVO — quello che tiene la
+  // chiave. La mia settimana e' gia' quella, e riscriverla dallo scheletro
+  // perderebbe le porzioni che ho calibrato qui.
+  //
+  // Su un mio SECONDO dispositivo, invece, il menu' va applicato: e' lo stesso
+  // profilo — stessa `origine` — ma la settimana qui non c'e' ancora. Senza
+  // questa distinzione chi vive da solo non poteva ritrovare il proprio piano
+  // sul tablet, e lo spazio funzionava solo se eravate almeno in due.
+  if (capo && capo.id === profilo.id && loc?.chiave) {
+    return { cambiato: false, mio: true };
+  }
   if (!capo) return { cambiato: false, manca: menu.da || 'chi decide il menù' };
 
-  const loc = await spazioLocale();
   const gia = await caricaSettimana(capo.id, data);
   const cambiato = !gia || loc?.menuVisto !== menu.quando;
   if (!cambiato) return { cambiato: false };

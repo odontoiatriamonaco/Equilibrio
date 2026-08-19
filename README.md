@@ -5,8 +5,9 @@ gestione dello sgarro con recupero distribuito sulla settimana.
 
 **In produzione:** https://equilibrio-theta.vercel.app
 
-> Equilibrio è uno strumento di organizzazione familiare. **Non è un dispositivo
-> medico** e non sostituisce il parere di un nutrizionista o del medico curante.
+> Equilibrio serve a organizzare i pasti e la spesa: per una persona sola, o per
+> tutta la famiglia. **Non è un dispositivo medico** e non sostituisce il parere di
+> un nutrizionista o del medico curante.
 > I vincoli di sicurezza descritti più sotto non sono decorativi: sono scritti nel
 > motore e non si possono aggirare dall'interfaccia.
 

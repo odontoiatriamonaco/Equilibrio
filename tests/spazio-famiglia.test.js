@@ -338,3 +338,79 @@ describe('lo spazio ricordato da questo dispositivo', () => {
     expect(await mod.spazioLocale()).toBe(null);
   });
 });
+
+describe('chi vive da solo, su due dispositivi suoi', () => {
+  let mod;
+  let store;
+
+  beforeEach(async () => {
+    const s = await import('../js/store.js');
+    await s.chiudi();
+    await new Promise((ok) => {
+      const req = indexedDB.deleteDatabase('equilibrio');
+      req.onsuccess = req.onerror = req.onblocked = ok;
+    });
+    vi.resetModules();
+    store = await import('../js/store.js');
+    mod = await import('../js/spazio-famiglia.js');
+  });
+
+  afterEach(() => { vi.unstubAllGlobals(); });
+
+  /** Lo spazio come lo restituisce il server, col menù di questa settimana. */
+  async function spazioConMenu(pl) {
+    const inizio = pl.iso(pl.inizioSettimana(new Date()));
+    const s = settimana();
+    s.inizio = inizio;
+    s.giorni.forEach((g, i) => {
+      const d = pl.inizioSettimana(new Date());
+      d.setDate(d.getDate() + i);
+      g.data = pl.iso(d);
+    });
+    return {
+      ok: true,
+      capo: 'o_renata',
+      menu: { ...mod.menuDaSettimana(s, 'Renata'), inizio },
+      membri: { o_renata: { nome: 'Renata', porzioni: mod.porzioniDaSettimana(s) } },
+      proposte: [],
+    };
+  }
+
+  it('il menù arriva sul secondo dispositivo, dove la chiave non c\'è', async () => {
+    // È lo stesso profilo — stessa `origine` — ma su un altro apparecchio: la
+    // settimana qui non c'è ancora. Prima veniva scartata come «l'ho fatta io»,
+    // e chi vive da solo non poteva ritrovare il piano sul tablet.
+    const pl = await import('../js/planner.js');
+    const d = await import('../js/dati.js');
+    const spazio = await spazioConMenu(pl);
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, status: 200, json: async () => spazio })));
+
+    await store.creaProfilo(RENATA);
+    await store.impostaProfiloAttivo(RENATA.id);
+    await mod.entraNelloSpazio('ABCDEFGHJK', RENATA, null);
+    expect((await mod.spazioLocale()).chiave).toBe(null);
+
+    const esito = await mod.allinea(RENATA);
+    expect(esito.cambiato).toBe(true);
+    expect(esito.mio).toBeUndefined();
+    expect(await d.caricaSettimana(RENATA.id, new Date())).toBeTruthy();
+  });
+
+  it('ma sul dispositivo che ha la chiave la settimana non si riscrive', async () => {
+    // Lì il piano è l'originale, con le porzioni calibrate a mano: rifarlo
+    // dallo scheletro sarebbe una perdita, non un aggiornamento.
+    const pl = await import('../js/planner.js');
+    const spazio = await spazioConMenu(pl);
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true, status: 200, json: async () => ({ ...spazio, codice: 'ABCDEFGHJK', chiave: 'K'.repeat(20) }),
+    })));
+
+    await store.creaProfilo(RENATA);
+    await mod.creaSpazio(RENATA, settimana());
+    expect((await mod.spazioLocale()).chiave).toHaveLength(20);
+
+    const esito = await mod.allinea(RENATA);
+    expect(esito.mio).toBe(true);
+    expect(esito.cambiato).toBe(false);
+  });
+});
