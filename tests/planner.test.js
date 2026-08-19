@@ -372,3 +372,64 @@ describe('dai grammi alle porzioni', () => {
     }
   });
 });
+
+describe('il pavimento calorico non ha una banda di tolleranza', () => {
+  // Il bersaglio il 6% se lo puo' permettere: e' un obiettivo. Il pavimento no,
+  // e' un vincolo di sicurezza. Finche' la tolleranza valeva in entrambe le
+  // direzioni, su 6720 giornate misurate il 13,2% finiva sotto il pavimento —
+  // fino a 59 kcal — quasi sempre con margine da vendere per evitarlo.
+  const PROFILI = [
+    { nome: 'donna minuscola', target: 1200, floor: 1200 },
+    { nome: 'donna media', target: 1388, floor: 1345 },
+    { nome: 'uomo piccolo', target: 1500, floor: 1500 },
+    { nome: 'uomo grande', target: 2901, floor: 2243 },
+    { nome: 'uomo enorme', target: 3556, floor: 2495 },
+  ];
+
+  it('nessuna giornata scende sotto, quando il menù lo consente', () => {
+    let evitabili = 0;
+    let impossibili = 0;
+    let peggiore = null;
+
+    for (const p of PROFILI) {
+      for (let seme = 1; seme <= 30; seme += 1) {
+        const s = generaSettimana({
+          target: p.target, floor: p.floor, preferenze: vuote(), mese: 6, seme,
+          inizio: new Date('2026-07-27T00:00:00'),
+        });
+        for (const g of s.giorni) {
+          const k = kcalGiorno(g);
+          if (k >= p.floor) continue;
+          // Il massimo che quel menù può dare, con ogni voce al tetto.
+          const max = tutteLeVoci(g)
+            .reduce((a, v) => a + valoriVoce({ ...v, porzioni: PORZIONE_MAX }).kcal, 0);
+          if (max < p.floor) { impossibili += 1; continue; }
+          evitabili += 1;
+          if (!peggiore || k - p.floor < peggiore.scarto) {
+            peggiore = { profilo: p.nome, seme, giorno: g.etichetta, k, floor: p.floor, scarto: k - p.floor };
+          }
+        }
+      }
+    }
+
+    expect(peggiore).toBe(null);
+    expect(evitabili).toBe(0);
+    // Le giornate che nemmeno al massimo arrivano al pavimento restano poche e
+    // sono un problema di scelta delle pietanze, non di calibrazione.
+    expect(impossibili).toBeLessThan(5);
+  });
+
+  it('e la giornata non si gonfia oltre il bersaglio per rimediare', () => {
+    // Alzare fino al pavimento non deve diventare una scusa per sforare in
+    // alto: chi ha target e pavimento coincidenti li' ci deve restare.
+    for (let seme = 1; seme <= 30; seme += 1) {
+      const s = generaSettimana({
+        target: 1500, floor: 1500, preferenze: vuote(), mese: 6, seme,
+        inizio: new Date('2026-07-27T00:00:00'),
+      });
+      for (const g of s.giorni) {
+        expect(kcalGiorno(g)).toBeLessThan(1500 * 1.25);
+      }
+    }
+  });
+});

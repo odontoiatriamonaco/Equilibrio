@@ -46,7 +46,10 @@ function montaRitmi() {
 }
 
 function montaBandiere() {
-  $('#bandiere').innerHTML = BANDIERE.map(
+  // Le bandiere `automatica` l'app le deduce da sola — l'età dalla data di
+  // nascita — e chiederne conferma sarebbe peggio che inutile: si fermerebbe
+  // chi la spunta e passerebbe chi se ne dimentica.
+  $('#bandiere').innerHTML = BANDIERE.filter((b) => !b.automatica).map(
     (b) => `<label class="interruttore">
               <input type="checkbox" name="bandiera" value="${b.id}">
               <span class="leva"></span>
@@ -120,7 +123,9 @@ function scriviModulo(p) {
 /* --- Riepilogo dal vivo ---------------------------------------------------- */
 
 function completo(d) {
-  return d.dataNascita && d.altezzaCm > 0 && d.pesoKg > 0;
+  // La data va LETTA, non solo presente: una stringa che non si interpreta
+  // faceva scendere NaN fino al fabbisogno, alle porzioni e allo schermo.
+  return Number.isFinite(eta(d.dataNascita)) && d.altezzaCm > 0 && d.pesoKg > 0;
 }
 
 function riga(etichetta, valore, nota = '', classe = '') {

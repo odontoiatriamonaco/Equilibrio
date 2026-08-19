@@ -456,3 +456,47 @@ describe('condizioni di salute e piano', () => {
     expect(b.vincoli.sodioMax).toBe(2000);
   });
 });
+
+describe('un minorenne non dipende dalla sua buona memoria', () => {
+  const OGGI = new Date('2026-08-18T12:00:00');
+  const RAGAZZA = {
+    sesso: 'donna', pesoKg: 62, altezzaCm: 165,
+    dataNascita: '2011-03-14', attivita: 'media', bandiere: {},
+  };
+
+  it('viene fermato anche senza spuntare la casella', () => {
+    // Era il difetto: l'app calcolava correttamente 15 anni e le assegnava
+    // comunque un piano ipocalorico da 1581 kcal, perché il blocco dipendeva
+    // da una casella che nessuno l'aveva obbligata a spuntare.
+    const r = riepilogo(RAGAZZA, OGGI);
+    expect(r.anni).toBe(15);
+    expect(r.bandiere.bloccante).toBe(true);
+    expect(r.bandiere.daSegnalare).toContain('minore');
+    expect(r.bandiere.messaggio).toMatch(/medico|nutrizionista/);
+    expect(r.fabbisogno.deficit).toBe(0);
+  });
+
+  it('il giorno dei diciotto anni il blocco cade', () => {
+    const vigilia = riepilogo({ ...RAGAZZA, dataNascita: '2008-08-19' }, OGGI);
+    const compleanno = riepilogo({ ...RAGAZZA, dataNascita: '2008-08-18' }, OGGI);
+    expect(vigilia.anni).toBe(17);
+    expect(vigilia.bandiere.bloccante).toBe(true);
+    expect(compleanno.anni).toBe(18);
+    expect(compleanno.bandiere.bloccante).toBe(false);
+    expect(compleanno.fabbisogno.deficit).toBeGreaterThan(0);
+  });
+
+  it('un adulto non viene fermato per sbaglio', () => {
+    const r = riepilogo({ ...RAGAZZA, dataNascita: '1985-01-20' }, OGGI);
+    expect(r.bandiere.bloccante).toBe(false);
+    expect(r.bandiere.daSegnalare).not.toContain('minore');
+  });
+
+  it('una data di nascita nel futuro non produce un piano', () => {
+    // Età negativa: è un dato sbagliato, e da un dato sbagliato non si ricava
+    // un deficit calorico.
+    const r = riepilogo({ ...RAGAZZA, dataNascita: '2030-01-01' }, OGGI);
+    expect(r.anni).toBeLessThan(0);
+    expect(r.bandiere.bloccante).toBe(true);
+  });
+});

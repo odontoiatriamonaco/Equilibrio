@@ -126,7 +126,7 @@
     { "id": "friarielli-ripassati", "nome": "Friarielli ripassati", "tipo": "contorno", "slot": ["pranzo", "cena"], "tempo": 20, "stagione": [11, 12, 1, 2, 3], "origine": "tradizione",
       "ingredienti": [{ "a": "friarielli", "g": 300 }, { "a": "aglio", "g": 5 }, { "a": "olio-evo", "g": 10 }] },
 
-    { "id": "parmigiana-forno", "nome": "Parmigiana di melanzane al forno", "tipo": "piatto-unico", "slot": ["pranzo", "cena"], "tempo": 75, "stagione": [6, 7, 8, 9, 10], "avanzabile": true, "origine": "tradizione",
+    { "id": "parmigiana-forno", "nome": "Parmigiana di melanzane al forno", "icona": "verdura", "tipo": "piatto-unico", "slot": ["pranzo", "cena"], "tempo": 75, "stagione": [6, 7, 8, 9, 10], "avanzabile": true, "origine": "tradizione",
       "ingredienti": [{ "a": "melanzane", "g": 300 }, { "a": "passata-pomodoro", "g": 150 }, { "a": "mozzarella", "g": 60 }, { "a": "parmigiano", "g": 15 }, { "a": "basilico", "g": 5 }, { "a": "olio-evo", "g": 12 }],
       "alleggerimento": "Melanzane grigliate o infornate invece che fritte. È la differenza fra circa 700 kcal a porzione e poco più di 300: la parmigiana fritta assorbe olio come una spugna.",
       "procedimento": ["Affetta le melanzane e infornale a 200 °C su carta forno finché non sono morbide.", "Alterna con passata, mozzarella scolata e basilico.", "Parmigiano in superficie e forno 30 minuti.", "Lasciala riposare mezz'ora prima di tagliarla."] },

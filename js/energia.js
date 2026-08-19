@@ -373,7 +373,12 @@ export const BANDIERE = [
   { id: 'gravidanza', testo: 'Sei in gravidanza', bloccante: true },
   { id: 'allattamento', testo: 'Stai allattando', bloccante: true },
   { id: 'disturbiAlimentari', testo: 'Hai avuto disturbi del comportamento alimentare', bloccante: true },
-  { id: 'minore', testo: 'Hai meno di 18 anni', bloccante: true },
+  // Questa non si spunta a mano: la ricava `riepilogo()` dalla data di
+  // nascita. Lasciarla alla buona volonta' voleva dire non fermare proprio chi
+  // si dimentica di dichiararlo — misurato: una ragazza di 15 anni, con la sua
+  // data di nascita giusta nel profilo, riceveva un piano da 1581 kcal senza
+  // un avviso, mentre l'app sapeva benissimo che aveva 15 anni.
+  { id: 'minore', testo: 'Hai meno di 18 anni', bloccante: true, automatica: true },
 
   {
     id: 'ipertensione',
@@ -437,6 +442,20 @@ export function vincoliDa(risposte = {}) {
 }
 
 /**
+ * Le bandiere dichiarate, piu' quelle che l'app puo' dedurre da sola.
+ *
+ * Un'eta' sotto i 18 anni la sa gia': chiederne conferma con una casella
+ * significa fermare chi la spunta e lasciar passare chi se ne dimentica —
+ * cioe' proprio il caso che la casella dovrebbe coprire. Una data di nascita
+ * nel futuro (eta' negativa) e' un dato sbagliato, e da un dato sbagliato non
+ * si ricava un piano ipocalorico: si ricava un blocco.
+ */
+export function bandiereConEta(dichiarate = {}, anni) {
+  if (!Number.isFinite(anni)) return { ...dichiarate };
+  return { ...dichiarate, minore: Boolean(dichiarate.minore) || anni < 18 };
+}
+
+/**
  * @param {Record<string, boolean>} risposte
  * @returns {{bloccante:boolean, daSegnalare:string[], messaggio:string|null}}
  */
@@ -493,7 +512,7 @@ export function riepilogo(profilo, oggi = new Date()) {
   // accettato dall'utente: e' una misura, non una previsione.
   const td = profilo.tdeeMisurato > 0 ? profilo.tdeeMisurato : stimato;
   const desiderabile = pesoDesiderabile(profilo.altezzaCm);
-  const bandiere = valutaBandiere(profilo.bandiere);
+  const bandiere = valutaBandiere(bandiereConEta(profilo.bandiere, anni));
   const ritmo = ritmoDi(profilo);
 
   const obiettivoKg = profilo.pesoObiettivoKg ?? Math.min(profilo.pesoKg, desiderabile.max);

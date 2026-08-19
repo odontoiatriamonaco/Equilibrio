@@ -278,9 +278,50 @@ export function calibra(settimana, target, floor) {
       }
     }
 
+    // Terzo passo: il pavimento non ha tolleranza.
+    //
+    // Il bersaglio il 6% se lo puo' permettere — e' un obiettivo, e giornate
+    // tutte identiche non sono cibo, sono contabilita'. Il PAVIMENTO no: e' un
+    // vincolo di sicurezza, e la stessa banda applicata verso il basso lo
+    // spostava di fatto a floor x 0,94. Misurato su 6720 giornate prima di
+    // questa riga: il 13,2% finiva sotto, fino a 59 kcal, e quasi sempre con
+    // margine da vendere — il giorno poteva arrivare al doppio del pavimento,
+    // ma la calibrazione si fermava perche' era «abbastanza vicino».
+    alzaSopraIlPavimento(giorno, voci, flessibili, floor);
+
     giorno.quota = kcalGiorno(giorno);
   }
   return settimana;
+}
+
+/**
+ * Riporta la giornata almeno al pavimento calorico.
+ *
+ * Prima una scalata proporzionale, poi la rifinitura: l'arrotondamento a 0,05
+ * puo' lasciare scoperte poche kcal, e si sale di un passo alla volta girando
+ * fra le voci flessibili — pane, pasta, colazione, frutta — invece di gonfiare
+ * il pesce. Quando anche tutto al massimo non basta il giorno resta sotto: li'
+ * il problema non e' la calibrazione, sono le pietanze scelte, e forzarle
+ * oltre PORZIONE_MAX darebbe un piatto che nessuno mangia.
+ */
+function alzaSopraIlPavimento(giorno, voci, flessibili, floor) {
+  if (!(floor > 0)) return;
+
+  let ora = kcalGiorno(giorno);
+  if (ora >= floor || !(ora > 0)) return;
+
+  const su = floor / ora;
+  for (const v of voci) {
+    v.porzioni = Math.min(PORZIONE_MAX, arrotondaPorzione(v.porzioni * su));
+  }
+
+  const salibili = flessibili.length ? flessibili : voci;
+  for (let giro = 0; giro < 200 && kcalGiorno(giorno) < floor; giro += 1) {
+    const spazio = salibili.filter((v) => v.porzioni < PORZIONE_MAX);
+    if (!spazio.length) return;
+    const v = spazio[giro % spazio.length];
+    v.porzioni = Math.min(PORZIONE_MAX, arrotondaPorzione(v.porzioni + 0.05));
+  }
 }
 
 function eFlessibile(voce) {
