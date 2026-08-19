@@ -282,14 +282,40 @@ export async function importaFascicolo(fascicolo, { nuovoNome, sovrascrivi } = {
     const tx = db.transaction(nome, 'readwrite');
     const s = tx.objectStore(nome);
     for (const r of record) {
-      // Le chiavi contengono il vecchio id del profilo: vanno riscritte.
-      const id = String(r.id).replace(fascicolo.profilo.id, nuovoId);
-      s.put({ ...r, id, profiloId: nuovoId });
+      s.put({
+        ...r,
+        id: riscriviChiave(r.id, fascicolo.profilo.id, nuovoId),
+        profiloId: nuovoId,
+      });
     }
     await attesaTx(tx);
   }
 
   return profilo;
+}
+
+/**
+ * La chiave di un record importato, col profilo nuovo davanti.
+ *
+ * Tutte le chiavi degli archivi per profilo hanno la forma `<profiloId>:<resto>`,
+ * quindi si riscrive il PREFISSO e basta.
+ *
+ * Prima si faceva una `replace` di stringa su tutta la chiave, e quella
+ * conosce solo la PRIMA occorrenza e nessun confine di parola. Tre modi di
+ * sbagliare, in ordine di gravita':
+ *   - con vecchio id `p_ab`, la chiave `scaffale_p_abcdef` diventava
+ *     `scaffale_p_<nuovo>cdef`: chiave di un altro record, mutilata;
+ *   - una chiave che ripetesse l'id due volte ne conservava una vecchia;
+ *   - e se il nuovo id era prefisso del vecchio, due record distinti
+ *     finivano sulla stessa chiave e uno spariva senza dirlo.
+ */
+function riscriviChiave(chiave, vecchioId, nuovoId) {
+  const testo = String(chiave);
+  const prefisso = `${vecchioId}:`;
+  if (testo.startsWith(prefisso)) return nuovoId + testo.slice(vecchioId.length);
+  // Forma inattesa — fascicolo vecchio, o toccato a mano: si mette comunque il
+  // profilo giusto davanti, cosi' il record non finisce fuori dal suo profilo.
+  return `${nuovoId}:${testo}`;
 }
 
 /** Cancella i dati di un profilo lasciando in piedi il profilo stesso. */

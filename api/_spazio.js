@@ -125,7 +125,12 @@ function sanificaProposta(p) {
     if (!da || !chiave || !nuovoId) return null;
 
     return {
-        id: testo(p.id, 60) || `${da}:${chiave}`,
+        // L'id lo decide il server, sempre. Prendendolo dal client, un
+        // intruso col solo codice poteva copiare l'id di una richiesta altrui:
+        // chi cucina ne accettava una e ne approvava due, e la seconda non
+        // l'aveva decisa nessuno. Derivandolo da chi + quale pasto, due persone
+        // diverse non possono collidere nemmeno volendo.
+        id: `${da}:${chiave}`,
         da,
         nome: testo(p.nome, 40),
         // La settimana a cui si riferisce: senza, una richiesta accettata
@@ -157,10 +162,19 @@ function fondiProposte(esistenti, arrivata) {
 
 /** Aggiunge o rimpiazza un membro, senza toccare gli altri. */
 function fondiMembro(membri, membro) {
-    const fuori = { ...(membri || {}) };
+    // Senza prototipo, e non per eleganza: su un oggetto normale
+    // `fuori['constructor']` esiste per eredita', quindi il controllo qui sotto
+    // lo scambiava per un membro gia' presente e il tetto saltava — bastavano
+    // gli id `constructor`, `toString`, `valueOf` per entrare in dodici in uno
+    // spazio da otto. E `fuori['__proto__'] = x` su un oggetto normale non
+    // crea nemmeno una proprieta': cambia il prototipo.
+    const fuori = Object.assign(Object.create(null), membri || {});
+
     // Uno spazio famiglia e' una famiglia: senza un tetto, chi trovasse il
     // codice potrebbe riempirlo di membri finti finche' non diventa illeggibile.
-    if (!fuori[membro.id] && Object.keys(fuori).length >= MAX_MEMBRI) return null;
+    const gia = Object.prototype.hasOwnProperty.call(fuori, membro.id);
+    if (!gia && Object.keys(fuori).length >= MAX_MEMBRI) return null;
+
     fuori[membro.id] = membro;
     return fuori;
 }

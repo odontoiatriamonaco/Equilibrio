@@ -172,3 +172,40 @@ describe('la chiave dello spazio', () => {
   });
 });
 
+
+describe('quello che si può fare col solo codice', () => {
+  it('il tetto dei membri non si scavalca con un id ereditato', () => {
+    // `fuori['constructor']` esiste su ogni oggetto normale: il controllo del
+    // tetto lo scambiava per un membro già presente e lasciava passare.
+    // Con gli id `constructor`, `toString` e `valueOf` si entrava in dodici in
+    // uno spazio da otto.
+    let membri = {};
+    for (let i = 0; i < sp.MAX_MEMBRI; i += 1) {
+      membri = sp.fondiMembro(membri, sp.sanificaMembro({ id: `p${i}` }));
+    }
+    expect(Object.keys(membri)).toHaveLength(sp.MAX_MEMBRI);
+
+    for (const id of ['estraneo', 'constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__']) {
+      expect(sp.fondiMembro(membri, sp.sanificaMembro({ id })), `id «${id}»`).toBe(null);
+    }
+  });
+
+  it('un id come __proto__ resta un membro, non diventa un prototipo', () => {
+    const membri = sp.fondiMembro({}, sp.sanificaMembro({ id: '__proto__', nome: 'Furbo' }));
+    expect(Object.keys(membri)).toEqual(['__proto__']);
+    expect(membri['__proto__'].nome).toBe('Furbo');
+    expect({}.nome).toBeUndefined();
+  });
+
+  it('l\'id di una richiesta lo decide il server, non chi la manda', () => {
+    // Copiando l'id di una richiesta altrui, un intruso col solo codice si
+    // faceva approvare la propria: chi cucina ne accettava una e ne passavano
+    // due, e la seconda non l'aveva decisa nessuno.
+    const vera = sp.sanificaProposta({ da: 'o_nina', chiave: 'lun|pranzo|0', nuovoId: 'frittata' });
+    const finta = sp.sanificaProposta({
+      da: 'o_intruso', chiave: 'mar|cena|0', nuovoId: 'pizza', id: vera.id,
+    });
+    expect(finta.id).not.toBe(vera.id);
+    expect(finta.id).toContain('o_intruso');
+  });
+});

@@ -157,6 +157,17 @@ L'allergia resta un'esclusione dura per prudenza: un allergene sta anche nelle t
 e nel procedimento, e «basta non metterlo» non è una cosa che un programma possa
 promettere.
 
+**Ma la durezza si applica a un elenco che compila l'utente.** Non esiste una
+classe di allergene: `eAllergene()` confronta un id alla volta, e in
+`alimenti.json` non c'è nessun campo `allergeni`. In pratica chi è celiaco deve
+marcare **dieci** alimenti a mano (`pasta-semola`, `pasta-integrale`,
+`orzo-perlato`, `farro-perlato`, `pane`, `pane-integrale`, `fette-biscottate`,
+`cous-cous`, `polenta-farina`, `farina-00`); chi non tollera il lattosio dodici
+latticini; chi ha problemi con le uova due, fra cui `tagliatelle-uovo`, che è
+facile non associare. Se ne salta uno, il piatto passa e nessuno lo segnala. È
+il limite più serio che resta in piedi, e si chiude solo dando agli alimenti una
+classe di allergene invece di un id per volta.
+
 ### Le pietanze di casa
 
 Il ricettario di serie in `data/piatti.json` **non si modifica mai**. Modificare una
@@ -288,9 +299,13 @@ sanitari e non devono mai finire nel repository.
 Non esiste un CREA scaricabile in JSON — le tabelle si consultano ma non hanno né
 API né dump, e in UE la tabella è protetta come banca dati. Quindi tre livelli:
 
-1. **Nucleo curato** in `data/alimenti.json`: 142 materie prime italiane, con
-   `fonte`/`fonteId` su ogni record (codice CREA o id FoodData Central) per
-   tracciabilità e correzioni in blocco. Funziona offline, è il cuore.
+1. **Nucleo curato** in `data/alimenti.json`: 142 materie prime italiane.
+   Funziona offline, è il cuore. Ogni record porta `fonte: "CREA"`, che però è
+   un'etichetta e non un riferimento: **`fonteId` non c'è su nessuno dei 142**, e
+   `verificato` è `false` ovunque. Finché restano così, un valore sospetto non si
+   può riagganciare alla riga di origine — e ce n'è già uno che lo meriterebbe:
+   `fette-biscottate` ha i macro che sommano a 103,1 g su 100. Riempire
+   `fonteId` è il lavoro che rende possibili le correzioni in blocco.
 2. **Open Food Facts** a runtime per i prodotti confezionati, via barcode, con
    risposta in cache. Licenza ODbL, attribuzione in pagina crediti.
 3. **USDA FoodData Central** (CC0) solo a tavolino, per verificare i valori del

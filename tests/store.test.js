@@ -123,3 +123,37 @@ describe('fascicolo di export/import', () => {
     await expect(store.esportaFascicolo('p_inesistente')).rejects.toThrow(/inesistente/);
   });
 });
+
+describe('le chiavi riscritte all\'import', () => {
+  it('non mutila una chiave che non comincia col profilo', async () => {
+    // Le chiavi degli archivi per profilo sono tutte `<profiloId>:<resto>`, ma
+    // un fascicolo vecchio o modificato a mano può portarne una di altra forma.
+    // Con la sostituzione di sottostringa, `scaffale_p_abcdef` diventava
+    // `scaffale_p_<nuovo>cdef`: la chiave di un record estraneo, tagliata a
+    // metà, e il record non più raggiungibile da nessuna parte.
+    await store.creaProfilo({ id: 'p_ab', nome: 'Prova', pesoKg: 70 });
+    const fascicolo = await store.esportaFascicolo('p_ab');
+    fascicolo.archivi.piatti = [
+      { id: 'scaffale_p_abcdef', profiloId: 'p_ab', nome: 'Pietanza di casa' },
+    ];
+
+    const rientrato = await store.importaFascicolo(fascicolo, { nuovoNome: 'Copia' });
+    const [riga] = await store.tutti('piatti', rientrato.id);
+
+    expect(riga.nome).toBe('Pietanza di casa');
+    expect(riga.id).toBe(`${rientrato.id}:scaffale_p_abcdef`);
+    // Il pezzo originale della chiave resta intero: niente `abcdef` orfano.
+    expect(riga.id).toContain('p_abcdef');
+  });
+
+  it('sulle chiavi normali riscrive solo il prefisso', async () => {
+    await store.creaProfilo({ id: 'p_ab', nome: 'Prova', pesoKg: 70 });
+    await store.scrivi('piatti', { id: 'p_ab:casa_p_abcdef', profiloId: 'p_ab', nome: 'Mia' });
+
+    const fascicolo = await store.esportaFascicolo('p_ab');
+    const rientrato = await store.importaFascicolo(fascicolo, { nuovoNome: 'Copia' });
+    const [riga] = await store.tutti('piatti', rientrato.id);
+
+    expect(riga.id).toBe(`${rientrato.id}:casa_p_abcdef`);
+  });
+});
