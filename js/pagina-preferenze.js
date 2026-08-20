@@ -11,7 +11,7 @@ import {
 } from './alimenti.js';
 import {
   caricaPreferenze, salvaPreferenze, gustoPiatto, gustoAlimento, eAllergene,
-  motivoEsclusione, prossimoGusto, imposta, alternaAllergia, impostaTetto,
+  motivoEsclusione, imposta, alternaAllergia, impostaTetto,
   riepilogo, omessi, NOMI_TETTI, ICONE_TETTI,
 } from './preferenze.js';
 

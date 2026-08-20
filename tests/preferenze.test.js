@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { piatti } from '../js/alimenti.js';
 import {
   vuote, gustoPiatto, gustoAlimento, eAllergene, motivoEsclusione, ammesso,
-  peso, prossimoGusto, imposta, alternaAllergia, impostaTetto, riepilogo, omessi,
+  peso, imposta, alternaAllergia, impostaTetto, riepilogo, omessi,
   TETTI_PREDEFINITI,
 } from '../js/preferenze.js';
 
@@ -97,15 +97,7 @@ describe('peso nella scelta', () => {
   });
 });
 
-describe('ciclo dei gusti', () => {
-  it('gira neutro → amato → omesso → neutro', () => {
-    expect(prossimoGusto('neutro')).toBe('amato');
-    expect(prossimoGusto('amato')).toBe('omesso');
-    expect(prossimoGusto('omesso')).toBe('neutro');
-    // La vecchia parola chiude comunque il giro invece di incastrarsi.
-    expect(prossimoGusto('escluso')).toBe('neutro');
-  });
-
+describe('le scritture sui gusti', () => {
   it('tornare al neutro non lascia residui nel record', () => {
     let pref = imposta(vuote(P), 'piatti', 'genovese', 'amato');
     expect(Object.keys(pref.piatti)).toEqual(['genovese']);

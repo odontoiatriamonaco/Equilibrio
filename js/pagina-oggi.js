@@ -280,7 +280,7 @@ function disegnaPasti() {
               ? `<button class="bottone-icona" data-scambia="${chiave}"
                          aria-label="Scegli qualcosa al posto di ${nomeVoce(voce)}">
                    ${icona('scambia', 'icona icona-sm')}</button>
-                 <a class="bottone-icona" href="/ricette.html" aria-label="Vedi la ricetta di ${nomeVoce(voce)}">
+                 <a class="bottone-icona" href="/ricette.html?piatto=${voce.id}" aria-label="Vedi la ricetta di ${nomeVoce(voce)}">
                    ${icona(iconaPiatto(oggetto || {}), 'icona icona-sm')}</a>`
               : ''}
           </label>`;

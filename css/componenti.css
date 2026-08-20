@@ -1321,7 +1321,8 @@
 /* Si arriva qui da Oggi, toccando il piatto che non va: la riga si accende un
    momento per dire «e' questa», e poi si spegne da sola. Non un colore fisso,
    che resterebbe a chiedersi perche'. */
-.voce-piano.appena-arrivato > summary {
+.voce-piano.appena-arrivato > summary,
+.carta-piatto.appena-arrivato {
   animation: arrivo 2.4s var(--e-standard);
   border-radius: var(--r-2);
 }
@@ -1332,7 +1333,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .voce-piano.appena-arrivato > summary { animation: none; background: var(--accento-velo); }
+  .voce-piano.appena-arrivato > summary,
+  .carta-piatto.appena-arrivato { animation: none; background: var(--accento-velo); }
 }
 
 .dosi {

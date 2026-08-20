@@ -159,11 +159,14 @@ function nome(id) {
 
 /* --- Scritture ------------------------------------------------------------- */
 
-const CICLO = { neutro: 'amato', amato: 'omesso', omesso: 'neutro', escluso: 'neutro' };
+/* Qui c'era `prossimoGusto`, un ciclo neutro → amato → omesso → neutro.
+   Era importato da `pagina-preferenze.js` e mai chiamato: quella pagina scrive
+   i valori diretti e riporta a neutro ripremendo lo stesso pulsante.
 
-export function prossimoGusto(attuale) {
-  return CICLO[attuale] || 'amato';
-}
+   Descriveva pero' un modello DIVERSO da quello vivo — per un piatto diceva
+   `omesso`, mentre l'esclusione vera si chiama `escluso` — e leggendolo ci ho
+   creduto io stesso, arrivando a dichiarare un difetto che non esisteva. Codice
+   morto che mente su come funziona l'app e' peggio di codice assente. */
 
 /** Imposta un gusto, togliendo la voce quando torna neutro (record compatto). */
 export function imposta(pref, tipo, id, valore) {

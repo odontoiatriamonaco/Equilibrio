@@ -64,6 +64,40 @@ export async function inizializza() {
   $('#nuova-pietanza').addEventListener('click', creaNuova);
 
   disegna();
+  vaiAlPiatto();
+}
+
+/**
+ * Si arriva da Oggi toccando la ricetta di un piatto: si atterra su QUELLA riga,
+ * non in cima a centocinquanta.
+ *
+ * La riga si accende un momento — dire «è questa» e poi spegnersi è meglio di un
+ * colore fisso, che resterebbe lì a chiedersi perché. E si apre anche la scheda,
+ * perché chi tocca «vedi la ricetta» vuole la ricetta: chiudendola resta in vista
+ * la riga giusta.
+ *
+ * Va chiamata DOPO `disegna()`, o le righe non esistono ancora nel documento.
+ */
+function vaiAlPiatto() {
+  const id = new URLSearchParams(location.search).get('piatto');
+  if (!id) return;
+
+  const riga = document.querySelector(`#elenco [data-id="${CSS.escape(id)}"]`);
+  if (!riga) return;
+
+  // Istantaneo, non fluido: la scheda che si apre subito dopo e' modale, e
+  // interrompe lo scorrimento animato a meta'. Cosi' invece la riga e' gia' al
+  // suo posto dietro al dialogo, e chiudendolo ci si ritrova sopra.
+  const portaci = () => riga.scrollIntoView({ block: 'center' });
+  portaci();
+  riga.classList.add('appena-arrivato');
+  riga.addEventListener('animationend', () => riga.classList.remove('appena-arrivato'), { once: true });
+
+  apri(id);
+  // E di nuovo alla chiusura della scheda: se l'apertura del modale ha
+  // spostato la pagina, chiudendola ci si ritrova comunque sulla riga giusta
+  // invece che in cima a centocinquanta pietanze.
+  $('#scheda').addEventListener('close', portaci, { once: true });
 }
 
 /* --- Modifica -------------------------------------------------------------- */
