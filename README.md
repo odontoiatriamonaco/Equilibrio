@@ -1,7 +1,7 @@
 # Equilibrio
 
 Piano alimentare settimanale a porzioni, lista della spesa per reparto e
-gestione dello sgarro con recupero distribuito sulla settimana.
+gestione degli sgarri con recupero distribuito sulla settimana.
 
 **In produzione:** https://equilibrio-theta.vercel.app
 
@@ -96,7 +96,7 @@ js/energia.js             BMI, WHtR, massa grassa, BMR, TDEE, vincoli di sicurez
 js/store.js               IndexedDB partizionato per profilo
 js/profilo-file.js        export/import del profilo in file cifrato
 js/planner.js             generatore della settimana a vincoli, calibrazione porzioni
-js/sgarro.js              redistribuzione dello sgarro, retroattiva e preventiva
+js/sgarro.js              redistribuzione degli sgarri, retroattiva e preventiva
 js/spesa.js               aggregazione, dispensa, formati di vendita, condivisione
 js/packaging.js           residui delle confezioni e proposte antispreco
 js/scambi.js              alternative fra alimenti e fra piatti
@@ -407,7 +407,7 @@ schermata Home". Da lì funziona anche senza rete.
 | ✅ | Guida |
 | ✅ | Nucleo alimenti, gruppi di scambio, sezione Pietanze |
 | ✅ | Generatore della settimana, scambi e lista della spesa |
-| ✅ | Motore dello sgarro, retroattivo e preventivo |
+| ✅ | Motore dello sgarro, retroattivo e preventivo, più d’uno per settimana e per giorno |
 | ✅ | Antispreco e dispensa, porzioni per commensali, peso di tendenza, TDEE adattivo |
 | ✅ | Condivisione della lista con un codice (serve l’archivio remoto, vedi sopra) |
 | ✅ | Spazio famiglia: il menù arriva da sé sugli altri telefoni, con le richieste di scambio |

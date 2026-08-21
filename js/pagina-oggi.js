@@ -253,6 +253,13 @@ function disegnaAnello(target) {
   $('#resta').className = resta > 0 ? 'piccolo morbido' : 'piccolo sgarro-testo';
 }
 
+/** Gli sgarri di un pasto, separati fra chi lo sostituisce e chi ci si aggiunge. */
+function sgarriDelPasto(giorno, pasto, sostituisce) {
+  const suoi = giorno?.sgarri || (giorno?.sgarro ? [giorno.sgarro] : []);
+  return suoi.filter((x) => (x.pasto || x.alPostoDi || null) === pasto
+    && (x.sostituisce ?? Boolean(x.alPostoDi)) === sostituisce);
+}
+
 /** Lo sgarro, dentro il pasto in cui si mangia. Uguale a quello del Piano. */
 function rigaSgarroOggi(sgarro, sostituisce) {
   return `
@@ -288,15 +295,11 @@ function disegnaPasti() {
         ${icona(MOMENTO[pasto], 'icona icona-sm')}
         <span class="occhiello">${NOMI_PASTO[pasto]}</span>
       </p>
-      ${(() => {
-        const sg = giorno?.stato === 'sgarro' ? giorno.sgarro : null;
-        const suo = sg?.pasto || (sg?.alPostoDi ?? null);
-        if (!sg || suo !== pasto) return '';
-        const sostituisce = sg.sostituisce ?? Boolean(sg.alPostoDi);
-        // Davanti se prende il posto del pasto, in coda se ci si aggiunge:
-        // qui esce solo la parte che va PRIMA.
-        return sostituisce ? rigaSgarroOggi(sg, true) : '';
-      })()}
+      ${
+  // Davanti quelli che prendono il posto del pasto, in coda quelli che ci si
+  // aggiungono: qui esce solo la parte che va PRIMA. Nello stesso pasto ce ne
+  // puo' stare piu' d'uno.
+  sgarriDelPasto(giorno, pasto, true).map((x) => rigaSgarroOggi(x, true)).join('')}
       ${voci.map((voce, i) => {
         const chiave = `${pasto}|${i}`;
         const oggetto = vociOggetto(voce);
@@ -331,13 +334,7 @@ function disegnaPasti() {
               : ''}
           </label>`;
       }).join('')}
-      ${(() => {
-        const sg = giorno?.stato === 'sgarro' ? giorno.sgarro : null;
-        const suo = sg?.pasto || (sg?.alPostoDi ?? null);
-        if (!sg || suo !== pasto) return '';
-        const sostituisce = sg.sostituisce ?? Boolean(sg.alPostoDi);
-        return sostituisce ? '' : rigaSgarroOggi(sg, false);
-      })()}
+      ${sgarriDelPasto(giorno, pasto, false).map((x) => rigaSgarroOggi(x, false)).join('')}
     </section>`).join('');
 
   $$('#pasti-oggi [data-scambia]').forEach((b) => b.addEventListener('click', (e) => {

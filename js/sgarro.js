@@ -14,6 +14,7 @@ import { valoriVoce } from './alimenti.js';
 import {
   tutteLeVoci, kcalGiorno, riducibileGiorno, PORZIONE_MIN,
   voceFlessibile as flessibile, arrotondaPorzione,
+  ribilanciaGiorno, applicaRibilanciamento,
 } from './planner.js';
 
 /**
@@ -280,4 +281,111 @@ export function racconta({ recupero, extra, modo, deficitGiornaliero, etichetta 
   }
 
   return `${base} Le proteine restano intere: il taglio è su pane e condimenti.`;
+}
+
+
+/* --- Piu' sgarri nella stessa settimana -------------------------------------
+   Una sera la pizza al posto della cena, e la sfogliatella in aggiunta allo
+   spuntino: sono due cose diverse nello stesso giorno, e prima il modello ne
+   reggeva una sola.
+
+   Quando l'insieme cambia non si aggiusta: si rimette la settimana com'era e si
+   riapplica tutto da capo, in ordine di giorno. Applicare in sequenza e' anche
+   la cosa GIUSTA da fare, non solo la piu' semplice: la capacita' di recupero di
+   un giorno che ha gia' ceduto calorie al primo sgarro e' davvero minore quando
+   arriva il secondo.
+   -------------------------------------------------------------------------- */
+
+/** Tutti gli sgarri della settimana, col giorno a cui appartengono. */
+export function elencoSgarri(settimana) {
+  const fuori = [];
+  (settimana?.giorni || []).forEach((g, giorno) => {
+    // I piani salvati prima portavano un solo `sgarro`: si continua a leggerli.
+    const suoi = g.sgarri || (g.sgarro ? [g.sgarro] : []);
+    // Chi e' stato salvato prima non ha un id: gliene si da' uno stabile, cosi'
+    // i pulsanti «modifica» e «togli» sanno a quale sgarro si riferiscono gia'
+    // al primo disegno, prima ancora che la settimana venga riscritta.
+    suoi.forEach((x, i) => fuori.push({ id: x.id || `g${giorno}-${i}`, ...x, giorno }));
+  });
+  return fuori;
+}
+
+/**
+ * Rimette la settimana al bersaglio e riapplica l'elenco degli sgarri.
+ *
+ * @param {object} settimana
+ * @param {Array<{id?:string, giorno:number, kcal:number, etichetta?:string,
+ *   pasto?:string|null, sostituisce?:boolean, modo?:'prima'|'dopo'}>} elenco
+ */
+export function applicaSgarri(settimana, elenco = []) {
+  const copia = structuredClone(settimana);
+
+  for (const g of copia.giorni) {
+    for (const voci of Object.values(g.pasti || {})) {
+      for (const v of voci) if (v) delete v.saltato;
+    }
+    delete g.sgarri;
+    delete g.sgarro;
+    delete g.recuperoKcal;
+    if (g.stato === 'sgarro' || g.stato === 'recupero') delete g.stato;
+    applicaRibilanciamento(g, ribilanciaGiorno(g, copia.target, { floor: copia.floor }));
+    g.quota = kcalGiorno(g);
+  }
+
+  let recuperato = 0;
+  let residuo = 0;
+  const motivi = [];
+
+  for (const x of [...elenco].sort((a, b) => a.giorno - b.giorno)) {
+    const g = copia.giorni[x.giorno];
+    if (!g || !(x.kcal > 0)) continue;
+
+    // Un pasto si sostituisce UNA volta sola: due sgarri sulla stessa cena non
+    // la tolgono due volte dal conto.
+    const gia = Boolean(x.sostituisce && x.pasto
+      && (g.pasti[x.pasto] || []).some((v) => v?.saltato));
+    if (x.sostituisce && x.pasto && !gia) {
+      for (const v of g.pasti[x.pasto] || []) if (v) v.saltato = true;
+    }
+
+    const netto = extraNetto(g, x.kcal, gia ? null : x.pasto, x.sostituisce);
+    const r = calcolaRecupero({
+      giorni: copia.giorni,
+      target: copia.target,
+      floor: copia.floor,
+      extra: netto,
+      indiceEvento: x.giorno,
+      modo: x.modo || 'prima',
+    });
+
+    for (let i = 0; i < copia.giorni.length; i++) {
+      const taglio = r.perGiorno[i] || 0;
+      if (taglio <= 0) continue;
+      riduciGiorno(copia.giorni[i], taglio, copia.floor);
+      copia.giorni[i].recuperoKcal = Math.round((copia.giorni[i].recuperoKcal || 0) + taglio);
+      if (copia.giorni[i].stato !== 'sgarro') copia.giorni[i].stato = 'recupero';
+    }
+
+    recuperato += r.recuperato;
+    residuo += r.residuo;
+    if (r.residuo > 0 && r.motivo) motivi.push(r.motivo);
+
+    const { giorno: _via, ...senzaGiorno } = x;
+    g.sgarri = [...(g.sgarri || []), senzaGiorno];
+    g.stato = 'sgarro';
+  }
+
+  // Le quote alla fine, con tutto applicato: un giorno puo' aver ceduto calorie
+  // a uno sgarro e portarne un altro suo.
+  for (const g of copia.giorni) {
+    const suoi = (g.sgarri || []).reduce((a, y) => a + (y.kcal || 0), 0);
+    g.quota = kcalGiorno(g) + Math.round(suoi);
+  }
+
+  copia.recupero = {
+    recuperato: Math.round(recuperato),
+    residuo: Math.round(residuo),
+    motivo: motivi[0] || '',
+  };
+  return copia;
 }
