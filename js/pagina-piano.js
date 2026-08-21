@@ -15,7 +15,7 @@ import { caricaPreferenze, NOMI_TETTI } from './preferenze.js';
 import { caricaSettimana, salvaSettimana } from './dati.js';
 import {
   generaSettimana, kcalGiorno, valoriGiorno, inizioSettimana, iso,
-  indiceOggi, GIORNI,
+  indiceOggi, GIORNI, ribilanciaGiorno, applicaRibilanciamento,
 } from './planner.js';
 import {
   nomeVoce, valoriVoce, iconaPiatto, vociOggetto, piatto, TIPI,
@@ -41,6 +41,8 @@ let energia = null;
 let pref = null;
 let settimana = null;
 let scambioAperto = null;
+/** Il giorno di uno sgarro che si sta modificando, invece di registrarne uno nuovo. */
+let modificaInCorso = null;
 let riferimento = null;
 let avvisiFamiglia = [];
 let tettiSforati = [];
@@ -114,9 +116,54 @@ export async function inizializza() {
   disegna();
   rendiArrivo(arrivo);
   if (arrivo.spazio) await rendiProposte(arrivo.spazio);
+
+  // Arrivando da «Registra o prenota uno sgarro» su Oggi, la finestra si apre
+  // da sola: chi ha premuto quel pulsante voleva quella, non questa pagina.
+  if (settimana && new URLSearchParams(location.search).has('sgarro')) {
+    apriSgarro();
+    // L'indirizzo torna pulito: ricaricando non si riapre a sorpresa.
+    history.replaceState(null, '', location.pathname);
+  }
 }
 
 /* --- Generazione ----------------------------------------------------------- */
+
+/**
+ * Toglie uno sgarro e rimette la settimana com'era.
+ *
+ * Il pasto sostituito torna al suo posto, e i giorni che avevano ceduto calorie
+ * per coprirlo si ribilanciano sul proprio bersaglio. Non è un ripristino esatto
+ * — le porzioni di prima non sono state conservate — ma è la stessa funzione che
+ * calibra il piano quando nasce, quindi il risultato è un giorno sano, non un
+ * giorno rattoppato.
+ */
+async function togliSgarro(indice) {
+  const g = settimana.giorni[indice];
+  if (!g?.sgarro) return;
+
+  for (const voci of Object.values(g.pasti || {})) {
+    for (const v of voci) if (v) delete v.saltato;
+  }
+  delete g.sgarro;
+  delete g.stato;
+  g.quota = kcalGiorno(g);
+
+  // I giorni alleggeriti tornano al bersaglio.
+  for (const giorno of settimana.giorni) {
+    if (!giorno.recuperoKcal) continue;
+    const esito = ribilanciaGiorno(giorno, settimana.target, { floor: settimana.floor });
+    applicaRibilanciamento(giorno, esito);
+    delete giorno.recuperoKcal;
+    delete giorno.stato;
+    giorno.quota = kcalGiorno(giorno);
+  }
+  delete settimana.recupero;
+
+  await salvaSettimana(profilo.id, settimana);
+  $('#nota-recupero').hidden = true;
+  divisione = await preparaDivisione();
+  disegna();
+}
 
 /**
  * Cosa porta via una rigenerazione.
@@ -407,6 +454,18 @@ function disegna() {
     apriScambio(Number(giorno), pasto, Number(indice));
   }));
 
+  $$('#settimana [data-sgarro-modifica]').forEach((b) => b.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    apriSgarro(Number(b.dataset.sgarroModifica));
+  }));
+
+  $$('#settimana [data-sgarro-togli]').forEach((b) => b.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await togliSgarro(Number(b.dataset.sgarroTogli));
+  }));
+
   $$('#settimana [data-rigido]').forEach((b) => b.addEventListener('click', async () => {
     const i = Number(b.dataset.rigido);
     settimana.giorni[i].rigido = !settimana.giorni[i].rigido;
@@ -431,7 +490,7 @@ function cartaGiorno(giorno, indice, eOggi) {
   const pasti = Object.entries(giorno.pasti).map(([pasto, voci]) => {
     const qui = sg && suoPasto === pasto;
     const righe = voci.map((voce, i) => rigaVoce(voce, indice, pasto, i)).join('');
-    const riga = qui ? rigaSgarro(sg, sostituisce) : '';
+    const riga = qui ? rigaSgarro(sg, sostituisce, indice) : '';
 
     return `
     <div class="pasto">
@@ -464,7 +523,7 @@ function cartaGiorno(giorno, indice, eOggi) {
 
       <div class="giorno-corpo">
         <div class="riga-tra piccolo morbido" style="margin-bottom: var(--sp-3)">
-          <span>P ${num(v.pro, 0)} g · C ${num(v.car, 0)} g · G ${num(v.gra, 0)} g · fibra ${num(v.fib, 0)} g${
+          <span>${sg ? 'Dai pasti in piano: ' : ''}P ${num(v.pro, 0)} g · C ${num(v.car, 0)} g · G ${num(v.gra, 0)} g · fibra ${num(v.fib, 0)} g${
   // Il sale si mostra solo a chi ha un tetto: agli altri e' un numero in piu'
   // che non serve a niente.
   energia.vincoliSalute?.sodioMax
@@ -509,7 +568,7 @@ function divisioneVoce(voce, chiave) {
 }
 
 /** Lo sgarro, disegnato come una voce del pasto in cui si mangia. */
-function rigaSgarro(sgarro, sostituisce) {
+function rigaSgarro(sgarro, sostituisce, indice) {
   return `
     <div class="riga-sgarro">
       <span class="sigillo-mini">${icona('sgarro', 'icona icona-sm')}</span>
@@ -518,6 +577,14 @@ function rigaSgarro(sgarro, sostituisce) {
         <br><span class="piccolo">${sostituisce ? 'al posto del pasto' : 'in aggiunta al pasto'}</span>
       </span>
       <span class="num">+${num(sgarro.kcal || 0)} kcal</span>
+      <button class="bottone-icona" data-sgarro-modifica="${indice}"
+              aria-label="Modifica ${sgarro.etichetta || 'lo sgarro'}">
+        ${icona('matita', 'icona icona-sm')}
+      </button>
+      <button class="bottone-icona" data-sgarro-togli="${indice}"
+              aria-label="Togli ${sgarro.etichetta || 'lo sgarro'}">
+        ${icona('cestino', 'icona icona-sm')}
+      </button>
     </div>`;
 }
 
@@ -750,7 +817,7 @@ function opzione(s) {
   return `<option value="${s.id}">${s.nome} — ${s.kcal} kcal</option>`;
 }
 
-function apriSgarro() {
+function apriSgarro(daModificare = null) {
   rendiCategorieSgarro();
   filtraCatalogo(categoriaSgarro);
 
@@ -759,10 +826,25 @@ function apriSgarro() {
     return `<option value="${i}">${d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'short' })}</option>`;
   }).join('');
 
-  const oggi = Math.max(0, indiceOggi(settimana));
-  $('#sgarro-giorno').value = String(oggi);
-  $('#sgarro-kcal').value = '';
+  const esistente = daModificare != null ? settimana.giorni[daModificare]?.sgarro : null;
+  const giorno = esistente ? daModificare : Math.max(0, indiceOggi(settimana));
+  $('#sgarro-giorno').value = String(giorno);
+  $('#sgarro-kcal').value = esistente ? String(esistente.kcal || '') : '';
+
+  const sostituisce = esistente
+    ? (esistente.sostituisce ?? Boolean(esistente.alPostoDi))
+    : false;
+  $(`#dialogo-sgarro [name="posto"][value="${sostituisce ? 'sostituisce' : 'aggiunta'}"]`).checked = true;
+
   aggiornaPastiSostituibili();
+  const suoPasto = esistente?.pasto || esistente?.alPostoDi;
+  if (suoPasto) $('#sgarro-pasto').value = suoPasto;
+
+  // Modificando uno sgarro già registrato si riparte pulito: prima si toglie
+  // quello di prima, o il recupero si sommerebbe a se stesso.
+  if (esistente) modificaInCorso = daModificare;
+  else modificaInCorso = null;
+
   aggiornaAnteprimaSgarro();
   $('#dialogo-sgarro').showModal();
 }
@@ -871,6 +953,19 @@ function aggiornaAnteprimaSgarro() {
 async function confermaSgarro() {
   const { lordo, extra, indiceEvento, modo, pasto, sostituisce } = datiSgarro();
   if (!(lordo > 0)) return;
+
+  // La settimana regge UNO sgarro alla volta: `settimana.recupero` è singolo,
+  // e la nota in cima pure. Prima di registrarne un altro si smonta quello che
+  // c'è — sia che lo si stia modificando, sia che se ne registri uno nuovo su
+  // un altro giorno.
+  //
+  // Senza questo restava un buco silenzioso: registrando il secondo sgarro, il
+  // primo giorno perdeva lo stato «sgarro» (sovrascritto da «recupero») ma
+  // teneva il pasto sostituito. Misurato: un sabato a 1189 kcal contro un
+  // bersaglio di 1974, senza niente sullo schermo a dire perché.
+  const conSgarro = settimana.giorni.findIndex((g) => g.sgarro);
+  if (conSgarro >= 0) await togliSgarro(conSgarro);
+  modificaInCorso = null;
 
   const recupero = calcolaRecupero({
     giorni: settimana.giorni,
