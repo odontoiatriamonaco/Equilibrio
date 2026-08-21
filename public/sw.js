@@ -11,6 +11,7 @@ var GUSCIO = [
   '/preferenze.html',
   '/piano.html',
   '/spesa.html',
+  '/dispensa.html',
   '/ricette.html',
   '/progressi.html',
   '/impostazioni.html',

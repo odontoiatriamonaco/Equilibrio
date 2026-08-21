@@ -31,6 +31,7 @@ export default defineConfig({
         preferenze: resolve(__dirname, 'preferenze.html'),
         piano: resolve(__dirname, 'piano.html'),
         spesa: resolve(__dirname, 'spesa.html'),
+        dispensa: resolve(__dirname, 'dispensa.html'),
         ricette: resolve(__dirname, 'ricette.html'),
         progressi: resolve(__dirname, 'progressi.html'),
         impostazioni: resolve(__dirname, 'impostazioni.html'),
