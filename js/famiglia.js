@@ -18,6 +18,7 @@ import {
   ribilanciaGiorno, applicaRibilanciamento, vociConChiave, inizioSettimana, iso,
   conteggiSettimana,
 } from './planner.js';
+import { applicaSgarri } from './sgarro.js';
 
 /* --- Il legame ------------------------------------------------------------- */
 
@@ -66,7 +67,28 @@ function chiavePers(profiloId, inizio) {
 
 export async function caricaPersonalizzazioni(profiloId, inizio) {
   const riga = await leggi('personalizzazioni', chiavePers(profiloId, inizio));
-  return riga || { id: chiavePers(profiloId, inizio), profiloId, inizio, voci: {} };
+  const vuota = { id: chiavePers(profiloId, inizio), profiloId, inizio, voci: {} };
+  // `sgarri` e `rigidi` sono arrivati dopo: le righe scritte prima non li hanno.
+  return { ...vuota, sgarri: [], rigidi: [], ...(riga || {}) };
+}
+
+/**
+ * Gli sgarri di chi segue il menù di un altro.
+ *
+ * Non stanno nella settimana: quella è di chi cucina, e chi segue la rilegge
+ * derivata a ogni apertura. Scrivendoli lì sparivano al primo ricaricamento —
+ * salvati in un posto che per lui non viene mai riletto. La pizza di sabato è
+ * sua, come lo sono gli scambi, quindi vive nello stesso strato personale.
+ */
+export async function salvaSgarriPersonali(profiloId, inizio, sgarri) {
+  const p = await caricaPersonalizzazioni(profiloId, inizio);
+  return scrivi('personalizzazioni', { ...p, sgarri });
+}
+
+/** I giorni che questa persona ha reso rigidi: anche quelli sono suoi. */
+export async function salvaRigidiPersonali(profiloId, inizio, rigidi) {
+  const p = await caricaPersonalizzazioni(profiloId, inizio);
+  return scrivi('personalizzazioni', { ...p, rigidi });
 }
 
 /** Scrive una sola voce dello strato personale, senza toccare le altre. */
@@ -180,10 +202,15 @@ export async function settimanaPer(profilo, data = new Date()) {
       x.voce.porzioni = 1;
       delete x.voce.fissata;
     }
-    // Anche il recupero di uno sgarro appartiene a chi l'ha fatto.
+    // Anche il recupero di uno sgarro appartiene a chi l'ha fatto: i suoi
+    // arrivano dopo, dallo strato personale.
     delete giorno.stato;
     delete giorno.recuperoKcal;
     delete giorno.sgarro;
+    delete giorno.sgarri;
+    for (const voci of Object.values(giorno.pasti || {})) {
+      for (const v of voci) if (v) delete v.saltato;
+    }
 
     for (const x of vociConChiave(giorno)) {
       const chiave = `${giorno.etichetta}|${x.chiave}`;
@@ -221,11 +248,18 @@ export async function settimanaPer(profilo, data = new Date()) {
   copia.floor = energia.fabbisogno.floor;
   copia.derivataDa = riferimento.id;
 
+  // I giorni rigidi e gli sgarri sono miei, non del menù: si rimettono qui,
+  // dopo la calibrazione e sul mio bersaglio. Il rigido prima, perché decide
+  // dove il recupero può andare a prendere le calorie.
+  copia.giorni.forEach((g, i) => { g.rigido = Boolean(pers.rigidi?.[i]); });
+  const miei = (pers.sgarri || []).filter((s) => s.giorno >= 0 && s.giorno < copia.giorni.length);
+  const finale = miei.length ? applicaSgarri(copia, miei) : copia;
+
   return {
-    settimana: copia,
+    settimana: finale,
     riferimento,
     avvisi,
-    tetti: tettiSforati(conteggiSettimana(copia), lente.preferenze),
+    tetti: tettiSforati(conteggiSettimana(finale), lente.preferenze),
     inizio,
   };
 }

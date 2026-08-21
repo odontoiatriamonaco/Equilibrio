@@ -5,7 +5,7 @@ import { profiloAttivo, profili, origineDi } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import { riepilogo as riepilogoEnergia } from './energia.js';
 import {
-  settimanaPer, salvaPersonalizzazione, lenteDi, settimaneDellaTavola,
+  settimanaPer, salvaPersonalizzazione, salvaSgarriPersonali, salvaRigidiPersonali, lenteDi, settimaneDellaTavola,
 } from './famiglia.js';
 import {
   allinea, porzioniDellaTavola, pubblicaMenu, spazioLocale, leggiSpazio,
@@ -140,8 +140,28 @@ export async function inizializza() {
  * quando nasce, quindi il risultato è un giorno sano, non un giorno rattoppato.
  */
 async function scriviSgarri(elenco) {
+  // Chi segue il menù di un altro non possiede la settimana: la rilegge
+  // derivata a ogni apertura. I suoi sgarri vanno quindi nello strato
+  // personale, dov'e' gia' scritto tutto quello che riguarda solo lui —
+  // scrivendoli nella settimana finivano in un archivio che per lui non viene
+  // mai riletto, e sparivano al primo ricaricamento.
+  if (riferimento) {
+    await salvaSgarriPersonali(profilo.id, settimana.inizio, elenco);
+    await ridisegnaDaCapo();
+    return;
+  }
   settimana = applicaSgarri(settimana, elenco);
   await salvaSettimana(profilo.id, settimana);
+  divisione = await preparaDivisione();
+  disegna();
+}
+
+/** Rilegge la settimana derivata e la ridisegna: per chi segue e' l'unica via. */
+async function ridisegnaDaCapo() {
+  const derivata = await settimanaPer(profilo);
+  settimana = derivata.settimana;
+  avvisiFamiglia = derivata.avvisi;
+  tettiSforati = derivata.tetti || [];
   divisione = await preparaDivisione();
   disegna();
 }
@@ -454,6 +474,14 @@ function disegna() {
 
   $$('#settimana [data-rigido]').forEach((b) => b.addEventListener('click', async () => {
     const i = Number(b.dataset.rigido);
+    // Stessa storia degli sgarri: un giorno rigido e' una scelta di chi mangia,
+    // non del menu'. Per chi segue va nello strato personale, o si perde.
+    if (riferimento) {
+      const rigidi = settimana.giorni.map((g, k) => (k === i ? !g.rigido : Boolean(g.rigido)));
+      await salvaRigidiPersonali(profilo.id, settimana.inizio, rigidi);
+      await ridisegnaDaCapo();
+      return;
+    }
     settimana.giorni[i].rigido = !settimana.giorni[i].rigido;
     await salvaSettimana(profilo.id, settimana);
     disegna();
