@@ -83,7 +83,9 @@ export function costruisciLista(settimana, { commensali = 1, dispensa = [], memb
     if (inCasa > 0) risparmiato += (inCasa / 1000) * (a.prezzo || 0);
 
     // Quello che c'e' in dispensa non si ricompra: sparisce dalla lista.
-    if (daComprare <= 0) continue;
+    // Sotto il grammo non e' una spesa, e' un resto di divisione: lasciandolo
+    // passare la lista scriveva «Miele — 0 g, 1 vasetto».
+    if (daComprare < 1) continue;
 
     const conf = confezioniNecessarie(id, daComprare);
     const spesa = (conf.acquistato / 1000) * (a.prezzo || 0);
@@ -164,6 +166,74 @@ const PLURALI = {
 
 function plurale(tipo) {
   return PLURALI[tipo] || `${tipo} ×`;
+}
+
+/**
+ * Tutto quello che la settimana userà, con quanto ne serve e quanto ne hai già.
+ *
+ * È il gemello di `costruisciLista`, con una differenza che conta: la lista
+ * della spesa NASCONDE quello che hai già in casa — è il suo mestiere, dirti
+ * cosa comprare. Qui invece deve comparire tutto, anche quello che è già
+ * coperto: stai guardando negli sportelli, e devi poterti correggere.
+ *
+ * Serve a riempire la dispensa PRIMA di fare la spesa la prima volta, invece di
+ * ricomprare mezzo scaffale che avevi già. Gli alimenti sono quelli del piano e
+ * basta: chiedere di censire centoquaranta cose per usarne quaranta è il modo
+ * più sicuro di far abbandonare il censimento a metà.
+ *
+ * @param {object} settimana
+ * @param {{commensali?:number, membri?:Array, dispensa?:Array}} opzioni
+ */
+export function daAvereInCasa(settimana, { commensali = 1, membri = null, dispensa = [] } = {}) {
+  const necessario = membri?.length
+    ? aggregaFamiglia(membri)
+    : aggregaSettimana(settimana, commensali);
+  const scorte = new Map(dispensa.map((d) => [d.alimentoId, d.grammi]));
+
+  const voci = [];
+  for (const [id, grammiTotali] of necessario) {
+    const a = alimento(id);
+    if (!a) continue;
+
+    // Per eccesso, non per difetto: il miele serve 41,4 g, e chi ne ha 41 non
+    // ne ha abbastanza. Arrotondando in giù «ce l'ho» lasciava 0,4 g scoperti —
+    // che non si vedono nella lista (arrotondati a «0 g») ma bastano a farti
+    // comprare il vasetto intero. Misurato: 2 alimenti su 19 restavano nel
+    // carrello dopo averli dichiarati in casa.
+    const serve = Math.ceil(grammiTotali);
+    if (serve <= 0) continue;
+    // Quello che c'è davvero in casa, non tagliato: «ne hai 900 e ne servono
+    // 600» è un'informazione, nasconderla no. È solo la copertura a fermarsi.
+    const hoGia = Math.round(scorte.get(id) || 0);
+
+    voci.push({
+      alimentoId: id,
+      nome: a.nome,
+      reparto: a.reparto,
+      serve,
+      hoGia,
+      coperto: Math.min(hoGia, serve),
+      basta: hoGia >= serve,
+    });
+  }
+
+  const ordinati = [...gruppi.reparti]
+    .sort((x, y) => x.ordine - y.ordine)
+    .map((r) => ({
+      ...r,
+      voci: voci
+        .filter((v) => v.reparto === r.id)
+        .sort((x, y) => x.nome.localeCompare(y.nome, 'it')),
+    }))
+    .filter((r) => r.voci.length);
+
+  return {
+    reparti: ordinati,
+    voci,
+    quanti: voci.length,
+    segnati: voci.filter((v) => v.hoGia > 0).length,
+    coperti: voci.filter((v) => v.basta).length,
+  };
 }
 
 /* --- Spunta e dispensa ----------------------------------------------------- */

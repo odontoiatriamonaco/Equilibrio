@@ -148,6 +148,11 @@ export function $$(sel, dove = document) {
 }
 
 /** Numero formattato all'italiana, senza decimali inutili. */
+/** Soldi all'italiana: virgola, due decimali, simbolo in coda. */
+export function euro(valore) {
+  return `${(valore || 0).toFixed(2).replace('.', ',')} €`;
+}
+
 export function num(valore, decimali = 0) {
   if (valore == null || Number.isNaN(valore)) return '—';
   return new Intl.NumberFormat('it-IT', {

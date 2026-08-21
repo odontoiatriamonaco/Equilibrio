@@ -1962,3 +1962,41 @@ body:has(.barra-passo) .guscio {
     padding-bottom: calc(var(--barra-h) + var(--sp-8));
   }
 }
+
+
+/* --- Riga di «cosa hai già» -------------------------------------------------
+   Il gemello della voce di spesa, con una casella al posto della spunta: lì
+   dichiari che l'hai comprato, qui che ce l'hai già.
+   -------------------------------------------------------------------------- */
+
+.riga-avere {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding-block: var(--sp-3);
+  border-bottom: 1px solid var(--bordo);
+}
+
+.riga-avere:last-child { border-bottom: none; }
+
+.riga-avere .nome { flex: 1; min-width: 0; }
+
+.riga-avere .quanti {
+  width: 5.5rem;
+  flex: none;
+  text-align: right;
+  padding: var(--sp-2);
+}
+
+.riga-avere .bottone { flex: none; }
+
+/* Coperto: il tono cala, come la voce di spesa già spuntata. Non è un
+   traguardo, è una cosa in meno da fare. */
+.riga-avere.coperta .nome { color: var(--testo-morbido); }
+.riga-avere.coperta .bottone { color: var(--verde-testo); }
+
+@media (max-width: 26rem) {
+  .riga-avere { flex-wrap: wrap; }
+  .riga-avere .nome { flex-basis: 100%; }
+  .riga-avere .quanti { margin-left: auto; }
+}

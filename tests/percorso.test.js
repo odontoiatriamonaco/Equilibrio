@@ -8,7 +8,7 @@ import { apri, chiudi, creaProfilo, leggi, scrivi } from '../js/store.js';
 import { registraPiattiUtente } from '../js/alimenti.js';
 import { vuote, salvaPreferenze, alternaAllergia } from '../js/preferenze.js';
 import { generaSettimana, inizioSettimana, iso } from '../js/planner.js';
-import { salvaSettimana, salvaSpesa } from '../js/dati.js';
+import { salvaSettimana, salvaSpesa, salvaScorta } from '../js/dati.js';
 import {
   statoPercorso, conSaltato, conChiuso, profiloCompleto, gustiImpostati, PASSI,
 } from '../js/percorso.js';
@@ -46,11 +46,11 @@ describe('a che punto sono', () => {
     const p = await creaProfilo(COMPLETO);
     const s = await statoPercorso(p, LUNEDI);
 
-    expect(s.totale).toBe(4);
+    expect(s.totale).toBe(5);
     expect(s.fatti).toBe(1);
     expect(s.completo).toBe(false);
     expect(s.prossimo.id).toBe('gusti');
-    expect(s.passi.map((x) => x.fatto)).toEqual([true, false, false, false]);
+    expect(s.passi.map((x) => x.fatto)).toEqual([true, false, false, false, false]);
   });
 
   it('un profilo senza misure non ha nemmeno il primo', async () => {
@@ -70,9 +70,13 @@ describe('a che punto sono', () => {
     await menuPer(p.id);
     expect((await statoPercorso(p, LUNEDI)).fatti).toBe(3);
 
+    // Basta una cosa segnata: il passo è «ho guardato negli sportelli».
+    await salvaScorta(p.id, 'pasta-semola', 500);
+    expect((await statoPercorso(p, LUNEDI)).fatti).toBe(4);
+
     await salvaSpesa(p.id, iso(inizioSettimana(LUNEDI)), []);
     const finale = await statoPercorso(p, LUNEDI);
-    expect(finale.fatti).toBe(4);
+    expect(finale.fatti).toBe(5);
     expect(finale.completo).toBe(true);
     expect(finale.prossimo).toBeNull();
   });

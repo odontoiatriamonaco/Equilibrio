@@ -66,6 +66,7 @@ quindi l'uso offline si prova dal sito su Vercel, non da `localhost`.
 |---|---|
 | `/` | Oggi: i pasti del giorno da spuntare, l'anello delle calorie, la fascia della settimana, l'acqua, i prodotti confezionati |
 | `/piano.html` | la settimana, gli scambi, il dialogo dello sgarro con anteprima dal vivo |
+| `/dispensa.html` | cosa hai già in casa, per non ricomprarlo alla prima spesa |
 | `/spesa.html` | lista per reparto, antispreco, dispensa, condivisione con un codice |
 | `/ricette.html` | le 153 pietanze, con ricerca, filtri e l’editor degli ingredienti |
 | `/preferenze.html` | gusti, allergie, tetti settimanali |

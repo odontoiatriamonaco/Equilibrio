@@ -9,7 +9,7 @@
    non puo' indicare una cosa che non c'e' piu'. */
 
 import { caricaPreferenze } from './preferenze.js';
-import { caricaSettimana, caricaSpesa } from './dati.js';
+import { caricaSettimana, caricaSpesa, caricaDispensa } from './dati.js';
 import { inizioSettimana, iso } from './planner.js';
 
 /**
@@ -41,6 +41,14 @@ export const PASSI = [
     azione: 'Genera la settimana',
     dove: '/piano.html',
     saltabile: false,
+  },
+  {
+    id: 'dispensa',
+    titolo: 'Cosa hai già in casa',
+    perche: 'Segna quello che hai già in dispensa e in frigo: la lista comprerà solo quello che manca.',
+    azione: 'Guarda cosa serve',
+    dove: '/dispensa.html',
+    saltabile: true,
   },
   {
     id: 'spesa',
@@ -86,18 +94,23 @@ export async function statoPercorso(profilo, oggi = new Date()) {
   const segue = Boolean(profilo?.seguo);
   const proprietario = profilo?.seguo || profilo?.id;
 
-  const [pref, settimana, spesa] = profilo?.id
+  const [pref, settimana, spesa, scorte] = profilo?.id
     ? await Promise.all([
       caricaPreferenze(profilo.id),
       caricaSettimana(proprietario, oggi),
       caricaSpesa(profilo.id, inizio),
+      caricaDispensa(profilo.id),
     ])
-    : [null, null, null];
+    : [null, null, null, null];
 
   const verifiche = {
     profilo: profiloCompleto(profilo),
     gusti: gustiImpostati(pref),
     settimana: Boolean(settimana),
+    // Basta una cosa segnata: il passo è «ho guardato negli sportelli», non
+    // «ho censito la cucina». Chi la cucina ce l'ha davvero vuota lo dichiara
+    // col pulsante, e vale uguale.
+    dispensa: (scorte || []).length > 0,
     spesa: Boolean(spesa),
   };
 

@@ -1,6 +1,6 @@
 /* Equilibrio — pagina Spesa: la lista per reparto, la dispensa, l'antispreco. */
 
-import { avvia, icona, $, $$, num, condividiTesto } from './guscio.js';
+import { avvia, icona, $, $$, num, euro, condividiTesto } from './guscio.js';
 import { montaBarraPercorso } from './barra-percorso.js';
 import { profiloAttivo } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
@@ -455,10 +455,6 @@ async function copia() {
 async function persisti() {
   await salvaSpesa(profilo.id, settimana.inizio, [...spunte.values()]);
   allineaCondivisa();
-}
-
-function euro(v) {
-  return `${v.toFixed(2).replace('.', ',')} €`;
 }
 
 function formatta(iso) {

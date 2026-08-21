@@ -28,14 +28,14 @@ describe('la barra sotto ogni sezione', () => {
   it('dice a che punto sei, col numero e il titolo', () => {
     const g = guidaPagina(stato(['profilo']), 'gusti');
     expect(g.numero).toBe(2);
-    expect(g.totale).toBe(4);
+    expect(g.totale).toBe(5);
     expect(g.titolo).toBe('Cosa ti piace');
     expect(g.etichetta).toBe('Avanti');
   });
 
   it('sull\u2019ultima sezione che resta dice «Ho finito», non «Avanti»', () => {
     // Fatti tutti tranne la spesa: sono sulla spesa.
-    const g = guidaPagina(stato(['profilo', 'gusti', 'settimana']), 'spesa');
+    const g = guidaPagina(stato(['profilo', 'gusti', 'settimana', 'dispensa']), 'spesa');
     expect(g.ultimo).toBe(true);
     expect(g.etichetta).toBe('Ho finito');
   });
@@ -48,7 +48,7 @@ describe('la barra sotto ogni sezione', () => {
   });
 
   it('non compare a percorso finito: non c\u2019e\u0300 nessun avanti', () => {
-    const tutto = stato(['profilo', 'gusti', 'settimana', 'spesa']);
+    const tutto = stato(['profilo', 'gusti', 'settimana', 'dispensa', 'spesa']);
     expect(tutto.completo).toBe(true);
     expect(guidaPagina(tutto, 'spesa')).toBeNull();
   });
@@ -67,7 +67,7 @@ describe('la barra sotto ogni sezione', () => {
 });
 
 describe('la fine, detta a chi l\u2019ha attraversata', () => {
-  const tutto = stato(['profilo', 'gusti', 'settimana', 'spesa']);
+  const tutto = stato(['profilo', 'gusti', 'settimana', 'dispensa', 'spesa']);
 
   it('non si annuncia a chi non ha mai avuto un passo da fare', () => {
     // E\u0300 il caso di chi usa l\u2019app da mesi: per lui non c\u2019e\u0300 stato nessun
@@ -103,14 +103,14 @@ describe('l\u2019ultimo passo, e come si chiude', () => {
   it('«Ho finito» chiude un passo che si esaurisce nell\u2019averlo visto', () => {
     // La spesa e\u0300 saltabile: aprirla e vederla e\u0300 tutto quello che c\u2019e\u0300 da fare,
     // e di quello non resta traccia da nessuna parte.
-    const g = guidaPagina(stato(['profilo', 'gusti', 'settimana'], { iniziato: true }), 'spesa');
+    const g = guidaPagina(stato(['profilo', 'gusti', 'settimana', 'dispensa'], { iniziato: true }), 'spesa');
     expect(g.conferma).toBe(true);
     expect(g.etichetta).toBe('Ho finito');
   });
 
   it('non chiude un passo che o lo fai o non lo fai', () => {
     // Solo il menu\u0300 manca, e un pulsante non puo\u0300 generarlo al posto tuo.
-    const g = guidaPagina(stato(['profilo', 'gusti', 'spesa'], { iniziato: true }), 'settimana');
+    const g = guidaPagina(stato(['profilo', 'gusti', 'dispensa', 'spesa'], { iniziato: true }), 'settimana');
     expect(g.ultimo).toBe(true);
     expect(g.conferma).toBe(false);
     expect(g.etichetta).toBe('Avanti');
@@ -118,19 +118,19 @@ describe('l\u2019ultimo passo, e come si chiude', () => {
 
   it('appena completato l\u2019ultimo passo la barra resta, per dire «Ho finito»', () => {
     // Senza questo la barra spariva proprio nell\u2019istante in cui finivi.
-    const tutto = stato(['profilo', 'gusti', 'settimana', 'spesa'], { iniziato: true });
+    const tutto = stato(['profilo', 'gusti', 'settimana', 'dispensa', 'spesa'], { iniziato: true });
     const g = guidaPagina(tutto, 'spesa');
     expect(g).not.toBeNull();
     expect(g.etichetta).toBe('Ho finito');
   });
 
   it('annunciata la fine, la barra se ne va', () => {
-    const tutto = stato(['profilo', 'gusti', 'settimana', 'spesa'], { iniziato: true, finito: true });
+    const tutto = stato(['profilo', 'gusti', 'settimana', 'dispensa', 'spesa'], { iniziato: true, finito: true });
     expect(guidaPagina(tutto, 'spesa')).toBeNull();
   });
 
   it('chi non ha mai avuto un passo da fare non la vede mai', () => {
-    const tutto = stato(['profilo', 'gusti', 'settimana', 'spesa'], { iniziato: false });
+    const tutto = stato(['profilo', 'gusti', 'settimana', 'dispensa', 'spesa'], { iniziato: false });
     expect(guidaPagina(tutto, 'spesa')).toBeNull();
   });
 

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cosa hai già — Equilibrio</title>
+  <meta name="description" content="Segna quello che hai già in casa: la lista della spesa comprerà solo quello che manca davvero.">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/componenti.css">
+  <script>
+    try {
+      var t = localStorage.getItem('equilibrio:tema');
+      if (t) document.documentElement.setAttribute('data-tema', t);
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <main class="guscio">
+    <header class="intestazione">
+      <a class="bottone-icona solo-stretto" href="/index.html" aria-label="Indietro">
+        <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#indietro"/></svg>
+      </a>
+      <div style="flex:1; min-width:0">
+        <p class="occhiello">Prima di comprare</p>
+        <h1>Cosa hai già</h1>
+      </div>
+      <a class="bottone-icona" href="/spesa.html" aria-label="Lista della spesa">
+        <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#spesa"/></svg>
+      </a>
+    </header>
+
+    <div class="scheda" id="senza-profilo" hidden>
+      <div class="vuoto">
+        <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#utente"/></svg>
+        <p>Prima serve il profilo.</p>
+        <a class="bottone" href="/profilo.html">Crea il profilo</a>
+      </div>
+    </div>
+
+    <div class="scheda" id="senza-piano" hidden>
+      <div class="vuoto">
+        <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#piano"/></svg>
+        <p>Questo elenco esce dalla settimana:<br>prima si genera il piano.</p>
+        <a class="bottone" href="/piano.html">Vai al piano</a>
+      </div>
+    </div>
+
+    <div id="contenuto">
+      <!-- Perché esiste questo passo, e perché puoi saltarlo. -->
+      <section class="scheda scheda-alta">
+        <p class="occhiello">A che serve</p>
+        <p style="margin-top: var(--sp-2)">
+          In dispensa e in frigo hai già qualcosa: mezzo pacco di pasta, l'olio,
+          il sale, tre uova. Se lo segni qui, <strong>la lista comprerà solo quello
+          che manca davvero</strong> invece di farti ricomprare uno scaffale che
+          avevi già.
+        </p>
+        <p class="piccolo morbido" style="margin-top: var(--sp-3)">
+          Sotto ci sono soltanto gli alimenti che la <em>tua</em> settimana userà —
+          non il catalogo intero. Sono già in ordine di reparto, così puoi girare
+          la cucina una volta sola.
+        </p>
+        <div class="avviso" style="margin-top: var(--sp-3)">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#info"/></svg>
+          <div><strong>Non è obbligatorio.</strong> Se salti, la lista comprerà tutto
+            da zero e va bene lo stesso: quello che avanza finirà in dispensa a fine
+            settimana, e dalla seconda in poi il conto torna da sé. Questo passo serve
+            solo a non sbagliare la <em>prima</em> spesa.</div>
+        </div>
+      </section>
+
+      <div class="scheda scheda-alta" id="conto" style="margin-top: var(--sp-4)"></div>
+
+      <div class="riga non-stampare" style="flex-wrap:wrap; gap: var(--sp-3); margin-block: var(--sp-5)">
+        <button class="bottone bottone-2" id="ho-le-basi">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#dispensa"/></svg>
+          Ho le cose di base
+        </button>
+        <button class="bottone bottone-2" id="azzera">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#cestino"/></svg>
+          Non ho niente
+        </button>
+        <a class="bottone" href="/spesa.html">
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spesa"/></svg>
+          Fai la lista
+        </a>
+      </div>
+
+      <div class="pila" id="elenco"></div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { inizializza } from '/js/pagina-dispensa.js';
+    inizializza();
+  </script>
+</body>
+</html>
