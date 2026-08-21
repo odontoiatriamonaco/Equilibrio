@@ -98,6 +98,35 @@ export async function lenteDi(profiloId) {
 /* --- La settimana come la vede una persona ---------------------------------- */
 
 /**
+ * Marca le voci che per questa persona non vanno, e le elenca.
+ *
+ * Non le toglie: un buco nel piano non si puo' cucinare, e la scelta del
+ * sostituto resta a chi mangia. `nonPerMe` vive solo sulla copia in memoria,
+ * mai su disco.
+ */
+function segnalaNonGraditi(copia, lente) {
+  const avvisi = [];
+  for (const giorno of copia.giorni) {
+    for (const x of vociConChiave(giorno)) {
+      if (x.voce.tipo !== 'piatto') continue;
+      const p = lente.indice.get(x.voce.id);
+      const motivo = p
+        ? motivoEsclusione(lente.preferenze, p)
+        : { tipo: 'assente', testo: 'non è più nel tuo ricettario' };
+      if (!motivo) continue;
+      x.voce.nonPerMe = motivo.testo;
+      avvisi.push({
+        chiave: `${giorno.etichetta}|${x.chiave}`,
+        giorno: giorno.etichetta,
+        nome: p?.nome || x.voce.id,
+        motivo: motivo.testo,
+      });
+    }
+  }
+  return avvisi;
+}
+
+/**
  * @param {object} profilo
  * @param {Date} data
  * @returns {Promise<{settimana:object|null, riferimento:object|null,
@@ -112,9 +141,19 @@ export async function settimanaPer(profilo, data = new Date()) {
   const settimana = await caricaSettimana(proprietario, data);
   if (!settimana) return { settimana: null, riferimento, avvisi: [], inizio };
 
-  // Chi non segue nessuno vede il proprio piano com'e': nessuna derivazione,
-  // nessun costo, nessun comportamento nuovo.
-  if (!riferimento) return { settimana, riferimento: null, avvisi: [], inizio };
+  // Chi non segue nessuno non ha niente da derivare — il piano e' gia' suo — ma
+  // deve sapere lo stesso se dentro c'e' finita una pietanza che nel frattempo
+  // ha escluso. La preferenza vale da quando la si esprime; il piano di adesso
+  // era gia' scritto, e lasciarlo li' senza dire niente vuol dire mostrargli
+  // qualcosa che l'app sa non andargli piu' bene.
+  //
+  // Questo avviso esisteva gia', ma solo per chi seguiva il menu' di un altro:
+  // il caso piu' raro lo riceveva, quello piu' comune no.
+  if (!riferimento) {
+    const copia = structuredClone(settimana);
+    const avvisi = segnalaNonGraditi(copia, await lenteDi(profilo.id));
+    return { settimana: copia, riferimento: null, avvisi, inizio };
+  }
 
   const lente = await lenteDi(profilo.id);
   const pers = await caricaPersonalizzazioni(profilo.id, inizio);
@@ -148,20 +187,7 @@ export async function settimanaPer(profilo, data = new Date()) {
         x.voce.sostituito = true;
       }
 
-      // 2. Quello che per questa persona non va si segnala. Non si toglie:
-      //    un buco nel piano non si puo' cucinare, e la scelta resta a lei.
-      const p = lente.indice.get(x.voce.id);
-      if (x.voce.tipo === 'piatto') {
-        const motivo = p
-          ? motivoEsclusione(lente.preferenze, p)
-          : { tipo: 'assente', testo: 'non è nel tuo ricettario' };
-        if (motivo) {
-          x.voce.nonPerMe = motivo.testo;
-          avvisi.push({ chiave, giorno: giorno.etichetta, nome: p?.nome || x.voce.id, motivo: motivo.testo });
-        }
-      }
-
-      // 3. Le porzioni decise a mano da questa persona vincono sul ricalcolo.
+      // 2. Le porzioni decise a mano da questa persona vincono sul ricalcolo.
       if (scelto.porzioni !== undefined) {
         x.voce.porzioni = scelto.porzioni;
         x.voce.fissata = true;
@@ -178,6 +204,10 @@ export async function settimanaPer(profilo, data = new Date()) {
     });
     applicaRibilanciamento(giorno, esito);
   }
+
+  // Quello che non va si segnala alla fine, con la stessa funzione usata da chi
+  // non segue nessuno: un solo posto dove decidere cosa e' un problema.
+  avvisi.push(...segnalaNonGraditi(copia, lente));
 
   copia.target = energia.fabbisogno.target;
   copia.floor = energia.fabbisogno.floor;

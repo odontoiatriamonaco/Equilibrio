@@ -57,6 +57,8 @@ let diario = null;
 let giorno = null;
 let riferimento = null;
 let pref = null;
+/** Le pietanze del piano che ora non vanno bene: escluse, allergeni, sparite. */
+let avvisiPiano = [];
 
 /* --- Da dove si comincia ----------------------------------------------------
    Compare finché resta un passo da fare, e quando sono tutti fatti se ne va da
@@ -118,11 +120,26 @@ function collegaPercorso() {
 function rendiRiferimento() {
   const nota = $('#nota-riferimento');
   if (!nota) return;
-  nota.hidden = !riferimento;
-  if (!riferimento) return;
-  nota.querySelector('div').innerHTML = `Segui il menù di <strong>${riferimento.nome}</strong>.
-    I piatti sono gli stessi — si cucina una volta sola — ma le porzioni sono le tue,
-    calcolate sul tuo fabbisogno.`;
+
+  const righe = [];
+  if (riferimento) {
+    righe.push(`Segui il menù di <strong>${riferimento.nome}</strong>.
+      I piatti sono gli stessi — si cucina una volta sola — ma le porzioni sono le tue,
+      calcolate sul tuo fabbisogno.`);
+  }
+
+  // Se dopo aver generato il piano hai escluso qualcosa che c'era dentro, qui
+  // lo trovi ancora: il piano non si riscrive da solo. Va detto.
+  const oggi = (avvisiPiano || []).filter((a) => giorno && a.giorno === giorno.etichetta);
+  if (oggi.length) {
+    righe.push(`Oggi ${oggi.length === 1 ? "c'è una pietanza che ora non ti va" : `ci sono ${oggi.length} pietanze che ora non ti vanno`}
+      bene: ${oggi.map((a) => `${a.nome} (${a.motivo})`).join(', ')}.
+      Tocca lo scambio su quella riga per sceglierne un'altra.`);
+  }
+
+  nota.hidden = !righe.length;
+  nota.className = oggi.length ? 'avviso avviso-sgarro' : 'avviso';
+  nota.querySelector('div').innerHTML = righe.join(' ');
 }
 
 function rendiArrivo(arrivo) {
@@ -159,13 +176,15 @@ export async function inizializza() {
   const derivata = await settimanaPer(profilo, oggi);
   settimana = derivata.settimana;
   riferimento = derivata.riferimento;
+  avvisiPiano = derivata.avvisi;
   diario = await caricaDiario(profilo.id, oggi);
-
-  rendiRiferimento();
-  rendiArrivo(arrivo);
 
   const i = settimana ? indiceOggi(settimana, oggi) : -1;
   giorno = i >= 0 ? settimana.giorni[i] : null;
+
+  // Dopo aver stabilito che giorno e', o l'avviso non saprebbe cosa filtrare.
+  rendiRiferimento();
+  rendiArrivo(arrivo);
 
   pref = await caricaPreferenze(profilo.id);
 
@@ -263,7 +282,9 @@ function disegnaPasti() {
           <label class="voce-spesa">
             <input type="checkbox" data-chiave="${chiave}" ${fatte.has(chiave) ? 'checked' : ''}>
             <span class="spunta"></span>
-            <span class="nome">${nomeVoce(voce)}
+            <span class="nome">${nomeVoce(voce)}${voce.nonPerMe
+    ? ` <span class="pillola pillola-sgarro" title="${voce.nonPerMe}">da cambiare</span>`
+    : ''}
               <br><span class="piccolo tenue">
                 ${voce.tipo === 'piatto' ? TIPI[oggetto?.tipo] || '' : 'Pane'}
                 · ${num(valoriVoce(voce).kcal)} kcal

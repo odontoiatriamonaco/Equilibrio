@@ -9,6 +9,7 @@ import {
   piatti, piattiScartati, alimenti, alimento, gruppi, iconaPiatto, TIPI,
   iconaAlimento, famigliaCibo,
 } from './alimenti.js';
+import { settimanaPer } from './famiglia.js';
 import {
   caricaPreferenze, salvaPreferenze, gustoPiatto, gustoAlimento, eAllergene,
   motivoEsclusione, imposta, alternaAllergia, impostaTetto,
@@ -189,6 +190,34 @@ async function cambia(tipo, id, valore) {
   disegnaRiepilogo();
 }
 
+/**
+ * Il piano di questa settimana non si riscrive quando cambi un gusto — e non
+ * deve: rigenerarlo butterebbe via gli scambi fatti, le quantità corrette a mano
+ * e gli sgarri prenotati. Ma quello che hai appena escluso può essere già lì
+ * dentro, e scoprirlo mercoledì a pranzo è peggio che saperlo adesso.
+ */
+async function aggiornaNotaPiano() {
+  const dove = $('#nota-piano');
+  if (!dove || !profilo) return;
+
+  const { settimana, avvisi } = await settimanaPer(profilo);
+  if (!settimana || !avvisi.length) { dove.innerHTML = ''; return; }
+
+  const quante = avvisi.length;
+  dove.innerHTML = `
+    <div class="avviso avviso-sgarro" style="margin-top:var(--sp-4)">
+      ${icona('avviso', 'icona icona-sm')}
+      <div>Nel piano di <strong>questa settimana</strong>
+        ${quante === 1 ? "c'è ancora una pietanza" : `ci sono ancora ${quante} pietanze`}
+        che ora ${quante === 1 ? 'non ti va' : 'non ti vanno'} bene:
+        ${avvisi.slice(0, 3).map((a) => a.nome).join(', ')}${quante > 3 ? ' e altre' : ''}.
+        Le scelte di qui valgono da adesso in avanti, non su quello che è già
+        scritto. <a href="/piano.html">Vai al piano</a> e scambiale una a una,
+        oppure rigenera la settimana — sapendo che rigenerando si perdono gli
+        scambi già fatti e gli sgarri prenotati.</div>
+    </div>`;
+}
+
 /* --- Tetti settimanali ----------------------------------------------------- */
 
 function disegnaTetti() {
@@ -247,7 +276,10 @@ function disegnaRiepilogo() {
         ${r.allergie === 1 ? 'Un alimento è segnato' : `${r.allergie} alimenti sono segnati`}
         come allergia: sono esclusioni dure, non preferenze, e non verranno mai
         proposti in nessun piatto.</p>` : ''}
-    ${rendiOmissioni()}`;
+    ${rendiOmissioni()}
+    <div id="nota-piano"></div>`;
+
+  aggiornaNotaPiano();
 }
 
 /**

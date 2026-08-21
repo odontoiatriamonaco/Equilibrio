@@ -158,21 +158,29 @@ function rendiAvvio() {
  */
 function rendiRiferimento() {
   const nota = $('#nota-riferimento');
-  nota.hidden = !riferimento;
-  if (!riferimento) return;
+  const righe = [];
 
-  const righe = [`Segui il menù di <strong>${riferimento.nome}</strong>: gli stessi piatti,
-    con le porzioni calcolate sul tuo fabbisogno.`];
-
-  if (avvisiFamiglia.length) {
-    const quanti = avvisiFamiglia.length;
-    righe.push(`<strong>${quanti} ${quanti === 1 ? 'pietanza' : 'pietanze'}</strong>
-      ${quanti === 1 ? 'non va' : 'non vanno'} bene per te: ${
-  avvisiFamiglia.slice(0, 3).map((a) => `${a.nome} (${a.motivo})`).join(', ')
-}${quanti > 3 ? ' e altre' : ''}. Tocca lo scambio su quella riga per sceglierne un'altra:
-      cambia solo nel tuo piatto.`);
+  if (riferimento) {
+    righe.push(`Segui il menù di <strong>${riferimento.nome}</strong>: gli stessi piatti,
+      con le porzioni calcolate sul tuo fabbisogno.`);
   }
 
+  // Vale per tutti, non solo per chi segue: se dopo aver generato il piano hai
+  // escluso una pietanza che c'era dentro, il piano non si riscrive da solo —
+  // buttarebbe via scambi, quantità corrette a mano e sgarri prenotati — ma
+  // l'app te lo deve dire invece di mostrartela come se niente fosse.
+  if (avvisiFamiglia.length) {
+    const quanti = avvisiFamiglia.length;
+    const elenco = avvisiFamiglia.slice(0, 3).map((a) => `${a.nome} (${a.motivo})`).join(', ');
+    righe.push(`In questa settimana ${quanti === 1 ? "c'è" : 'ci sono'}
+      <strong>${quanti} ${quanti === 1 ? 'pietanza' : 'pietanze'}</strong> che ora
+      ${quanti === 1 ? 'non ti va' : 'non ti vanno'} bene: ${elenco}${quanti > 3 ? ' e altre' : ''}.
+      Tocca lo scambio su quella riga per sceglierne un'altra${riferimento
+    ? ': cambia solo nel tuo piatto.'
+    : ', oppure rigenera la settimana — ma rigenerando si perdono gli scambi già fatti, le quantità corrette a mano e gli sgarri prenotati.'}`);
+  }
+
+  nota.hidden = !righe.length;
   nota.className = avvisiFamiglia.length ? 'avviso avviso-sgarro' : 'avviso';
   nota.querySelector('div').innerHTML = righe.join(' ');
 }
@@ -412,7 +420,7 @@ function rigaVoce(voce, giorno, pasto, indice) {
   // La pillola resta corta per stare in riga, ma «73 g» da solo non dice di
   // cosa: il nome per esteso va a chi legge con lo schermo e a chi passa sopra.
   const etichetta = voce.nonPerMe
-    ? `<span class="pillola pillola-sgarro" title="${voce.nonPerMe}">non per te</span>`
+    ? `<span class="pillola pillola-sgarro" title="${voce.nonPerMe}">da cambiare</span>`
     : guida
       ? `<span class="pillola pillola-dato num" title="${guida.alimento.nome}">
            ${num(guida.grammi)} g<span class="solo-lettori"> di ${guida.alimento.nome.toLowerCase()}</span>

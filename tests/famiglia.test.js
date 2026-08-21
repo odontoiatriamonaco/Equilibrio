@@ -15,7 +15,7 @@ import { vuote, alternaAllergia, imposta, salvaPreferenze } from '../js/preferen
 import { alternativePiatto } from '../js/scambi.js';
 import { generaSettimana, inizioSettimana, kcalGiorno, tutteLeVoci } from '../js/planner.js';
 import { riepilogo as riepilogoEnergia } from '../js/energia.js';
-import { salvaSettimana } from '../js/dati.js';
+import { salvaSettimana, caricaSettimana } from '../js/dati.js';
 import { aggregaFamiglia, aggregaSettimana } from '../js/spesa.js';
 import {
   settimanaPer, possibiliRiferimenti, tavola, salvaPersonalizzazione,
@@ -451,5 +451,73 @@ describe('reimportare lo stesso profilo', () => {
     // reimportandolo si riconosce ancora, invece di moltiplicarsi.
     const gemello = await gemelloDi(await esportaFascicolo(primo.id));
     expect(gemello).not.toBeNull();
+  });
+});
+
+describe('chi non segue nessuno viene avvisato lo stesso', () => {
+  // Il piano non si riscrive quando cambi un gusto — rigenerarlo butterebbe via
+  // scambi, quantità corrette a mano e sgarri prenotati. Ma l'app deve DIRE che
+  // dentro c'è finito qualcosa che nel frattempo hai escluso. Prima questo
+  // avviso lo riceveva solo chi seguiva il menù di un altro: il caso più raro.
+  it('una pietanza esclusa dopo la generazione viene segnalata', async () => {
+    const p = await creaProfilo({
+      nome: 'Sola', sesso: 'donna', pesoKg: 68, altezzaCm: 165,
+      dataNascita: '1985-01-20', attivita: 'leggera',
+    });
+
+    const s = generaSettimana({
+      target: 1600, floor: 1400, preferenze: vuote(p.id), mese: 8, seme: 5,
+      inizio: inizioSettimana(new Date()),
+    });
+    await salvaSettimana(p.id, s);
+
+    const dentro = s.giorni
+      .flatMap((g) => Object.values(g.pasti).flat())
+      .find((v) => v.tipo === 'piatto').id;
+
+    // Senza esclusioni non si avvisa di niente: un avviso che c'è sempre
+    // insegna a non leggere gli avvisi.
+    const prima = await settimanaPer(p);
+    expect(prima.avvisi).toEqual([]);
+    expect(prima.riferimento).toBe(null);
+
+    let pref = vuote(p.id);
+    pref = imposta(pref, 'piatti', dentro, 'escluso');
+    await salvaPreferenze(pref);
+
+    const dopo = await settimanaPer(p);
+    expect(dopo.avvisi.length).toBeGreaterThan(0);
+    expect(dopo.avvisi[0].motivo).toMatch(/esclus/);
+
+    // La voce è marcata, ma NON tolta: un buco non si può cucinare.
+    const voci = dopo.settimana.giorni
+      .flatMap((g) => Object.values(g.pasti).flat())
+      .filter((v) => v.id === dentro);
+    expect(voci.length).toBeGreaterThan(0);
+    expect(voci.every((v) => v.nonPerMe)).toBe(true);
+  });
+
+  it('la marcatura non finisce su disco', async () => {
+    // `nonPerMe` vive solo sulla copia in memoria: se si salvasse, resterebbe
+    // appiccicata anche dopo aver rimesso la pietanza in gioco.
+    const p = await creaProfilo({
+      nome: 'Sola', sesso: 'donna', pesoKg: 68, altezzaCm: 165,
+      dataNascita: '1985-01-20', attivita: 'leggera',
+    });
+    const s = generaSettimana({
+      target: 1600, floor: 1400, preferenze: vuote(p.id), mese: 8, seme: 5,
+      inizio: inizioSettimana(new Date()),
+    });
+    await salvaSettimana(p.id, s);
+    const dentro = s.giorni.flatMap((g) => Object.values(g.pasti).flat())
+      .find((v) => v.tipo === 'piatto').id;
+
+    await salvaPreferenze(imposta(vuote(p.id), 'piatti', dentro, 'escluso'));
+    await settimanaPer(p);
+
+    const salvata = await caricaSettimana(p.id, new Date());
+    const marcate = salvata.giorni.flatMap((g) => Object.values(g.pasti).flat())
+      .filter((v) => v.nonPerMe);
+    expect(marcate).toEqual([]);
   });
 });
