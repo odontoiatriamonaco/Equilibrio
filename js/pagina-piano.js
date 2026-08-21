@@ -5,7 +5,8 @@ import { profiloAttivo, profili, origineDi } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import { riepilogo as riepilogoEnergia } from './energia.js';
 import {
-  settimanaPer, salvaPersonalizzazione, salvaSgarriPersonali, salvaRigidiPersonali, lenteDi, settimaneDellaTavola,
+  settimanaPer, salvaPersonalizzazione, salvaSgarriPersonali, salvaRigidiPersonali,
+  recuperaSgarriOrfani, lenteDi, settimaneDellaTavola,
 } from './famiglia.js';
 import {
   allinea, porzioniDellaTavola, pubblicaMenu, spazioLocale, leggiSpazio,
@@ -66,6 +67,10 @@ export async function inizializza() {
   await caricaRicettario(profilo.id);
   pref = await caricaPreferenze(profilo.id);
 
+  // Gli sgarri finiti nell'archivio sbagliato prima della correzione tornano
+  // al loro posto: una volta sola, e prima di leggere la settimana.
+  const ripescati = await recuperaSgarriOrfani(profilo);
+
   // Prima di disegnare: se dallo spazio famiglia è arrivato un menù nuovo va
   // messo in casa adesso, o si guarderebbe la settimana scorsa.
   const arrivo = await allinea(profilo);
@@ -117,6 +122,12 @@ export async function inizializza() {
   $('#sgarro-pasto').addEventListener('change', aggiornaAnteprimaSgarro);
 
   disegna();
+  if (ripescati.recuperati > 0) {
+    $('#nota-recupero').hidden = false;
+    $('#nota-recupero div').innerHTML = `Ho ritrovato <strong>${ripescati.recuperati} ${
+      ripescati.recuperati === 1 ? 'sgarro' : 'sgarri'}</strong> che si erano persi `
+      + 'al ricaricamento. Sono di nuovo nella settimana, al loro posto.';
+  }
   rendiArrivo(arrivo);
   if (arrivo.spazio) await rendiProposte(arrivo.spazio);
 

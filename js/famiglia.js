@@ -18,7 +18,7 @@ import {
   ribilanciaGiorno, applicaRibilanciamento, vociConChiave, inizioSettimana, iso,
   conteggiSettimana,
 } from './planner.js';
-import { applicaSgarri } from './sgarro.js';
+import { applicaSgarri, elencoSgarri } from './sgarro.js';
 
 /* --- Il legame ------------------------------------------------------------- */
 
@@ -83,6 +83,39 @@ export async function caricaPersonalizzazioni(profiloId, inizio) {
 export async function salvaSgarriPersonali(profiloId, inizio, sgarri) {
   const p = await caricaPersonalizzazioni(profiloId, inizio);
   return scrivi('personalizzazioni', { ...p, sgarri });
+}
+
+/**
+ * Ripesca gli sgarri finiti nell'archivio sbagliato, una volta sola.
+ *
+ * Finché la pagina salvava con `salvaSettimana(profilo.id)`, gli sgarri di chi
+ * segue un menù venivano scritti sotto il PROPRIO id — dove nessuno andava mai
+ * a rileggerli. Non sono andati persi: sono ancora lì. Invece di far riscrivere
+ * a mano la pizza di sabato, la si va a riprendere.
+ *
+ * Il segno `recuperoFatto` serve a non farlo due volte: senza, uno sgarro
+ * cancellato apposta risorgerebbe dall'archivio orfano alla riapertura dopo.
+ * Niente viene cancellato — quella settimana resta dov'è, per sicurezza.
+ */
+export async function recuperaSgarriOrfani(profilo, data = new Date()) {
+  const riferimento = await riferimentoDi(profilo);
+  if (!riferimento) return { recuperati: 0 };
+
+  const inizio = iso(inizioSettimana(data));
+  const pers = await caricaPersonalizzazioni(profilo.id, inizio);
+  if (pers.recuperoFatto) return { recuperati: 0 };
+
+  const orfana = await caricaSettimana(profilo.id, data);
+  const sgarri = orfana ? elencoSgarri(orfana) : [];
+  const rigidi = orfana ? orfana.giorni.map((g) => Boolean(g.rigido)) : [];
+
+  await scrivi('personalizzazioni', {
+    ...pers,
+    recuperoFatto: true,
+    sgarri: pers.sgarri?.length ? pers.sgarri : sgarri,
+    rigidi: pers.rigidi?.length ? pers.rigidi : (rigidi.some(Boolean) ? rigidi : []),
+  });
+  return { recuperati: pers.sgarri?.length ? 0 : sgarri.length };
 }
 
 /** I giorni che questa persona ha reso rigidi: anche quelli sono suoi. */

@@ -14,8 +14,9 @@ import { riepilogo as riepilogoEnergia } from '../js/energia.js';
 import { salvaSettimana } from '../js/dati.js';
 import {
   settimanaPer, salvaSgarriPersonali, salvaRigidiPersonali, caricaPersonalizzazioni,
+  recuperaSgarriOrfani,
 } from '../js/famiglia.js';
-import { elencoSgarri } from '../js/sgarro.js';
+import { elencoSgarri, applicaSgarri } from '../js/sgarro.js';
 
 async function pulisci() {
   await chiudi();
@@ -116,5 +117,52 @@ describe('lo sgarro di chi segue non sparisce al ricaricamento', () => {
     const dopo = await caricaPersonalizzazioni(g.id, INIZIO);
     expect(dopo.voci).toEqual({});
     expect(dopo.sgarri).toHaveLength(1);
+  });
+});
+
+describe('il recupero di quelli gia\u0300 persi', () => {
+  beforeEach(pulisci);
+
+  it('ripesca gli sgarri scritti nell\u0027archivio sbagliato', async () => {
+    const { g } = await famiglia();
+    // Il percorso vecchio: la settimana con lo sgarro salvata sotto il PROPRIO id.
+    const mia = (await settimanaPer(g, LUNEDI)).settimana;
+    const conSgarro = applicaSgarri(mia, [
+      { id: 'x', giorno: 5, kcal: 850, etichetta: 'Pizza margherita', pasto: 'cena', sostituisce: true, modo: 'prima' },
+      { id: 'y', giorno: 5, kcal: 420, etichetta: 'Sfogliatella riccia', pasto: 'spuntino-pomeriggio', sostituisce: false, modo: 'prima' },
+    ]);
+    conSgarro.giorni[1].rigido = true;
+    await salvaSettimana(g.id, conSgarro);
+
+    // Prima del recupero: persi.
+    expect(elencoSgarri((await settimanaPer(g, LUNEDI)).settimana)).toHaveLength(0);
+
+    const esito = await recuperaSgarriOrfani(g, LUNEDI);
+    expect(esito.recuperati).toBe(2);
+
+    const dopo = (await settimanaPer(g, LUNEDI)).settimana;
+    expect(elencoSgarri(dopo).map((s) => s.etichetta).sort())
+      .toEqual(['Pizza margherita', 'Sfogliatella riccia']);
+    expect(dopo.giorni[1].rigido).toBe(true);
+  });
+
+  it('non risorge uno sgarro cancellato apposta', async () => {
+    const { g } = await famiglia();
+    const mia = (await settimanaPer(g, LUNEDI)).settimana;
+    await salvaSettimana(g.id, applicaSgarri(mia, [
+      { id: 'x', giorno: 5, kcal: 850, etichetta: 'Pizza', pasto: 'cena', sostituisce: true, modo: 'prima' },
+    ]));
+
+    expect((await recuperaSgarriOrfani(g, LUNEDI)).recuperati).toBe(1);
+    // Lo tolgo a mano, come farebbe il cestino.
+    await salvaSgarriPersonali(g.id, INIZIO, []);
+    // Riapro la pagina: il recupero non deve rifarlo tornare.
+    expect((await recuperaSgarriOrfani(g, LUNEDI)).recuperati).toBe(0);
+    expect(elencoSgarri((await settimanaPer(g, LUNEDI)).settimana)).toHaveLength(0);
+  });
+
+  it('non tocca chi non segue nessuno', async () => {
+    const { c } = await famiglia();
+    expect((await recuperaSgarriOrfani(c, LUNEDI)).recuperati).toBe(0);
   });
 });
