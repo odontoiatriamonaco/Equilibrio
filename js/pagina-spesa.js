@@ -1,6 +1,7 @@
 /* Equilibrio — pagina Spesa: la lista per reparto, la dispensa, l'antispreco. */
 
 import { avvia, icona, $, $$, num, condividiTesto } from './guscio.js';
+import { montaBarraPercorso } from './barra-percorso.js';
 import { profiloAttivo } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import {
@@ -74,6 +75,9 @@ export async function inizializza() {
   $('#manda-codice').addEventListener('click', mandaCodice);
 
   ricostruisci();
+  // Il filo verso il passo dopo: c'e' solo finche' il percorso e' aperto.
+  await montaBarraPercorso(profilo, 'spesa');
+
 }
 
 /* --- Condivisione col codice ----------------------------------------------- */

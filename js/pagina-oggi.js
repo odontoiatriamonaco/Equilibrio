@@ -13,7 +13,9 @@ import {
 } from './spazio-famiglia.js';
 import { caricaPreferenze } from './preferenze.js';
 import { alternativePiatto, scambiaPiatto } from './scambi.js';
-import { statoPercorso, conSaltato, conChiuso } from './percorso.js';
+import {
+  statoPercorso, conSaltato, conChiuso, conFinito, conIniziato, fineDaDire,
+} from './percorso.js';
 import {
   kcalGiorno, indiceOggi, iso,
   ribilanciaGiorno, applicaRibilanciamento, vociConChiave,
@@ -74,6 +76,15 @@ async function rendiPercorso() {
   const daMostrare = !stato.completo && !stato.chiuso;
   scheda.hidden = !daMostrare;
   riapri.hidden = stato.completo || !stato.chiuso;
+
+  // Chi ha ancora un passo da fare sta attraversando il percorso: va segnato
+  // adesso, o alla fine non si saprebbe a chi annunciarla.
+  if (!stato.completo && !profilo?.percorso?.iniziato) {
+    profilo = conIniziato(profilo);
+    await scrivi('profili', profilo);
+  }
+
+  $('#percorso-finito').hidden = !fineDaDire(profilo, stato);
   if (!daMostrare) return;
 
   $('#percorso-conta').textContent = `${stato.fatti} di ${stato.totale}`;
@@ -105,6 +116,11 @@ async function rendiPercorso() {
 function collegaPercorso() {
   $('#chiudi-percorso').addEventListener('click', async () => {
     profilo = conChiuso(profilo, true);
+    await scrivi('profili', profilo);
+    await rendiPercorso();
+  });
+  $('#chiudi-finito').addEventListener('click', async () => {
+    profilo = conFinito(profilo, true);
     await scrivi('profili', profilo);
     await rendiPercorso();
   });

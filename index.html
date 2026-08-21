@@ -154,6 +154,28 @@
         </p>
       </section>
 
+      <!-- La fine, detta una volta sola: il percorso non deve sparire in
+           silenzio, che somiglia troppo a un guasto. -->
+      <section class="scheda scheda-alta percorso-finito" id="percorso-finito" hidden>
+        <div class="riga" style="gap: var(--sp-3); align-items: flex-start">
+          <span class="sigillo">
+            <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#spunta"/></svg>
+          </span>
+          <div style="flex:1; min-width:0">
+            <p class="occhiello">Ci siamo</p>
+            <h2 style="margin: 0 0 var(--sp-2)">Hai finito i primi passi</h2>
+            <p class="piccolo morbido" style="margin:0">
+              Da qui in poi l'app lavora da sola: il menù si rigenera ogni settimana,
+              la spesa esce dal piano. Il resto — lo sgarro, la famiglia, il diario —
+              si scopre quando serve, e <a href="/guida.html">la guida</a> lo spiega.
+            </p>
+          </div>
+          <button class="bottone-icona" id="chiudi-finito" aria-label="Ho letto">
+            <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#chiudi"/></svg>
+          </button>
+        </div>
+      </section>
+
       <p class="piccolo tenue" id="riapri-percorso" hidden style="margin-bottom: var(--sp-4)">
         <a href="#" id="mostra-percorso">Rivedi i primi passi</a>
       </p>

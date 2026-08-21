@@ -3,6 +3,7 @@
    a perdere il lavoro. */
 
 import { avvia, icona, $, $$, num } from './guscio.js';
+import { montaBarraPercorso } from './barra-percorso.js';
 import { profiloAttivo } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import {
@@ -53,6 +54,9 @@ export async function inizializza() {
   disegnaTetti();
   disegnaElenco();
   disegnaRiepilogo();
+  // Il filo verso il passo dopo: c'e' solo finche' il percorso e' aperto.
+  await montaBarraPercorso(profilo, 'gusti');
+
 }
 
 /* --- Elenco dei gusti ------------------------------------------------------ */
@@ -180,6 +184,7 @@ async function cambia(tipo, id, valore) {
   const nuovo = attuale === valore ? 'neutro' : valore;
   pref = imposta(pref, tipo, id, nuovo);
   await salvaPreferenze(pref);
+  await montaBarraPercorso(profilo, 'gusti');
 
   // Togliere un alimento cambia i piatti, non solo una preferenza: il
   // ricettario va rifatto perche' i valori tornino giusti subito.
@@ -335,6 +340,7 @@ function salva() {
   $('#stato-salvataggio').textContent = '';
   attesaSalvataggio = setTimeout(async () => {
     await salvaPreferenze(pref);
+    await montaBarraPercorso(profilo, 'gusti');
     $('#stato-salvataggio').textContent = 'Salvato';
     setTimeout(() => { $('#stato-salvataggio').textContent = ''; }, 1600);
   }, 400);

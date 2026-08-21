@@ -1,6 +1,7 @@
 /* Equilibrio — pagina del profilo: raccolta dati, riepilogo dal vivo, salvataggio. */
 
 import { $, num, avvia } from './guscio.js';
+import { montaBarraPercorso } from './barra-percorso.js';
 import {
   riepilogo, LAF, BANDIERE, RITMI, ritmoDi, AVVIO_SETTIMANE,
   margineDisponibile, bmrMifflin, tdee as calcolaTdee, eta,
@@ -306,7 +307,12 @@ async function salva() {
   let messaggio;
 
   if (profilo) {
-    await scrivi('profili', { ...profilo, ...dati });
+    // Anche in memoria, non solo in archivio: quello che resta qui e' il profilo
+    // su cui ragionano l'intestazione e la barra dei primi passi. Senza, dopo un
+    // salvataggio dicevano ancora le cose di prima — un nome vecchio, un passo
+    // «da fare» su una pagina appena compilata.
+    profilo = { ...profilo, ...dati };
+    await scrivi('profili', profilo);
     messaggio = `«${dati.nome}» salvato su questo dispositivo.`;
   } else {
     profilo = await creaProfilo(dati);
@@ -321,6 +327,9 @@ async function salva() {
   esito.className = 'avviso avviso-ok';
   esito.innerHTML = `${messaggio} <a href="/impostazioni.html">Tutti i profili</a>`;
   aggiornaIntestazione();
+  // Il passo e' appena diventato fatto: la barra si rilegge, o resterebbe a
+  // dire «da fare» su una pagina che hai appena compilato.
+  await montaBarraPercorso(profilo, 'profilo');
 }
 
 /* --- Intestazione ---------------------------------------------------------- */
@@ -385,4 +394,7 @@ export async function inizializza() {
   $('#modulo').addEventListener('change', aggiorna);
   $('#salva').addEventListener('click', salva);
   aggiorna();
+  // Il filo verso il passo dopo: c'e' solo finche' il percorso e' aperto.
+  await montaBarraPercorso(profilo, 'profilo');
+
 }

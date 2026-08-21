@@ -73,11 +73,11 @@ export async function caricaPersonalizzazioni(profiloId, inizio) {
 }
 
 /**
- * Gli sgarri di chi segue il menù di un altro.
+ * Gli sgarri di chi segue il menù di un altro.
  *
- * Non stanno nella settimana: quella è di chi cucina, e chi segue la rilegge
- * derivata a ogni apertura. Scrivendoli lì sparivano al primo ricaricamento —
- * salvati in un posto che per lui non viene mai riletto. La pizza di sabato è
+ * Non stanno nella settimana: quella è di chi cucina, e chi segue la rilegge
+ * derivata a ogni apertura. Scrivendoli lì sparivano al primo ricaricamento —
+ * salvati in un posto che per lui non viene mai riletto. La pizza di sabato è
  * sua, come lo sono gli scambi, quindi vive nello stesso strato personale.
  */
 export async function salvaSgarriPersonali(profiloId, inizio, sgarri) {
@@ -88,14 +88,14 @@ export async function salvaSgarriPersonali(profiloId, inizio, sgarri) {
 /**
  * Ripesca gli sgarri finiti nell'archivio sbagliato, una volta sola.
  *
- * Finché la pagina salvava con `salvaSettimana(profilo.id)`, gli sgarri di chi
- * segue un menù venivano scritti sotto il PROPRIO id — dove nessuno andava mai
- * a rileggerli. Non sono andati persi: sono ancora lì. Invece di far riscrivere
+ * Finché la pagina salvava con `salvaSettimana(profilo.id)`, gli sgarri di chi
+ * segue un menù venivano scritti sotto il PROPRIO id — dove nessuno andava mai
+ * a rileggerli. Non sono andati persi: sono ancora lì. Invece di far riscrivere
  * a mano la pizza di sabato, la si va a riprendere.
  *
  * Il segno `recuperoFatto` serve a non farlo due volte: senza, uno sgarro
  * cancellato apposta risorgerebbe dall'archivio orfano alla riapertura dopo.
- * Niente viene cancellato — quella settimana resta dov'è, per sicurezza.
+ * Niente viene cancellato — quella settimana resta dov'è, per sicurezza.
  */
 export async function recuperaSgarriOrfani(profilo, data = new Date()) {
   const riferimento = await riferimentoDi(profilo);
@@ -281,9 +281,9 @@ export async function settimanaPer(profilo, data = new Date()) {
   copia.floor = energia.fabbisogno.floor;
   copia.derivataDa = riferimento.id;
 
-  // I giorni rigidi e gli sgarri sono miei, non del menù: si rimettono qui,
-  // dopo la calibrazione e sul mio bersaglio. Il rigido prima, perché decide
-  // dove il recupero può andare a prendere le calorie.
+  // I giorni rigidi e gli sgarri sono miei, non del menù: si rimettono qui,
+  // dopo la calibrazione e sul mio bersaglio. Il rigido prima, perché decide
+  // dove il recupero può andare a prendere le calorie.
   copia.giorni.forEach((g, i) => { g.rigido = Boolean(pers.rigidi?.[i]); });
   const miei = (pers.sgarri || []).filter((s) => s.giorno >= 0 && s.giorno < copia.giorni.length);
   const finale = miei.length ? applicaSgarri(copia, miei) : copia;

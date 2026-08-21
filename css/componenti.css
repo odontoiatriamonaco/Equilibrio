@@ -1896,3 +1896,69 @@
 
 .tabella td.num,
 .tabella th.num { text-align: right; }
+
+
+/* --- Il filo fra le sezioni dei primi passi ---------------------------------
+   Sta sopra la navigazione, non al suo posto: le due barre dicono cose diverse
+   — una dove puoi andare, l'altra dove stai andando. Sparisce da sola quando il
+   percorso e' finito, quindi non ruba spazio a chi l'app la usa da mesi.
+   -------------------------------------------------------------------------- */
+
+.barra-passo {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--barra-h) + env(safe-area-inset-bottom));
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  background: color-mix(in srgb, var(--accento-tenue) 92%, var(--superficie));
+  border-top: 1px solid var(--bordo);
+  box-shadow: 0 -6px 20px -12px rgb(0 0 0 / 0.28);
+}
+
+.barra-passo .dove {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.barra-passo .conta {
+  font-size: var(--t-xs);
+  color: var(--testo-tenue);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.barra-passo .titolo {
+  font-weight: 600;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barra-passo .titolo .icona { color: var(--verde-testo); vertical-align: -2px; }
+
+.barra-passo .bottone { flex: none; }
+
+/* La pagina si allunga di una barra, o l'ultima riga finisce sotto. */
+body:has(.barra-passo) .guscio {
+  padding-bottom: calc(var(--barra-h) * 2 + env(safe-area-inset-bottom) + var(--sp-6));
+}
+
+@media (min-width: 64rem) {
+  .barra-passo {
+    left: var(--rail-l);
+    bottom: 0;
+    padding-inline: var(--sp-6);
+  }
+
+  body:has(.barra-passo) .guscio {
+    padding-bottom: calc(var(--barra-h) + var(--sp-8));
+  }
+}

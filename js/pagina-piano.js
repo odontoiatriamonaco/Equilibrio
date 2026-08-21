@@ -1,6 +1,7 @@
 /* Equilibrio — pagina Piano: la settimana, gli scambi, lo sgarro. */
 
 import { avvia, icona, $, $$, num } from './guscio.js';
+import { montaBarraPercorso } from './barra-percorso.js';
 import { profiloAttivo, profili, origineDi } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import { riepilogo as riepilogoEnergia } from './energia.js';
@@ -138,6 +139,9 @@ export async function inizializza() {
     // L'indirizzo torna pulito: ricaricando non si riapre a sorpresa.
     history.replaceState(null, '', location.pathname);
   }
+  // Il filo verso il passo dopo: c'e' solo finche' il percorso e' aperto.
+  await montaBarraPercorso(profilo, 'settimana');
+
 }
 
 /* --- Generazione ----------------------------------------------------------- */
@@ -151,7 +155,7 @@ export async function inizializza() {
  * quando nasce, quindi il risultato è un giorno sano, non un giorno rattoppato.
  */
 async function scriviSgarri(elenco) {
-  // Chi segue il menù di un altro non possiede la settimana: la rilegge
+  // Chi segue il menù di un altro non possiede la settimana: la rilegge
   // derivata a ogni apertura. I suoi sgarri vanno quindi nello strato
   // personale, dov'e' gia' scritto tutto quello che riguarda solo lui —
   // scrivendoli nella settimana finivano in un archivio che per lui non viene
@@ -263,6 +267,7 @@ async function rigenera() {
   await salvaSettimana(profilo.id, settimana);
   divisione = await preparaDivisione();
   disegna();
+  await montaBarraPercorso(profilo, 'settimana');
 
   // Chi ha aperto lo spazio ha appena cambiato la cena a tutta la famiglia:
   // il menù parte subito, senza un secondo pulsante da ricordarsi di premere.
