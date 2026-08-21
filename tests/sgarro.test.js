@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import {
   calcolaRecupero, applicaRecupero, slittamentoTraguardo, grammiEquivalenti,
-  racconta, TAGLIO_MAX,
+  racconta, TAGLIO_MAX, extraNetto,
 } from '../js/sgarro.js';
 import { generaSettimana, kcalGiorno, tutteLeVoci } from '../js/planner.js';
 import { vuote } from '../js/preferenze.js';
+import { valoriVoce } from '../js/alimenti.js';
 
 const TARGET = 1700;
 const FLOOR = 1300;
@@ -209,5 +210,76 @@ describe('applicazione al piano vero', () => {
 
   it('non modifica la settimana di partenza', () => {
     expect(settimana.giorni[0].stato).toBeUndefined();
+  });
+});
+
+describe('lo sgarro in aggiunta o al posto di un pasto', () => {
+  // Una sfogliatella si somma alla colazione. Una pizza al posto della cena no:
+  // quella cena non la mangi, e farla recuperare vuol dire togliere calorie
+  // agli altri giorni per un pasto che non è mai stato fatto. Misurato prima
+  // della correzione: 680 kcal di recupero chiesto per niente.
+  function giornoFinto() {
+    return {
+      etichetta: 'sab',
+      pasti: {
+        colazione: [{ tipo: 'alimento', id: 'mela', porzioni: 1 }],
+        pranzo: [{ tipo: 'piatto', id: 'pasta-ceci', porzioni: 1 }],
+        cena: [{ tipo: 'piatto', id: 'genovese', porzioni: 1 }],
+      },
+    };
+  }
+
+  it('in aggiunta pesa tutto', () => {
+    expect(extraNetto(giornoFinto(), 850, null)).toBe(850);
+  });
+
+  it('al posto di un pasto pesa solo la differenza', () => {
+    const g = giornoFinto();
+    const cena = Math.round(g.pasti.cena.reduce((a, v) => a + valoriVoce(v).kcal, 0));
+    expect(extraNetto(g, 850, 'cena')).toBe(Math.max(0, 850 - cena));
+    // E deve essere davvero meno di quanto peserebbe in aggiunta.
+    expect(extraNetto(g, 850, 'cena')).toBeLessThan(850);
+  });
+
+  it('se lo sgarro pesa meno del pasto non c\'è niente da recuperare', () => {
+    // Una pizza più leggera della cena che sostituisce: quel giorno hai
+    // mangiato meno del previsto, e va bene così. Mai un numero negativo.
+    expect(extraNetto(giornoFinto(), 50, 'cena')).toBe(0);
+  });
+
+  it('un pasto che non esiste non cambia niente', () => {
+    expect(extraNetto(giornoFinto(), 300, 'merenda')).toBe(300);
+    expect(extraNetto(undefined, 300, 'cena')).toBe(300);
+    expect(extraNetto(giornoFinto(), 0, 'cena')).toBe(0);
+  });
+
+  it('il pasto sostituito sparisce dal conto del giorno e dalla spesa', () => {
+    const settimana = {
+      target: 2000, floor: 1600,
+      giorni: [giornoFinto(), giornoFinto(), giornoFinto()],
+    };
+    const pieno = kcalGiorno(settimana.giorni[1]);
+
+    const dopo = applicaRecupero(settimana, { perGiorno: [0, 0, 0], recuperato: 0, residuo: 0 }, {
+      extra: 850, indiceEvento: 1, etichettaSgarro: 'Pizzeria', alPostoDi: 'cena',
+    });
+    const g = dopo.giorni[1];
+
+    expect(g.pasti.cena.every((v) => v.saltato)).toBe(true);
+    expect(g.sgarro.alPostoDi).toBe('cena');
+    // Il giorno vale quello che resta più la pizza, non tutto più la pizza.
+    expect(g.quota).toBeLessThan(pieno + 850);
+    expect(kcalGiorno(g)).toBeLessThan(pieno);
+  });
+
+  it('registrarlo di nuovo non lascia sostituito il pasto di prima', () => {
+    const settimana = { target: 2000, floor: 1600, giorni: [giornoFinto()] };
+    const uno = applicaRecupero(settimana, { perGiorno: [0], recuperato: 0, residuo: 0 },
+      { extra: 850, indiceEvento: 0, alPostoDi: 'cena' });
+    const due = applicaRecupero(uno, { perGiorno: [0], recuperato: 0, residuo: 0 },
+      { extra: 300, indiceEvento: 0, alPostoDi: 'pranzo' });
+
+    expect(due.giorni[0].pasti.cena.some((v) => v.saltato)).toBe(false);
+    expect(due.giorni[0].pasti.pranzo.every((v) => v.saltato)).toBe(true);
   });
 });

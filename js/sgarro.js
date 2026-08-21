@@ -16,6 +16,30 @@ import {
   voceFlessibile as flessibile, arrotondaPorzione,
 } from './planner.js';
 
+/**
+ * Le calorie che lo sgarro AGGIUNGE davvero alla giornata.
+ *
+ * Una sfogliatella si somma alla colazione: aggiunge tutte le sue calorie. Una
+ * pizza al posto della cena no — quella cena non la mangi, e contarla sarebbe
+ * far recuperare all'utente un pasto che non ha fatto. Su una cena da 680 kcal
+ * e una pizza da 850, la differenza fra i due modi e' 680 kcal di recupero
+ * chiesto per niente.
+ *
+ * @param {object} giorno il giorno dell'evento
+ * @param {number} kcalSgarro quanto pesa lo sgarro
+ * @param {string|null} alPostoDi la chiave del pasto sostituito, o null
+ */
+export function extraNetto(giorno, kcalSgarro, alPostoDi) {
+  const lordo = Math.max(0, Math.round(kcalSgarro || 0));
+  const voci = alPostoDi && giorno?.pasti?.[alPostoDi];
+  if (!voci || !voci.length) return lordo;
+
+  const pasto = voci.reduce((s, v) => s + (v ? valoriVoce(v).kcal : 0), 0);
+  // Se lo sgarro pesa MENO del pasto che sostituisce non c'e' niente da
+  // recuperare: quel giorno si e' mangiato meno del previsto, e va bene cosi'.
+  return Math.max(0, lordo - Math.round(pasto));
+}
+
 /** Riduzione massima su un singolo giorno, in frazione del suo target. */
 export const TAGLIO_MAX = 0.20;
 
@@ -154,7 +178,9 @@ export function grammiEquivalenti(residuo) {
  * Vincolo di progetto: non sostituisce nessun piatto. La lista della spesa
  * gia' fatta resta valida — sarebbe assurdo mandare a buttare il carrello.
  */
-export function applicaRecupero(settimana, recupero, { extra, indiceEvento, etichettaSgarro } = {}) {
+export function applicaRecupero(settimana, recupero, {
+  extra, indiceEvento, etichettaSgarro, alPostoDi = null,
+} = {}) {
   const copia = structuredClone(settimana);
 
   for (let i = 0; i < copia.giorni.length; i++) {
@@ -167,12 +193,24 @@ export function applicaRecupero(settimana, recupero, { extra, indiceEvento, etic
 
   if (indiceEvento != null && copia.giorni[indiceEvento]) {
     const g = copia.giorni[indiceEvento];
+
+    // Si riparte pulito: registrare due volte sullo stesso giorno non deve
+    // lasciare sostituito il pasto di prima.
+    for (const voci of Object.values(g.pasti || {})) {
+      for (const v of voci) if (v) delete v.saltato;
+    }
+    if (alPostoDi && g.pasti?.[alPostoDi]) {
+      for (const v of g.pasti[alPostoDi]) if (v) v.saltato = true;
+    }
+
     g.stato = 'sgarro';
     g.sgarro = {
       kcal: Math.round(extra || 0),
       etichetta: etichettaSgarro || 'Sgarro',
       quando: recupero.residuo > 0 ? 'parziale' : 'coperto',
+      alPostoDi: alPostoDi || null,
     };
+    // `kcalGiorno` ora esclude gia' il pasto sostituito: la somma torna da sola.
     g.quota = kcalGiorno(g) + Math.round(extra || 0);
   }
 

@@ -340,7 +340,11 @@ export function arrotondaPorzione(f) {
 /* --- Letture --------------------------------------------------------------- */
 
 export function tutteLeVoci(giorno) {
-  return Object.values(giorno.pasti || {}).flat().filter(Boolean);
+  // Un pasto sostituito da uno sgarro NON si mangia: non conta nelle calorie,
+  // non conta nei macro, e non si compra. Resta pero' scritto nel piano,
+  // marcato, cosi' si vede cosa e' stato sostituito — e se lo sgarro cambia,
+  // torna al suo posto.
+  return Object.values(giorno.pasti || {}).flat().filter((v) => v && !v.saltato);
 }
 
 export { eFlessibile as voceFlessibile };

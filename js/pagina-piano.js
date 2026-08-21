@@ -23,7 +23,7 @@ import {
 } from './alimenti.js';
 import { alternativePiatto, scambiaPiatto } from './scambi.js';
 import {
-  calcolaRecupero, applicaRecupero, racconta, slittamentoTraguardo,
+  calcolaRecupero, applicaRecupero, racconta, slittamentoTraguardo, extraNetto,
 } from './sgarro.js';
 import { rendiFascia } from './ui-budget.js';
 import sgarriCatalogo from '../data/sgarri.json';
@@ -101,7 +101,15 @@ export async function inizializza() {
     aggiornaAnteprimaSgarro();
   });
   $('#sgarro-kcal').addEventListener('input', aggiornaAnteprimaSgarro);
-  $('#sgarro-giorno').addEventListener('change', aggiornaAnteprimaSgarro);
+  $('#sgarro-giorno').addEventListener('change', () => {
+    aggiornaPastiSostituibili();
+    aggiornaAnteprimaSgarro();
+  });
+  $$('#dialogo-sgarro [name="posto"]').forEach((r) => r.addEventListener('change', () => {
+    aggiornaPastiSostituibili();
+    aggiornaAnteprimaSgarro();
+  }));
+  $('#sgarro-pasto').addEventListener('change', aggiornaAnteprimaSgarro);
 
   disegna();
   rendiArrivo(arrivo);
@@ -723,24 +731,74 @@ function apriSgarro() {
   const oggi = Math.max(0, indiceOggi(settimana));
   $('#sgarro-giorno').value = String(oggi);
   $('#sgarro-kcal').value = '';
+  aggiornaPastiSostituibili();
   aggiornaAnteprimaSgarro();
   $('#dialogo-sgarro').showModal();
 }
 
+/** Come si chiama lo sgarro, o «Sgarro» se le calorie le hai scritte a mano. */
+function nomeSgarroScelto() {
+  const sel = $('#sgarro-catalogo');
+  if (!sel.value) return 'Sgarro';
+  return sel.selectedOptions[0]?.textContent?.split(' — ')[0]?.trim() || 'Sgarro';
+}
+
 function datiSgarro() {
-  const extra = Number($('#sgarro-kcal').value) || 0;
+  const lordo = Number($('#sgarro-kcal').value) || 0;
   const indiceEvento = Number($('#sgarro-giorno').value) || 0;
   const modo = $('#dialogo-sgarro [name="modo"]:checked')?.value || 'prima';
-  return { extra, indiceEvento, modo };
+  const sostituisce = $('#dialogo-sgarro [name="posto"]:checked')?.value === 'sostituisce';
+  const alPostoDi = sostituisce ? ($('#sgarro-pasto').value || null) : null;
+
+  // Quello che pesa DAVVERO sulla settimana: se sostituisce un pasto, quel
+  // pasto non si mangia e non c'è niente da recuperare per lui.
+  const extra = extraNetto(settimana?.giorni?.[indiceEvento], lordo, alPostoDi);
+  return { lordo, extra, indiceEvento, modo, alPostoDi };
+}
+
+/** I pasti del giorno scelto, con quanto pesano: sono le opzioni sostituibili. */
+function pastiDelGiorno(indice) {
+  const g = settimana?.giorni?.[indice];
+  if (!g) return [];
+  return Object.entries(g.pasti || {})
+    .map(([pasto, voci]) => ({
+      pasto,
+      nome: NOMI_PASTO[pasto] || pasto,
+      kcal: Math.round((voci || []).reduce((a, v) => a + (v ? valoriVoce(v).kcal : 0), 0)),
+    }))
+    .filter((p) => p.kcal > 0);
+}
+
+function aggiornaPastiSostituibili() {
+  const sostituisce = $('#dialogo-sgarro [name="posto"]:checked')?.value === 'sostituisce';
+  $('#riquadro-quale-pasto').hidden = !sostituisce;
+  if (!sostituisce) return;
+
+  const sel = $('#sgarro-pasto');
+  const scelto = sel.value;
+  sel.innerHTML = pastiDelGiorno(Number($('#sgarro-giorno').value) || 0)
+    .map((p) => `<option value="${p.pasto}">${p.nome} — ${p.kcal} kcal</option>`).join('');
+  // Cambiando giorno si tiene il pasto scelto, se in quel giorno esiste.
+  if (scelto && [...sel.options].some((o) => o.value === scelto)) sel.value = scelto;
 }
 
 function aggiornaAnteprimaSgarro() {
-  const { extra, indiceEvento, modo } = datiSgarro();
+  const { lordo, extra, indiceEvento, modo, alPostoDi } = datiSgarro();
   const anteprima = $('#sgarro-anteprima');
 
-  if (!(extra > 0)) {
+  if (!(lordo > 0)) {
     anteprima.innerHTML = '<p class="piccolo tenue">Scegli lo sgarro o scrivi quante calorie sono.</p>';
     $('#conferma-sgarro').disabled = true;
+    return;
+  }
+
+  if (alPostoDi && extra === 0) {
+    const pasto = pastiDelGiorno(indiceEvento).find((p) => p.pasto === alPostoDi);
+    anteprima.innerHTML = `<p class="piccolo morbido">${lordo} kcal al posto di
+      ${(pasto?.nome || 'quel pasto').toLowerCase()}, che ne vale ${pasto?.kcal ?? 0}:
+      <strong>non c'è niente da recuperare</strong>. Quel giorno mangi meno del previsto,
+      e va bene così.</p>`;
+    $('#conferma-sgarro').disabled = false;
     return;
   }
 
@@ -753,7 +811,7 @@ function aggiornaAnteprimaSgarro() {
     modo,
   });
 
-  const etichetta = $('#sgarro-catalogo').selectedOptions[0]?.textContent?.split(' — ')[0];
+  const etichetta = nomeSgarroScelto();
   const testo = racconta({
     recupero, extra, modo,
     deficitGiornaliero: energia.fabbisogno.deficit || 300,
@@ -778,8 +836,8 @@ function aggiornaAnteprimaSgarro() {
 }
 
 async function confermaSgarro() {
-  const { extra, indiceEvento, modo } = datiSgarro();
-  if (!(extra > 0)) return;
+  const { lordo, extra, indiceEvento, modo, alPostoDi } = datiSgarro();
+  if (!(lordo > 0)) return;
 
   const recupero = calcolaRecupero({
     giorni: settimana.giorni,
@@ -788,9 +846,9 @@ async function confermaSgarro() {
     extra, indiceEvento, modo,
   });
 
-  const etichetta = $('#sgarro-catalogo').selectedOptions[0]?.textContent?.split(' — ')[0];
+  const etichetta = nomeSgarroScelto();
   settimana = applicaRecupero(settimana, recupero, {
-    extra, indiceEvento, etichettaSgarro: etichetta || 'Sgarro',
+    extra: lordo, indiceEvento, etichettaSgarro: etichetta || 'Sgarro', alPostoDi,
   });
 
   await salvaSettimana(profilo.id, settimana);

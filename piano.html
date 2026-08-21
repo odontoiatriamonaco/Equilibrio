@@ -160,6 +160,26 @@
         </div>
 
         <fieldset style="border:none; padding:0">
+          <legend class="occhiello" style="margin-bottom: var(--sp-2)">Come lo mangi</legend>
+          <label class="riga" style="align-items:flex-start; gap:var(--sp-3); margin-bottom:var(--sp-3)">
+            <input type="radio" name="posto" value="aggiunta" checked style="margin-top:6px">
+            <span><strong>In aggiunta a un pasto</strong><br>
+              <span class="piccolo morbido">La sfogliatella col caffè, il gelato dopo cena:
+                si somma a quello che avevi in programma.</span></span>
+          </label>
+          <label class="riga" style="align-items:flex-start; gap:var(--sp-3)">
+            <input type="radio" name="posto" value="sostituisce" style="margin-top:6px">
+            <span><strong>Al posto di un pasto</strong><br>
+              <span class="piccolo morbido">La pizza al posto della cena: quel pasto non lo
+                mangi, e non deve pesare né sul conto né sulla spesa.</span></span>
+          </label>
+          <div class="campo" id="riquadro-quale-pasto" hidden style="margin-top:var(--sp-3)">
+            <label for="sgarro-pasto">Quale pasto sostituisce</label>
+            <select id="sgarro-pasto"></select>
+          </div>
+        </fieldset>
+
+        <fieldset style="border:none; padding:0">
           <legend class="occhiello" style="margin-bottom: var(--sp-2)">Come lo sistemo</legend>
           <label class="riga" style="align-items:flex-start; gap:var(--sp-3); margin-bottom:var(--sp-3)">
             <input type="radio" name="modo" value="prima" checked style="margin-top:6px">
