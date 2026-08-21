@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { piatti } from '../js/alimenti.js';
 import {
   vuote, gustoPiatto, gustoAlimento, eAllergene, motivoEsclusione, ammesso,
-  peso, imposta, alternaAllergia, impostaTetto, riepilogo, omessi,
+  peso, imposta, alternaAllergia, impostaTetto, riepilogo, omessi, tettiSforati,
   TETTI_PREDEFINITI,
 } from '../js/preferenze.js';
 
@@ -142,5 +142,31 @@ describe('riepilogo', () => {
 
     const abbastanza = piatti.slice(0, 20);
     expect(riepilogo(vuote(P), abbastanza).scarso).toBe(false);
+  });
+});
+
+describe('i tetti che il piano già scritto supera', () => {
+  // Un tetto parla della settimana, non di un piatto: abbassarlo non rende
+  // sbagliata nessuna pietanza in particolare — sono tre formaggi a essere
+  // troppi, non il terzo. Per questo è un conto a parte, non una marcatura.
+  it('elenca solo quelli davvero superati', () => {
+    const pref = { tetti: { formaggi: 2, uova: 3, salumi: 0, pesce: 4 } };
+    const conteggi = { formaggi: 3, uova: 3, salumi: 1, pesce: 2 };
+
+    const fuori = tettiSforati(conteggi, pref);
+    expect(fuori.map((t) => t.gruppo).sort()).toEqual(['formaggi', 'salumi']);
+    expect(fuori.find((t) => t.gruppo === 'formaggi')).toEqual({ gruppo: 'formaggi', quante: 3, tetto: 2 });
+    // Uguale al tetto non è superarlo, e un gruppo assente conta zero.
+    expect(fuori.some((t) => t.gruppo === 'uova')).toBe(false);
+    expect(fuori.some((t) => t.gruppo === 'pesce')).toBe(false);
+  });
+
+  it('un gruppo mai comparso nel piano non sfora niente', () => {
+    expect(tettiSforati({}, { tetti: { salumi: 0, formaggi: 2 } })).toEqual([]);
+  });
+
+  it('regge preferenze o conteggi mancanti', () => {
+    expect(tettiSforati(undefined, undefined)).toEqual([]);
+    expect(tettiSforati({ formaggi: 9 }, {})).toEqual([]);
   });
 });

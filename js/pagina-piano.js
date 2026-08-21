@@ -11,7 +11,7 @@ import {
   allinea, porzioniDellaTavola, pubblicaMenu, spazioLocale, leggiSpazio,
   proponiScambio, decidiProposte, proposteInAttesa, raccontaArrivo,
 } from './spazio-famiglia.js';
-import { caricaPreferenze } from './preferenze.js';
+import { caricaPreferenze, NOMI_TETTI } from './preferenze.js';
 import { caricaSettimana, salvaSettimana } from './dati.js';
 import {
   generaSettimana, kcalGiorno, valoriGiorno, inizioSettimana, iso,
@@ -43,6 +43,7 @@ let settimana = null;
 let scambioAperto = null;
 let riferimento = null;
 let avvisiFamiglia = [];
+let tettiSforati = [];
 /** Chi mangia quanto, voce per voce. Vuoto per chi non cucina per altri. */
 let divisione = [];
 
@@ -68,6 +69,7 @@ export async function inizializza() {
   settimana = derivata.settimana;
   riferimento = derivata.riferimento;
   avvisiFamiglia = derivata.avvisi;
+  tettiSforati = derivata.tetti || [];
   divisione = await preparaDivisione();
 
   // Chi segue non rigenera: il menu' lo decide il riferimento, altrimenti
@@ -180,8 +182,17 @@ function rendiRiferimento() {
     : ', oppure rigenera la settimana — ma rigenerando si perdono gli scambi già fatti, le quantità corrette a mano e gli sgarri prenotati.'}`);
   }
 
+  // Un tetto parla della settimana, non di un piatto: non si marca nessuna riga,
+  // si dice il conto. Tre formaggi sono troppi, non lo è il terzo.
+  if (tettiSforati.length) {
+    righe.push(`Questa settimana supera ${tettiSforati.length === 1 ? 'un tetto' : `${tettiSforati.length} tetti`}
+      che hai impostato: ${tettiSforati.map((t) => `<strong>${(NOMI_TETTI[t.gruppo] || t.gruppo).toLowerCase()}</strong>
+      ${t.quante} ${t.quante === 1 ? 'volta' : 'volte'} invece di ${t.tetto}`).join(', ')}.
+      I tetti valgono da adesso in avanti: questo piano era già scritto.`);
+  }
+
   nota.hidden = !righe.length;
-  nota.className = avvisiFamiglia.length ? 'avviso avviso-sgarro' : 'avviso';
+  nota.className = (avvisiFamiglia.length || tettiSforati.length) ? 'avviso avviso-sgarro' : 'avviso';
   nota.querySelector('div').innerHTML = righe.join(' ');
 }
 
@@ -575,6 +586,7 @@ function disegnaAlternative() {
       const derivata = await settimanaPer(profilo);
       settimana = derivata.settimana;
       avvisiFamiglia = derivata.avvisi;
+  tettiSforati = derivata.tetti || [];
     } else {
       settimana = scambiaPiatto(settimana, { ...scambioAperto, nuovoId: b.dataset.nuovo });
       await salvaSettimana(profilo.id, settimana);

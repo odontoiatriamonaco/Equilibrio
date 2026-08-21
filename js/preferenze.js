@@ -104,6 +104,26 @@ export function omessi(pref) {
     .filter((id) => gustoAlimento(pref, id) === 'omesso');
 }
 
+/**
+ * I tetti che il piano di questa settimana sfora.
+ *
+ * Un tetto parla della SETTIMANA, non di un piatto: abbassarlo non rende
+ * sbagliata nessuna pietanza in particolare — sono tre formaggi a essere troppi,
+ * non il terzo. Per questo non produce una marcatura sulla riga come fa
+ * un'esclusione, ma un conto a parte.
+ *
+ * @param {Record<string, number>} conteggi da `conteggiSettimana`
+ * @returns {Array<{gruppo:string, quante:number, tetto:number}>}
+ */
+export function tettiSforati(conteggi = {}, pref) {
+  const fuori = [];
+  for (const [gruppo, tetto] of Object.entries(pref?.tetti || {})) {
+    const quante = conteggi[gruppo] || 0;
+    if (quante > tetto) fuori.push({ gruppo, quante, tetto });
+  }
+  return fuori;
+}
+
 export function eAllergene(pref, id) {
   return (pref.allergie || []).includes(id);
 }

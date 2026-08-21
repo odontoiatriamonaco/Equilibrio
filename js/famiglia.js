@@ -11,11 +11,12 @@
 import { leggi, scrivi, profili } from './store.js';
 import { caricaSettimana } from './dati.js';
 import { lenteRicettario, valoriPiatto } from './alimenti.js';
-import { caricaPreferenze, omessi, motivoEsclusione } from './preferenze.js';
+import { caricaPreferenze, omessi, motivoEsclusione, tettiSforati } from './preferenze.js';
 import { pietanzeDiCasa } from './piatti-utente.js';
 import { riepilogo as riepilogoEnergia } from './energia.js';
 import {
   ribilanciaGiorno, applicaRibilanciamento, vociConChiave, inizioSettimana, iso,
+  conteggiSettimana,
 } from './planner.js';
 
 /* --- Il legame ------------------------------------------------------------- */
@@ -139,7 +140,7 @@ export async function settimanaPer(profilo, data = new Date()) {
   const proprietario = riferimento?.id || profilo.id;
 
   const settimana = await caricaSettimana(proprietario, data);
-  if (!settimana) return { settimana: null, riferimento, avvisi: [], inizio };
+  if (!settimana) return { settimana: null, riferimento, avvisi: [], tetti: [], inizio };
 
   // Chi non segue nessuno non ha niente da derivare — il piano e' gia' suo — ma
   // deve sapere lo stesso se dentro c'e' finita una pietanza che nel frattempo
@@ -150,9 +151,16 @@ export async function settimanaPer(profilo, data = new Date()) {
   // Questo avviso esisteva gia', ma solo per chi seguiva il menu' di un altro:
   // il caso piu' raro lo riceveva, quello piu' comune no.
   if (!riferimento) {
+    const lenteSola = await lenteDi(profilo.id);
     const copia = structuredClone(settimana);
-    const avvisi = segnalaNonGraditi(copia, await lenteDi(profilo.id));
-    return { settimana: copia, riferimento: null, avvisi, inizio };
+    const avvisi = segnalaNonGraditi(copia, lenteSola);
+    return {
+      settimana: copia,
+      riferimento: null,
+      avvisi,
+      tetti: tettiSforati(conteggiSettimana(copia), lenteSola.preferenze),
+      inizio,
+    };
   }
 
   const lente = await lenteDi(profilo.id);
@@ -213,7 +221,13 @@ export async function settimanaPer(profilo, data = new Date()) {
   copia.floor = energia.fabbisogno.floor;
   copia.derivataDa = riferimento.id;
 
-  return { settimana: copia, riferimento, avvisi, inizio };
+  return {
+    settimana: copia,
+    riferimento,
+    avvisi,
+    tetti: tettiSforati(conteggiSettimana(copia), lente.preferenze),
+    inizio,
+  };
 }
 
 /**

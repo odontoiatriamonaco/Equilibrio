@@ -200,19 +200,27 @@ async function aggiornaNotaPiano() {
   const dove = $('#nota-piano');
   if (!dove || !profilo) return;
 
-  const { settimana, avvisi } = await settimanaPer(profilo);
-  if (!settimana || !avvisi.length) { dove.innerHTML = ''; return; }
+  const { settimana, avvisi, tetti } = await settimanaPer(profilo);
+  if (!settimana || (!avvisi.length && !tetti.length)) { dove.innerHTML = ''; return; }
 
-  const quante = avvisi.length;
+  const righe = [];
+  if (avvisi.length) {
+    const quante = avvisi.length;
+    righe.push(`${quante === 1 ? "C'è ancora una pietanza" : `Ci sono ancora ${quante} pietanze`}
+      che ora ${quante === 1 ? 'non ti va' : 'non ti vanno'} bene:
+      ${avvisi.slice(0, 3).map((a) => a.nome).join(', ')}${quante > 3 ? ' e altre' : ''}.`);
+  }
+  if (tetti.length) {
+    righe.push(`Supera ${tetti.length === 1 ? 'un tetto' : `${tetti.length} tetti`}:
+      ${tetti.map((t) => `${(NOMI_TETTI[t.gruppo] || t.gruppo).toLowerCase()} ${t.quante} invece di ${t.tetto}`).join(', ')}.`);
+  }
+
   dove.innerHTML = `
     <div class="avviso avviso-sgarro" style="margin-top:var(--sp-4)">
       ${icona('avviso', 'icona icona-sm')}
-      <div>Nel piano di <strong>questa settimana</strong>
-        ${quante === 1 ? "c'è ancora una pietanza" : `ci sono ancora ${quante} pietanze`}
-        che ora ${quante === 1 ? 'non ti va' : 'non ti vanno'} bene:
-        ${avvisi.slice(0, 3).map((a) => a.nome).join(', ')}${quante > 3 ? ' e altre' : ''}.
+      <div>Nel piano di <strong>questa settimana</strong>: ${righe.join(' ')}
         Le scelte di qui valgono da adesso in avanti, non su quello che è già
-        scritto. <a href="/piano.html">Vai al piano</a> e scambiale una a una,
+        scritto. <a href="/piano.html">Vai al piano</a> e sistemalo a mano,
         oppure rigenera la settimana — sapendo che rigenerando si perdono gli
         scambi già fatti e gli sgarri prenotati.</div>
     </div>`;
