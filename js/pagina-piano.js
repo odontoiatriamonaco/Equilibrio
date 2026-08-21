@@ -79,7 +79,8 @@ export async function inizializza() {
     $('#genera').hidden = true;
   }
 
-  $('#rigenera').addEventListener('click', () => rigenera());
+  collegaRigenera();
+  // Sulla settimana vuota non c'e' niente da perdere: si genera e basta.
   $('#genera').addEventListener('click', () => rigenera());
   $('#apri-sgarro').addEventListener('click', apriSgarro);
   $('#chiudi-scambio').addEventListener('click', () => $('#scambio').close());
@@ -108,6 +109,70 @@ export async function inizializza() {
 }
 
 /* --- Generazione ----------------------------------------------------------- */
+
+/**
+ * Cosa porta via una rigenerazione.
+ *
+ * I giorni di recupero non si contano: sono la conseguenza di uno sgarro, non
+ * un secondo sgarro. Contarli direbbe «perdi 6 sgarri» per una pizza sola.
+ */
+function cosaSiPerde() {
+  let scambi = 0;
+  let quantita = 0;
+  let sgarri = 0;
+
+  for (const g of settimana?.giorni || []) {
+    if (g.stato === 'sgarro') sgarri += 1;
+    for (const v of Object.values(g.pasti || {}).flat()) {
+      if (!v) continue;
+      if (v.scambiato) scambi += 1;
+      if (v.fissata) quantita += 1;
+    }
+  }
+  return { scambi, quantita, sgarri };
+}
+
+/** «3 scambi e 1 sgarro prenotato», o stringa vuota se non c'è niente. */
+function frasePerdita({ scambi, quantita, sgarri }) {
+  const pezzi = [];
+  if (scambi) pezzi.push(`${scambi} ${scambi === 1 ? 'scambio' : 'scambi'}`);
+  if (quantita) pezzi.push(`${quantita} ${quantita === 1 ? 'quantità corretta' : 'quantità corrette'} a mano`);
+  if (sgarri) pezzi.push(`${sgarri} ${sgarri === 1 ? 'sgarro' : 'sgarri'}`);
+  if (pezzi.length < 2) return pezzi[0] || '';
+  return `${pezzi.slice(0, -1).join(', ')} e ${pezzi[pezzi.length - 1]}`;
+}
+
+/**
+ * Rigenerare riscrive la settimana e non si torna indietro. Ora che l'avviso
+ * sulle preferenze ci manda la gente, il pulsante deve dire cosa costa: non un
+ * «sei sicuro?» generico, ma il conto di quello che sparisce.
+ *
+ * Se non c'è niente da perdere non chiede nulla — una conferma per il vuoto
+ * insegna solo a premere due volte senza leggere.
+ */
+function collegaRigenera() {
+  const b = $('#rigenera');
+  const originale = b.innerHTML;
+  let inAttesa = false;
+
+  const rimetti = () => {
+    inAttesa = false;
+    b.classList.remove('bottone-pericolo');
+    b.innerHTML = originale;
+  };
+
+  b.addEventListener('click', async () => {
+    if (inAttesa) { rimetti(); await rigenera(); return; }
+
+    const cosa = frasePerdita(cosaSiPerde());
+    if (!cosa) { await rigenera(); return; }
+
+    inAttesa = true;
+    b.classList.add('bottone-pericolo');
+    b.textContent = `Perdi ${cosa}: confermi?`;
+    setTimeout(() => { if (inAttesa) rimetti(); }, 6000);
+  });
+}
 
 async function rigenera() {
   const seme = Math.floor(Math.random() * 2 ** 31);
