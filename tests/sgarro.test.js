@@ -230,27 +230,29 @@ describe('lo sgarro in aggiunta o al posto di un pasto', () => {
   }
 
   it('in aggiunta pesa tutto', () => {
-    expect(extraNetto(giornoFinto(), 850, null)).toBe(850);
+    expect(extraNetto(giornoFinto(), 850, null, false)).toBe(850);
+    // Anche indicando il pasto: in aggiunta non toglie niente.
+    expect(extraNetto(giornoFinto(), 850, 'cena', false)).toBe(850);
   });
 
   it('al posto di un pasto pesa solo la differenza', () => {
     const g = giornoFinto();
     const cena = Math.round(g.pasti.cena.reduce((a, v) => a + valoriVoce(v).kcal, 0));
-    expect(extraNetto(g, 850, 'cena')).toBe(Math.max(0, 850 - cena));
+    expect(extraNetto(g, 850, 'cena', true)).toBe(Math.max(0, 850 - cena));
     // E deve essere davvero meno di quanto peserebbe in aggiunta.
-    expect(extraNetto(g, 850, 'cena')).toBeLessThan(850);
+    expect(extraNetto(g, 850, 'cena', true)).toBeLessThan(850);
   });
 
   it('se lo sgarro pesa meno del pasto non c\'è niente da recuperare', () => {
     // Una pizza più leggera della cena che sostituisce: quel giorno hai
     // mangiato meno del previsto, e va bene così. Mai un numero negativo.
-    expect(extraNetto(giornoFinto(), 50, 'cena')).toBe(0);
+    expect(extraNetto(giornoFinto(), 50, 'cena', true)).toBe(0);
   });
 
   it('un pasto che non esiste non cambia niente', () => {
-    expect(extraNetto(giornoFinto(), 300, 'merenda')).toBe(300);
-    expect(extraNetto(undefined, 300, 'cena')).toBe(300);
-    expect(extraNetto(giornoFinto(), 0, 'cena')).toBe(0);
+    expect(extraNetto(giornoFinto(), 300, 'merenda', true)).toBe(300);
+    expect(extraNetto(undefined, 300, 'cena', true)).toBe(300);
+    expect(extraNetto(giornoFinto(), 0, 'cena', true)).toBe(0);
   });
 
   it('il pasto sostituito sparisce dal conto del giorno e dalla spesa', () => {
@@ -261,12 +263,13 @@ describe('lo sgarro in aggiunta o al posto di un pasto', () => {
     const pieno = kcalGiorno(settimana.giorni[1]);
 
     const dopo = applicaRecupero(settimana, { perGiorno: [0, 0, 0], recuperato: 0, residuo: 0 }, {
-      extra: 850, indiceEvento: 1, etichettaSgarro: 'Pizzeria', alPostoDi: 'cena',
+      extra: 850, indiceEvento: 1, etichettaSgarro: 'Pizzeria', pasto: 'cena', sostituisce: true,
     });
     const g = dopo.giorni[1];
 
     expect(g.pasti.cena.every((v) => v.saltato)).toBe(true);
-    expect(g.sgarro.alPostoDi).toBe('cena');
+    expect(g.sgarro.pasto).toBe('cena');
+    expect(g.sgarro.sostituisce).toBe(true);
     // Il giorno vale quello che resta più la pizza, non tutto più la pizza.
     expect(g.quota).toBeLessThan(pieno + 850);
     expect(kcalGiorno(g)).toBeLessThan(pieno);
@@ -275,9 +278,9 @@ describe('lo sgarro in aggiunta o al posto di un pasto', () => {
   it('registrarlo di nuovo non lascia sostituito il pasto di prima', () => {
     const settimana = { target: 2000, floor: 1600, giorni: [giornoFinto()] };
     const uno = applicaRecupero(settimana, { perGiorno: [0], recuperato: 0, residuo: 0 },
-      { extra: 850, indiceEvento: 0, alPostoDi: 'cena' });
+      { extra: 850, indiceEvento: 0, pasto: 'cena', sostituisce: true });
     const due = applicaRecupero(uno, { perGiorno: [0], recuperato: 0, residuo: 0 },
-      { extra: 300, indiceEvento: 0, alPostoDi: 'pranzo' });
+      { extra: 300, indiceEvento: 0, pasto: 'pranzo', sostituisce: true });
 
     expect(due.giorni[0].pasti.cena.some((v) => v.saltato)).toBe(false);
     expect(due.giorni[0].pasti.pranzo.every((v) => v.saltato)).toBe(true);

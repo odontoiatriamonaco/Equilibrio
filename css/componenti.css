@@ -1355,6 +1355,53 @@
   color: var(--testo-morbido);
 }
 
+/* --- Lo sgarro dentro il pasto ---------------------------------------------
+   Uno sgarro non e' un'etichetta appesa in cima al giorno: e' qualcosa che si
+   mangia, e sta dove si mangia. In aggiunta va in coda al pasto; al posto di un
+   pasto va davanti, con quello che sostituisce sbiadito sotto — cosi' si vede
+   cosa NON si cucina piu'.
+   -------------------------------------------------------------------------- */
+
+.riga-sgarro {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  margin-block: var(--sp-1);
+  border-radius: var(--r-2);
+  background: var(--sgarro-tenue);
+  border-left: 3px solid var(--sgarro);
+}
+
+.riga-sgarro .sigillo-mini {
+  background: transparent;
+  color: var(--sgarro-testo);
+  flex: none;
+}
+
+.riga-sgarro .nome { flex: 1; min-width: 0; }
+.riga-sgarro .nome strong { color: var(--sgarro-testo); font-weight: 600; }
+.riga-sgarro .nome .piccolo { color: var(--testo-morbido); }
+.riga-sgarro .num { color: var(--sgarro-testo); font-weight: 700; white-space: nowrap; }
+
+/* Il pasto che lo sgarro ha preso il posto: resta scritto, ma spento. */
+/* Non troppo spenta: al 50% il testo scendeva sotto 3,5 di contrasto, e
+   quello a cui stai rinunciando vale la pena poterlo ancora leggere. */
+.voce-piano.sostituita,
+.voce-spesa.sostituita { opacity: .62; }
+.voce-spesa.sostituita .nome > :first-child { text-decoration: line-through; }
+.voce-piano.sostituita > summary .nome > :first-child { text-decoration: line-through; }
+.voce-piano.sostituita > summary { pointer-events: none; }
+
+.nota-sostituito {
+  margin: 0 0 var(--sp-1) calc(var(--sp-3) + 1.75rem);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--sgarro-testo);
+}
+
 /* --- Quanto va in pentola --------------------------------------------------
    Chi cucina per la famiglia non pesa la propria porzione: pesa il totale. Il
    numero grande e' quello, e la divisione per persona sta sotto, piu' piccola —

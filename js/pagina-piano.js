@@ -421,14 +421,32 @@ function cartaGiorno(giorno, indice, eOggi) {
   const kcal = giorno.quota ?? v.kcal;
   const data = new Date(giorno.data);
 
-  const pasti = Object.entries(giorno.pasti).map(([pasto, voci]) => `
+  // Lo sgarro sta dove si mangia, non appeso in cima al giorno: dentro il suo
+  // pasto, in coda se si aggiunge, davanti se ne prende il posto — con quello
+  // che sostituisce lasciato sotto, spento, così si vede cosa non si cucina.
+  const sg = giorno.stato === 'sgarro' ? giorno.sgarro : null;
+  const suoPasto = sg?.pasto || (sg?.alPostoDi ?? null);
+  const sostituisce = sg ? (sg.sostituisce ?? Boolean(sg.alPostoDi)) : false;
+
+  const pasti = Object.entries(giorno.pasti).map(([pasto, voci]) => {
+    const qui = sg && suoPasto === pasto;
+    const righe = voci.map((voce, i) => rigaVoce(voce, indice, pasto, i)).join('');
+    const riga = qui ? rigaSgarro(sg, sostituisce) : '';
+
+    return `
     <div class="pasto">
       <p class="occhiello">${NOMI_PASTO[pasto]}</p>
-      ${voci.map((voce, i) => rigaVoce(voce, indice, pasto, i)).join('')}
-    </div>`).join('');
+      ${qui && sostituisce
+    ? riga + `<p class="nota-sostituito">al posto di</p>` + righe
+    : righe + riga}
+    </div>`;
+  }).join('');
 
+  // In cima resta solo quanto pesa, non come si chiama: il nome sta nel pasto,
+  // e ripeterlo qui vorrebbe dire dirlo due volte. Serve però a riconoscere il
+  // giorno quando la scheda è chiusa.
   const marca = giorno.stato === 'sgarro'
-    ? `<span class="pillola pillola-sgarro">${giorno.sgarro?.etichetta || 'Sgarro'}</span>`
+    ? `<span class="pillola pillola-sgarro">+${num(giorno.sgarro?.kcal || 0)} kcal</span>`
     : giorno.stato === 'recupero'
       ? `<span class="pillola pillola-verde">−${num(giorno.recuperoKcal || 0)} kcal</span>`
       : '';
@@ -490,6 +508,19 @@ function divisioneVoce(voce, chiave) {
   };
 }
 
+/** Lo sgarro, disegnato come una voce del pasto in cui si mangia. */
+function rigaSgarro(sgarro, sostituisce) {
+  return `
+    <div class="riga-sgarro">
+      <span class="sigillo-mini">${icona('sgarro', 'icona icona-sm')}</span>
+      <span class="nome">
+        <strong>${sgarro.etichetta || 'Sgarro'}</strong>
+        <br><span class="piccolo">${sostituisce ? 'al posto del pasto' : 'in aggiunta al pasto'}</span>
+      </span>
+      <span class="num">+${num(sgarro.kcal || 0)} kcal</span>
+    </div>`;
+}
+
 function rigaVoce(voce, giorno, pasto, indice) {
   const oggetto = vociOggetto(voce);
   const kcal = valoriVoce(voce).kcal;
@@ -523,7 +554,7 @@ function rigaVoce(voce, giorno, pasto, indice) {
     ? ` · ${num(voce.porzioni, 2).replace(',00', '')} porzioni` : '';
 
   return `
-    <details class="voce-piano">
+    <details class="voce-piano${voce.saltato ? ' sostituita' : ''}">
       <summary>
         <span class="sigillo-mini">${icona(voce.tipo === 'piatto' ? iconaPiatto(oggetto || {}) : 'panetteria', 'icona icona-sm')}</span>
         <span class="nome">
@@ -748,12 +779,12 @@ function datiSgarro() {
   const indiceEvento = Number($('#sgarro-giorno').value) || 0;
   const modo = $('#dialogo-sgarro [name="modo"]:checked')?.value || 'prima';
   const sostituisce = $('#dialogo-sgarro [name="posto"]:checked')?.value === 'sostituisce';
-  const alPostoDi = sostituisce ? ($('#sgarro-pasto').value || null) : null;
+  const pasto = $('#sgarro-pasto').value || null;
 
   // Quello che pesa DAVVERO sulla settimana: se sostituisce un pasto, quel
   // pasto non si mangia e non c'è niente da recuperare per lui.
-  const extra = extraNetto(settimana?.giorni?.[indiceEvento], lordo, alPostoDi);
-  return { lordo, extra, indiceEvento, modo, alPostoDi };
+  const extra = extraNetto(settimana?.giorni?.[indiceEvento], lordo, pasto, sostituisce);
+  return { lordo, extra, indiceEvento, modo, pasto, sostituisce };
 }
 
 /** I pasti del giorno scelto, con quanto pesano: sono le opzioni sostituibili. */
@@ -771,8 +802,10 @@ function pastiDelGiorno(indice) {
 
 function aggiornaPastiSostituibili() {
   const sostituisce = $('#dialogo-sgarro [name="posto"]:checked')?.value === 'sostituisce';
-  $('#riquadro-quale-pasto').hidden = !sostituisce;
-  if (!sostituisce) return;
+  // Il pasto si sceglie in tutti e due i casi: sostituendolo per toglierlo,
+  // aggiungendosi per sapere dove scrivere lo sgarro nel piano.
+  $('#etichetta-quale-pasto').textContent = sostituisce
+    ? 'Quale pasto sostituisce' : 'A quale pasto si aggiunge';
 
   const sel = $('#sgarro-pasto');
   const scelto = sel.value;
@@ -783,7 +816,7 @@ function aggiornaPastiSostituibili() {
 }
 
 function aggiornaAnteprimaSgarro() {
-  const { lordo, extra, indiceEvento, modo, alPostoDi } = datiSgarro();
+  const { lordo, extra, indiceEvento, modo, pasto, sostituisce } = datiSgarro();
   const anteprima = $('#sgarro-anteprima');
 
   if (!(lordo > 0)) {
@@ -792,10 +825,10 @@ function aggiornaAnteprimaSgarro() {
     return;
   }
 
-  if (alPostoDi && extra === 0) {
-    const pasto = pastiDelGiorno(indiceEvento).find((p) => p.pasto === alPostoDi);
+  if (sostituisce && extra === 0) {
+    const quale = pastiDelGiorno(indiceEvento).find((p) => p.pasto === pasto);
     anteprima.innerHTML = `<p class="piccolo morbido">${lordo} kcal al posto di
-      ${(pasto?.nome || 'quel pasto').toLowerCase()}, che ne vale ${pasto?.kcal ?? 0}:
+      ${(quale?.nome || 'quel pasto').toLowerCase()}, che ne vale ${quale?.kcal ?? 0}:
       <strong>non c'è niente da recuperare</strong>. Quel giorno mangi meno del previsto,
       e va bene così.</p>`;
     $('#conferma-sgarro').disabled = false;
@@ -836,7 +869,7 @@ function aggiornaAnteprimaSgarro() {
 }
 
 async function confermaSgarro() {
-  const { lordo, extra, indiceEvento, modo, alPostoDi } = datiSgarro();
+  const { lordo, extra, indiceEvento, modo, pasto, sostituisce } = datiSgarro();
   if (!(lordo > 0)) return;
 
   const recupero = calcolaRecupero({
@@ -848,7 +881,7 @@ async function confermaSgarro() {
 
   const etichetta = nomeSgarroScelto();
   settimana = applicaRecupero(settimana, recupero, {
-    extra: lordo, indiceEvento, etichettaSgarro: etichetta || 'Sgarro', alPostoDi,
+    extra: lordo, indiceEvento, etichettaSgarro: etichetta || 'Sgarro', pasto, sostituisce,
   });
 
   await salvaSettimana(profilo.id, settimana);

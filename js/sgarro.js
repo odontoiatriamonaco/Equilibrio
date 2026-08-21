@@ -27,17 +27,19 @@ import {
  *
  * @param {object} giorno il giorno dell'evento
  * @param {number} kcalSgarro quanto pesa lo sgarro
- * @param {string|null} alPostoDi la chiave del pasto sostituito, o null
+ * @param {string|null} pasto la chiave del pasto a cui si riferisce
+ * @param {boolean} sostituisce se ne prende il posto invece di aggiungersi
  */
-export function extraNetto(giorno, kcalSgarro, alPostoDi) {
+export function extraNetto(giorno, kcalSgarro, pasto, sostituisce = true) {
   const lordo = Math.max(0, Math.round(kcalSgarro || 0));
-  const voci = alPostoDi && giorno?.pasti?.[alPostoDi];
+  // In aggiunta il pasto serve solo a sapere DOVE scriverlo: non toglie niente.
+  const voci = sostituisce && pasto && giorno?.pasti?.[pasto];
   if (!voci || !voci.length) return lordo;
 
-  const pasto = voci.reduce((s, v) => s + (v ? valoriVoce(v).kcal : 0), 0);
+  const kcalPasto = voci.reduce((s, v) => s + (v ? valoriVoce(v).kcal : 0), 0);
   // Se lo sgarro pesa MENO del pasto che sostituisce non c'e' niente da
   // recuperare: quel giorno si e' mangiato meno del previsto, e va bene cosi'.
-  return Math.max(0, lordo - Math.round(pasto));
+  return Math.max(0, lordo - Math.round(kcalPasto));
 }
 
 /** Riduzione massima su un singolo giorno, in frazione del suo target. */
@@ -179,7 +181,7 @@ export function grammiEquivalenti(residuo) {
  * gia' fatta resta valida — sarebbe assurdo mandare a buttare il carrello.
  */
 export function applicaRecupero(settimana, recupero, {
-  extra, indiceEvento, etichettaSgarro, alPostoDi = null,
+  extra, indiceEvento, etichettaSgarro, pasto = null, sostituisce = false,
 } = {}) {
   const copia = structuredClone(settimana);
 
@@ -199,8 +201,8 @@ export function applicaRecupero(settimana, recupero, {
     for (const voci of Object.values(g.pasti || {})) {
       for (const v of voci) if (v) delete v.saltato;
     }
-    if (alPostoDi && g.pasti?.[alPostoDi]) {
-      for (const v of g.pasti[alPostoDi]) if (v) v.saltato = true;
+    if (sostituisce && pasto && g.pasti?.[pasto]) {
+      for (const v of g.pasti[pasto]) if (v) v.saltato = true;
     }
 
     g.stato = 'sgarro';
@@ -208,7 +210,9 @@ export function applicaRecupero(settimana, recupero, {
       kcal: Math.round(extra || 0),
       etichetta: etichettaSgarro || 'Sgarro',
       quando: recupero.residuo > 0 ? 'parziale' : 'coperto',
-      alPostoDi: alPostoDi || null,
+      // Dove si mangia, e se prende il posto di quel pasto o ci si aggiunge.
+      pasto: pasto || null,
+      sostituisce: Boolean(sostituisce && pasto),
     };
     // `kcalGiorno` ora esclude gia' il pasto sostituito: la somma torna da sola.
     g.quota = kcalGiorno(g) + Math.round(extra || 0);

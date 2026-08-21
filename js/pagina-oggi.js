@@ -253,6 +253,19 @@ function disegnaAnello(target) {
   $('#resta').className = resta > 0 ? 'piccolo morbido' : 'piccolo sgarro-testo';
 }
 
+/** Lo sgarro, dentro il pasto in cui si mangia. Uguale a quello del Piano. */
+function rigaSgarroOggi(sgarro, sostituisce) {
+  return `
+    <div class="riga-sgarro">
+      <span class="sigillo-mini">${icona('sgarro', 'icona icona-sm')}</span>
+      <span class="nome">
+        <strong>${sgarro.etichetta || 'Sgarro'}</strong>
+        <br><span class="piccolo">${sostituisce ? 'al posto del pasto' : 'in aggiunta al pasto'}</span>
+      </span>
+      <span class="num">+${num(sgarro.kcal || 0)} kcal</span>
+    </div>`;
+}
+
 function disegnaPasti() {
   if (!giorno) {
     $('#pasti-oggi').innerHTML = `
@@ -275,14 +288,26 @@ function disegnaPasti() {
         ${icona(MOMENTO[pasto], 'icona icona-sm')}
         <span class="occhiello">${NOMI_PASTO[pasto]}</span>
       </p>
+      ${(() => {
+        const sg = giorno?.stato === 'sgarro' ? giorno.sgarro : null;
+        const suo = sg?.pasto || (sg?.alPostoDi ?? null);
+        if (!sg || suo !== pasto) return '';
+        const sostituisce = sg.sostituisce ?? Boolean(sg.alPostoDi);
+        // Davanti se prende il posto del pasto, in coda se ci si aggiunge:
+        // qui esce solo la parte che va PRIMA.
+        return sostituisce ? rigaSgarroOggi(sg, true) : '';
+      })()}
       ${voci.map((voce, i) => {
         const chiave = `${pasto}|${i}`;
         const oggetto = vociOggetto(voce);
         return `
-          <label class="voce-spesa">
-            <input type="checkbox" data-chiave="${chiave}" ${fatte.has(chiave) ? 'checked' : ''}>
+          <label class="voce-spesa${voce.saltato ? ' sostituita' : ''}">
+            <input type="checkbox" data-chiave="${chiave}"
+                   ${fatte.has(chiave) ? 'checked' : ''} ${voce.saltato ? 'disabled' : ''}>
             <span class="spunta"></span>
-            <span class="nome">${nomeVoce(voce)}${voce.nonPerMe
+            <span class="nome">${nomeVoce(voce)}${voce.saltato
+    ? ' <span class="pillola pillola-sgarro">sostituito</span>'
+    : ''}${voce.nonPerMe && !voce.saltato
     ? ` <span class="pillola pillola-sgarro" title="${voce.nonPerMe}">da cambiare</span>`
     : ''}
               <br><span class="piccolo tenue">
@@ -306,6 +331,13 @@ function disegnaPasti() {
               : ''}
           </label>`;
       }).join('')}
+      ${(() => {
+        const sg = giorno?.stato === 'sgarro' ? giorno.sgarro : null;
+        const suo = sg?.pasto || (sg?.alPostoDi ?? null);
+        if (!sg || suo !== pasto) return '';
+        const sostituisce = sg.sostituisce ?? Boolean(sg.alPostoDi);
+        return sostituisce ? '' : rigaSgarroOggi(sg, false);
+      })()}
     </section>`).join('');
 
   $$('#pasti-oggi [data-scambia]').forEach((b) => b.addEventListener('click', (e) => {
