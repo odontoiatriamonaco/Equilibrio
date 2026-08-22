@@ -2032,3 +2032,54 @@ body:has(.barra-passo) .guscio {
   .riga-avere .nome { flex-basis: 100%; }
   .riga-avere .quanti { margin-left: auto; }
 }
+
+
+/* --- Spesa o dispensa ------------------------------------------------------
+   Due pulsanti, sempre tutti e due visibili. Uno solo che cambia significato a
+   seconda della pagina — «vai alla dispensa» qui, «vai alla spesa» di là —
+   costringe a leggerlo per capire dove si è: due che stanno fermi si guardano
+   e basta. Quello dove sei è pieno, l'altro è vuoto e si tocca.
+   -------------------------------------------------------------------------- */
+
+.scelta-pagina {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-2);
+  padding: var(--sp-1);
+  margin-bottom: var(--sp-5);
+  background: var(--sfondo-alt);
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-3);
+}
+
+.scelta-pagina a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--tocco-min);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-2);
+  font-weight: 600;
+  color: var(--testo-morbido);
+  text-decoration: none;
+  transition: background-color var(--d-veloce) var(--e-standard),
+              color var(--d-veloce) var(--e-standard);
+}
+
+.scelta-pagina a:hover { background: var(--superficie); color: var(--testo); }
+.scelta-pagina a:focus-visible { box-shadow: var(--anello-fuoco); }
+
+.scelta-pagina a[aria-current='page'] {
+  background: var(--superficie);
+  color: var(--testo);
+  box-shadow: var(--ombra-1);
+}
+
+.scelta-pagina .icona { flex: none; }
+
+/* Su schermo largo non si stira: due parole in un pulsante da 400 px sembrano
+   un errore di impaginazione, non un comando. */
+@media (min-width: 42rem) {
+  .scelta-pagina { max-width: 26rem; }
+}

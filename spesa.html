@@ -30,6 +30,17 @@
       </div>
     </header>
 
+    <nav class="scelta-pagina non-stampare" aria-label="Spesa o dispensa">
+      <a href="/spesa.html" aria-current="page">
+        <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#spesa"/></svg>
+        Spesa
+      </a>
+      <a href="/dispensa.html">
+        <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#dispensa"/></svg>
+        Dispensa
+      </a>
+    </nav>
+
     <div class="scheda" id="senza-profilo" hidden>
       <div class="vuoto">
         <svg class="icona icona-lg" aria-hidden="true"><use href="/assets/icons.svg#utente"/></svg>
@@ -142,10 +153,6 @@
       <section class="sezione non-stampare">
         <header>
           <h2>Dispensa</h2>
-          <a class="bottone bottone-fantasma" href="/dispensa.html">
-            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#dispensa"/></svg>
-            Segna cosa hai già in casa
-          </a>
           <button class="bottone bottone-fantasma" id="svuota-dispensa">
             <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#cestino"/></svg>
             Svuota la dispensa
