@@ -273,6 +273,23 @@ export function fondiSpunte(locale, remota) {
  * Cio' che avanza dopo la spesa entra in dispensa e verra' sottratto
  * alla lista della settimana successiva.
  */
+/**
+ * Quanto ne avanza davvero: quello che hai portato a casa meno quello che la
+ * settimana consuma.
+ *
+ * Sta qui, esportata, perché la usano in due — la riga della lista, per dirlo
+ * a schermo, e gli avanzi di fine settimana, per metterlo in dispensa. Con due
+ * copie della stessa formula bastava correggerne una per far dire allo schermo
+ * un numero e all'archivio un altro.
+ *
+ * @param {object} voce  una voce di `costruisciLista`
+ * @param {number|null|undefined} preso  i grammi corretti a mano, se ci sono
+ */
+export function avanzoDi(voce, preso) {
+  if (preso === undefined || preso === null || preso === '') return voce.residuo;
+  return Math.max(0, Math.round(Number(preso) - voce.grammi));
+}
+
 export function residuiInDispensa(lista, profiloId, opzioni = 25) {
   // Firma vecchia `(lista, id, minimoG)` ancora accettata: era un numero.
   const { minimoG = 25, comprato = null } = typeof opzioni === 'number'
@@ -284,10 +301,7 @@ export function residuiInDispensa(lista, profiloId, opzioni = 25) {
       // Quanto ne è entrato in casa davvero. Il mazzo di bietole era da 500 g e
       // ne hai preso uno da 700: l'avanzo è 200 g in più di quello previsto, e
       // la settimana prossima quei 200 g esistono per davvero.
-      const preso = comprato?.get?.(v.alimentoId);
-      const grammi = preso === undefined || preso === null
-        ? v.residuo
-        : Math.max(0, Math.round(preso - v.grammi));
+      const grammi = avanzoDi(v, comprato?.get?.(v.alimentoId));
       return { voce: v, grammi };
     })
     // Sotto una ventina di grammi tenerne conto e' rumore: la dispensa

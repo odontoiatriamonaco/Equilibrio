@@ -7,8 +7,10 @@ import { caricaRicettario } from './piatti-utente.js';
 import {
   caricaSettimana, caricaDispensa, salvaScorta, caricaSpesa, salvaSpesa, segnaAvanzi,
 } from './dati.js';
-import { costruisciLista, quantitaLeggibile, comeTesto, residuiInDispensa } from './spesa.js';
-import { suggerimentiAntispreco } from './packaging.js';
+import {
+  costruisciLista, quantitaLeggibile, comeTesto, residuiInDispensa, avanzoDi,
+} from './spesa.js';
+import { suggerimentiAntispreco, residuoDaSegnalare } from './packaging.js';
 import { caricaPreferenze } from './preferenze.js';
 import { alimento, gruppi } from './alimenti.js';
 import {
@@ -259,6 +261,15 @@ function disegna() {
     aggiornaConteggio();
   }));
 
+  $$('#reparti [data-presi]').forEach((i) => i.addEventListener('input', () => {
+    // Subito, mentre scrivi: se dici 1000 g su una retina da 2 kg, l'avanzo
+    // deve scendere sotto gli occhi. Aggiornare la sola riga, e non ridisegnare
+    // tutto, serve a non farti sparire la casella da sotto le dita.
+    const v = lista.voci.find((x) => x.alimentoId === i.dataset.presi);
+    const nodo = $(`[data-nota="${i.dataset.presi}"]`);
+    if (v && nodo) nodo.textContent = notaVoce(v, i.value === '' ? undefined : Number(i.value));
+  }));
+
   $$('#reparti [data-presi]').forEach((i) => i.addEventListener('change', async () => {
     const g = Number(i.value);
     const id = i.dataset.presi;
@@ -295,14 +306,7 @@ function rendiReparto(r) {
 function rigaVoce(v) {
   const segno = spunte.get(v.alimentoId);
   const stato = segno?.spuntato ? 'checked' : '';
-  // Prima quanto ne chiede la dieta, poi il resto. È il numero che si va a
-  // cercare davanti allo scaffale: la quantità a destra dice quanto se ne
-  // COMPRA — un mazzo, una confezione — e non è la stessa cosa. Fra «1 mazzo
-  // (500 g)» e «ne avanzano 400 g» mancava proprio il dato di mezzo: che di
-  // bietola, questa settimana, ne servono cento grammi.
-  const nota = [`servono ${num(v.serve)} g`];
-  if (v.inCasa > 0) nota.push(`${num(v.inCasa)} g già in casa`);
-  if (v.residuoDaSegnalare) nota.push(`ne avanzano ${num(v.residuo)} g`);
+  const nota = notaVoce(v, segno?.acquistato);
 
   return `
     <div class="voce-spesa">
@@ -310,7 +314,7 @@ function rigaVoce(v) {
         <input type="checkbox" data-id="${v.alimentoId}" ${stato}>
         <span class="spunta"></span>
         <span class="nome">${v.nome}
-          ${nota.length ? `<br><span class="piccolo tenue">${nota.join(' · ')}</span>` : ''}
+          <br><span class="piccolo tenue" data-nota="${v.alimentoId}">${nota}</span>
         </span>
       </label>
       <span class="qta num">${quantitaLeggibile(v)}</span>
@@ -322,6 +326,24 @@ function rigaVoce(v) {
         <span class="piccolo tenue">g presi</span>
       </span>
     </div>`;
+}
+
+/**
+ * La riga sotto il nome: quanto ne chiede la dieta, poi il resto.
+ *
+ * «Servono» è il numero che si va a cercare davanti allo scaffale — la quantità
+ * a destra dice quanto se ne COMPRA, un mazzo o una confezione, e non è la
+ * stessa cosa. E l'avanzo segue quello che hai preso DAVVERO: se scrivi 1000 g
+ * di arance su una retina da 2 kg, l'avanzo scende subito, invece di continuare
+ * a dire il numero della confezione che non hai comprato.
+ */
+function notaVoce(v, presi) {
+  const pezzi = [`servono ${num(v.serve)} g`];
+  if (v.inCasa > 0) pezzi.push(`${num(v.inCasa)} g già in casa`);
+
+  const avanzo = avanzoDi(v, presi);
+  if (residuoDaSegnalare(v.alimentoId, avanzo)) pezzi.push(`ne avanzano ${num(avanzo)} g`);
+  return pezzi.join(' · ');
 }
 
 function aggiornaConteggio() {

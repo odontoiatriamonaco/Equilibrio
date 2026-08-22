@@ -5,6 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   daAvereInCasa, costruisciLista, aggregaSettimana, residuiInDispensa, comeTesto,
+  avanzoDi,
 } from '../js/spesa.js';
 import { generaSettimana, inizioSettimana } from '../js/planner.js';
 import { vuote } from '../js/preferenze.js';
@@ -174,5 +175,42 @@ describe('i soldi non si mostrano piu\u0300', () => {
 
     expect(lista.coperti).toBe(3);
     expect(costruisciLista(s, { dispensa: [] }).coperti).toBe(0);
+  });
+});
+
+describe('l\u2019avanzo segue quello che hai preso davvero', () => {
+  const s = settimana();
+  const lista = costruisciLista(s, { dispensa: [] });
+  const v = lista.voci.find((x) => x.acquistato > x.grammi + 300);
+
+  it('senza correzione resta quello della confezione', () => {
+    expect(avanzoDi(v, undefined)).toBe(v.residuo);
+    expect(avanzoDi(v, null)).toBe(v.residuo);
+    expect(avanzoDi(v, '')).toBe(v.residuo);
+  });
+
+  it('preso meno della confezione, avanza meno', () => {
+    const preso = v.grammi + 100;
+    expect(avanzoDi(v, preso)).toBe(100);
+    expect(avanzoDi(v, preso)).toBeLessThan(v.residuo);
+  });
+
+  it('preso esattamente quello che serve, non avanza niente', () => {
+    expect(avanzoDi(v, v.grammi)).toBe(0);
+  });
+
+  it('preso meno del necessario, l\u2019avanzo non va sotto zero', () => {
+    expect(avanzoDi(v, Math.floor(v.grammi / 2))).toBe(0);
+  });
+
+  it('lo schermo e la dispensa usano la stessa formula, quindi non divergono', () => {
+    // È la ragione per cui `avanzoDi` è una funzione sola ed esportata: con due
+    // copie bastava correggerne una per far dire allo schermo un numero e
+    // all\u2019archivio un altro.
+    const preso = v.grammi + 400;
+    const comprato = new Map([[v.alimentoId, preso]]);
+    const inDispensa = residuiInDispensa(lista, 'p', { comprato })
+      .find((x) => x.alimentoId === v.alimentoId);
+    expect(inDispensa.grammi).toBe(avanzoDi(v, preso));
   });
 });
