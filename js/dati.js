@@ -43,9 +43,19 @@ export async function caricaDispensa(profiloId) {
 export async function salvaScorta(profiloId, alimentoId, grammi) {
   const id = `${profiloId}:${alimentoId}`;
   if (grammi <= 0) return elimina('dispensa', id);
+
+  // La data di entrata NON si riscrive correggendo la quantità: altrimenti una
+  // ricotta comprata cinque giorni fa tornava fresca ogni volta che si toccava
+  // il numero, e la dispensa perdeva la memoria proprio di quello che le serve
+  // ricordare. Quando la scorta finisce il record sparisce, quindi ricomprando
+  // la data riparte da sé.
+  const gia = await leggi('dispensa', id);
   return scrivi('dispensa', {
-    id, profiloId, alimentoId, grammi,
-    dal: new Date().toISOString().slice(0, 10),
+    id,
+    profiloId,
+    alimentoId,
+    grammi,
+    dal: gia?.dal || new Date().toISOString().slice(0, 10),
   });
 }
 

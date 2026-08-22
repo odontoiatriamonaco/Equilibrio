@@ -97,6 +97,7 @@ js/energia.js             BMI, WHtR, massa grassa, BMR, TDEE, vincoli di sicurez
 js/store.js               IndexedDB partizionato per profilo
 js/profilo-file.js        export/import del profilo in file cifrato
 js/planner.js             generatore della settimana a vincoli, calibrazione porzioni
+js/conservazione.js       quanto tiene quello che hai in casa, e quanto urge consumarlo
 js/sgarro.js              redistribuzione degli sgarri, retroattiva e preventiva
 js/spesa.js               aggregazione, dispensa, formati di vendita, condivisione
 js/packaging.js           residui delle confezioni e proposte antispreco

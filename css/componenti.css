@@ -2083,3 +2083,16 @@ body:has(.barra-passo) .guscio {
 @media (min-width: 42rem) {
   .scelta-pagina { max-width: 26rem; }
 }
+
+
+/* --- Quanto manca ----------------------------------------------------------
+   Ocra come lo sgarro, non rosso: una mozzarella che sta per scadere è una cosa
+   da organizzare, non un pericolo. Il rosso in questa app è riservato ai
+   vincoli di sicurezza, e una scadenza STIMATA non è un vincolo di sicurezza.
+   -------------------------------------------------------------------------- */
+
+.fretta { font-weight: 600; }
+.fretta[data-fretta='settimana'] { color: var(--testo-morbido); }
+.fretta[data-fretta='presto']    { color: var(--testo-morbido); }
+.fretta[data-fretta='urgente'],
+.fretta[data-fretta='scaduta']   { color: var(--sgarro-testo); }

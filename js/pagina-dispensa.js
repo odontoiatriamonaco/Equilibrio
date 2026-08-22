@@ -17,6 +17,8 @@ import { caricaDispensa, salvaScorta, svuotaDispensa } from './dati.js';
 import { riferimentoDi, settimanaPer, settimaneDellaTavola } from './famiglia.js';
 import { caricaRicettario } from './piatti-utente.js';
 import { daAvereInCasa, costruisciLista } from './spesa.js';
+import { alimento } from './alimenti.js';
+import { comeStaMessa, perFretta } from './conservazione.js';
 
 let profilo = null;
 let settimana = null;
@@ -88,6 +90,7 @@ function rendiConto() {
     return;
   }
 
+  rendiFretta();
   $('#conto').innerHTML = `
     <p class="occhiello">La lista, con quello che hai già</p>
     <p style="margin: var(--sp-2) 0">
@@ -97,6 +100,38 @@ function rendiConto() {
     <p class="piccolo morbido" style="margin:0">${inMeno > 0
     ? `<strong>${inMeno} in meno</strong> da comprare. ` : ''}Hai segnato
       ${quadro.segnati} ${quadro.segnati === 1 ? 'alimento' : 'alimenti'} su ${quadro.quanti}.</p>`;
+}
+
+/**
+ * Cosa va usato prima. È l'ordine che il piano segue quando sceglie i piatti,
+ * e mostrarlo serve a poterlo smentire: se la mozzarella l'hai già finita, la
+ * togli da qui e la settimana prossima non ci gira intorno.
+ */
+function rendiFretta() {
+  const urgenti = perFretta(dispensa)
+    .map((s) => ({ s, m: comeStaMessa(s) }))
+    .filter((x) => x.m.stato === 'urgente' || x.m.stato === 'scaduta' || x.m.stato === 'presto');
+
+  const nodo = $('#fretta');
+  nodo.hidden = !urgenti.length;
+  if (!urgenti.length) return;
+
+  nodo.innerHTML = `
+    ${icona('orologio', 'icona icona-sm')}
+    <div><strong>Da usare prima:</strong>
+      ${urgenti.slice(0, 6).map((x) => `${nomeAlimento(x.s.alimentoId)} <span class="piccolo tenue">(${x.m.testo})</span>`).join(' · ')}${
+  urgenti.length > 6 ? ` e altri ${urgenti.length - 6}` : ''}.
+      <br><span class="piccolo">Quando rigeneri la settimana, il piano preferisce i piatti che
+      se li portano via.</span></div>`;
+}
+
+/**
+ * Il nome per esteso. Dal catalogo, non dall'elenco della settimana: in dispensa
+ * ci sta anche quello che questa settimana non si usa — ed e' proprio quello il
+ * caso in cui urge di piu', perche' nessun piatto in programma se lo porta via.
+ */
+function nomeAlimento(id) {
+  return alimento(id)?.nome || id;
 }
 
 /* --- L'elenco, reparto per reparto ------------------------------------------ */
@@ -137,10 +172,16 @@ function disegna() {
  */
 function rigaAvere(v) {
   const avanza = v.hoGia > v.serve ? ` · ne hai ${num(v.hoGia)}, avanza` : '';
+  // Come sta messa, solo se ce l'hai: su una cosa che non hai la scadenza non
+  // vuol dire niente.
+  const messa = v.hoGia > 0 ? comeStaMessa({ alimentoId: v.alimentoId, dal: v.dal }) : null;
+  const fretta = messa && messa.stato !== 'calma'
+    ? ` · <span class="fretta" data-fretta="${messa.stato}">${messa.testo}</span>`
+    : '';
   return `
     <div class="riga-avere${v.basta ? ' coperta' : ''}">
       <span class="nome">${v.nome}
-        <br><span class="piccolo tenue">ne servono ${num(v.serve)} g${avanza}</span></span>
+        <br><span class="piccolo tenue">ne servono ${num(v.serve)} g${avanza}${fretta}</span></span>
       <input class="quanti num" type="number" inputmode="numeric" min="0" step="10"
              data-quanti="${v.alimentoId}" value="${v.hoGia || ''}" placeholder="0"
              aria-label="Quanti grammi di ${v.nome} hai già">

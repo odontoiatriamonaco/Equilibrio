@@ -14,14 +14,14 @@ import {
   proponiScambio, decidiProposte, proposteInAttesa, raccontaArrivo,
 } from './spazio-famiglia.js';
 import { caricaPreferenze, NOMI_TETTI } from './preferenze.js';
-import { caricaSettimana, salvaSettimana } from './dati.js';
+import { caricaSettimana, salvaSettimana, caricaDispensa } from './dati.js';
 import {
   generaSettimana, kcalGiorno, valoriGiorno, inizioSettimana, iso,
   indiceOggi, GIORNI,
 } from './planner.js';
 import {
   nomeVoce, valoriVoce, iconaPiatto, vociOggetto, piatto, TIPI,
-  dosiVoce, dosePrincipale,
+  dosiVoce, dosePrincipale, alimento,
 } from './alimenti.js';
 import { alternativePiatto, scambiaPiatto } from './scambi.js';
 import {
@@ -252,6 +252,10 @@ function collegaRigenera() {
 
 async function rigenera() {
   const seme = Math.floor(Math.random() * 2 ** 31);
+  // Quello che c'è già in casa entra nella scelta dei piatti: fra due piatti
+  // che vanno bene uguale, viene preferito quello che si porta via la
+  // mozzarella che sta per scadere. Non decide — alza la probabilità.
+  const dispensa = await caricaDispensa(profilo.id);
   settimana = generaSettimana({
     target: energia.fabbisogno.target,
     floor: energia.fabbisogno.floor,
@@ -263,6 +267,7 @@ async function rigenera() {
     // Le condizioni dichiarate nel profilo entrano nella scelta dei piatti,
     // non solo in un avviso.
     vincoli: energia.vincoliSalute,
+    dispensa,
   });
   await salvaSettimana(profilo.id, settimana);
   divisione = await preparaDivisione();
@@ -277,6 +282,33 @@ async function rigenera() {
       ? { attivo: true, mandato: true }
       : { attivo: true, messaggio: esito.messaggio });
   }
+}
+
+/**
+ * Cosa questa settimana si porta via dalla dispensa.
+ *
+ * Il piano ha preferito certi piatti per consumare quello che sta in casa: è
+ * una scelta che ha fatto da solo, quindi va detta. Un menù che cambia senza
+ * spiegare perché somiglia a un capriccio, e la prima cosa che uno fa con un
+ * capriccio è smettere di fidarsi.
+ */
+function rendiDallaDispensa() {
+  const roba = settimana?.dallaDispensa || [];
+  const nota = $('#nota-dispensa');
+  nota.hidden = !roba.length;
+  if (!roba.length) return;
+
+  const nomi = roba.slice(0, 4)
+    .map((x) => `<strong>${alimentoDi(x.alimentoId)}</strong> (${num(x.grammi)} g)`);
+  const altri = roba.length - nomi.length;
+
+  nota.querySelector('div').innerHTML = `Questa settimana usa quello che avevi già in casa:
+    ${nomi.join(', ')}${altri > 0 ? ` e altre ${altri} cose` : ''}.
+    <a href="/dispensa.html">Cambia la dispensa</a> e rigenera, se non è più vero.`;
+}
+
+function alimentoDi(id) {
+  return alimento(id)?.nome || id;
 }
 
 /**
@@ -461,6 +493,7 @@ function disegna() {
     $('#nota-recupero').hidden = true;
   }
 
+  rendiDallaDispensa();
   rendiAvvio();
   rendiRiferimento();
 

@@ -200,7 +200,7 @@ export function daAvereInCasa(settimana, { commensali = 1, membri = null, dispen
   const necessario = membri?.length
     ? aggregaFamiglia(membri)
     : aggregaSettimana(settimana, commensali);
-  const scorte = new Map(dispensa.map((d) => [d.alimentoId, d.grammi]));
+  const scorte = new Map(dispensa.map((d) => [d.alimentoId, d]));
 
   const voci = [];
   for (const [id, grammiTotali] of necessario) {
@@ -216,7 +216,8 @@ export function daAvereInCasa(settimana, { commensali = 1, membri = null, dispen
     if (serve <= 0) continue;
     // Quello che c'è davvero in casa, non tagliato: «ne hai 900 e ne servono
     // 600» è un'informazione, nasconderla no. È solo la copertura a fermarsi.
-    const hoGia = Math.round(scorte.get(id) || 0);
+    const inCasaDa = scorte.get(id);
+    const hoGia = Math.round(inCasaDa?.grammi || 0);
 
     voci.push({
       alimentoId: id,
@@ -224,6 +225,8 @@ export function daAvereInCasa(settimana, { commensali = 1, membri = null, dispen
       reparto: a.reparto,
       serve,
       hoGia,
+      // Da quando ce l'hai: serve a dire cosa va usato prima.
+      dal: inCasaDa?.dal || null,
       coperto: Math.min(hoGia, serve),
       basta: hoGia >= serve,
     });

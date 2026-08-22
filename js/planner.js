@@ -7,8 +7,9 @@
 
 import { piatti as tuttiPiatti, gruppi, valoriVoce, alimento } from './alimenti.js';
 import { diStagione } from './alimenti.js';
-import { peso as pesoPreferenza, ammesso } from './preferenze.js';
+import { peso as pesoPreferenza, ammesso, omessi, eAllergene } from './preferenze.js';
 import { generatore, pescaPesato, semeDaTesto } from './casuale.js';
+import { urgenza } from './conservazione.js';
 
 /** Un piatto non deve ripresentarsi entro questi giorni. */
 export const GIORNI_VARIETA = 4;
@@ -42,6 +43,9 @@ const CATEGORIE = Object.entries(gruppi.categorieTetti || {})
   .map(([categoria, ids]) => [categoria, new Set(ids)]);
 
 /** A quali tetti tocca un piatto (puo' toccarne piu' di uno). */
+/** Quanto puo' pesare al massimo l'antispreco: due volte e mezzo un piatto qualunque. */
+const BONUS_DISPENSA = 1.5;
+
 export function categorieDi(piatto) {
   const trovate = new Set();
   for (const ing of piatto.ingredienti || []) {
@@ -81,13 +85,32 @@ export function generaSettimana(opzioni) {
     target, floor, preferenze, mese = new Date().getMonth() + 1,
     seme = Date.now(), rigidi = [], commensali = 1,
     piatti = tuttiPiatti, inizio = inizioSettimana(new Date()),
-    vincoli = {},
+    vincoli = {}, dispensa = [], oggi = new Date(),
   } = opzioni;
 
   const semeNum = typeof seme === 'string' ? semeDaTesto(seme) : seme >>> 0;
   const rnd = generatore(semeNum);
 
   const disponibili = piatti.filter((p) => ammesso(preferenze, p));
+
+  // Quello che c'è già in casa, con quanta fretta ha. Si CONSUMA man mano che
+  // il piano si costruisce: 200 g di riso avanzato giustificano un piatto di
+  // riso, non sette. Senza sottrarre, il bonus resterebbe acceso tutta la
+  // settimana e il menù diventerebbe un monotema.
+  //
+  // Quello che comunque non finirebbe nel piatto non conta: un ingrediente
+  // omesso viene tolto dai piatti che lo prevedono, e un allergene esclude il
+  // piatto intero. Senza questo filtro il piano avrebbe preferito piatti «per
+  // consumare la ricotta» a cui la ricotta viene poi tolta — un antispreco che
+  // non spreca niente perche' non consuma niente.
+  const daNonUsare = new Set(omessi(preferenze));
+  const scorte = new Map();
+  for (const s of dispensa) {
+    if (!(s?.grammi > 0)) continue;
+    if (daNonUsare.has(s.alimentoId) || eAllergene(preferenze, s.alimentoId)) continue;
+    scorte.set(s.alimentoId, { grammi: s.grammi, fretta: urgenza(s, oggi) });
+  }
+  const consumate = new Map();
   const usati = new Map();          // piattoId -> ultimo giorno in cui e' comparso
   const conteggi = new Map();       // categoria -> volte nella settimana
 
@@ -104,10 +127,10 @@ export function generaSettimana(opzioni) {
     data.setDate(data.getDate() + g);
 
     const pasti = {
-      colazione: [scegli({ tipo: 'colazione' }, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli })],
-      'spuntino-mattina': [scegli({ tipo: 'spuntino' }, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli })],
+      colazione: [scegli({ tipo: 'colazione' }, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli, scorte, consumate })],
+      'spuntino-mattina': [scegli({ tipo: 'spuntino' }, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli, scorte, consumate })],
       pranzo: [],
-      'spuntino-pomeriggio': [scegli({ tipo: 'spuntino' }, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli })],
+      'spuntino-pomeriggio': [scegli({ tipo: 'spuntino' }, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli, scorte, consumate })],
       cena: [],
     };
 
@@ -115,7 +138,7 @@ export function generaSettimana(opzioni) {
       for (const slot of schemaPasto(pasto, rnd)) {
         const voce = slot.alimento
           ? { tipo: 'alimento', id: slot.alimento, porzioni: 1 }
-          : scegli(slot, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli });
+          : scegli(slot, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli, scorte, consumate });
         if (voce) pasti[pasto].push(voce);
       }
     }
@@ -137,12 +160,22 @@ export function generaSettimana(opzioni) {
     giorni,
   };
 
+  // Cosa il piano si porta via dalla dispensa. Serve a dirlo: un menu' che
+  // cambia da solo senza spiegare perche' e' peggio di uno che non cambia.
+  if (consumate.size) {
+    settimana.dallaDispensa = [...consumate.entries()]
+      .map(([a, g]) => ({ alimentoId: a, grammi: Math.round(g) }))
+      .sort((x, y) => y.grammi - x.grammi);
+  }
+
   calibra(settimana, target, floor);
   return settimana;
 }
 
 function scegli(slot, giorno, ctx) {
-  const { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli } = ctx;
+  const {
+    disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli, scorte, consumate,
+  } = ctx;
   const candidati = disponibili.filter((p) => p.tipo === slot.tipo);
   if (!candidati.length) return null;
 
@@ -169,12 +202,18 @@ function scegli(slot, giorno, ctx) {
       // l'unico valore «clinico» che il ricettario conosce su tutti gli alimenti.
       w *= pesoSodio(p, vincoli?.sodioMax);
       w *= pesoFibra(p, vincoli?.fibraMin);
+      // L'antispreco entra qui, come tutti gli altri criteri: alza la
+      // probabilita', non decide. Un piatto escluso resta escluso anche se in
+      // frigo c'e' mezzo chilo del suo ingrediente — la ricotta che scade non
+      // e' un buon motivo per far mangiare a qualcuno una cosa che non vuole.
+      w *= pesoDispensa(p, scorte);
       ammessi.push(p);
       pesi.push(w);
     }
 
     const scelto = pescaPesato(ammessi, pesi, rnd);
     if (scelto) {
+      consumaScorte(scelto, scorte, consumate);
       usati.set(scelto.id, giorno);
       for (const c of categorieDi(scelto)) {
         conteggi.set(c, (conteggi.get(c) || 0) + 1);
@@ -183,6 +222,57 @@ function scegli(slot, giorno, ctx) {
     }
   }
   return null;
+}
+
+/**
+ * Quanto pesa, in piu', un piatto che svuota la dispensa.
+ *
+ * La spinta e' proporzionale alla FRETTA, non alla quantita': mezzo chilo di
+ * riso in dispensa non e' un'emergenza, cento grammi di ricotta di quattro
+ * giorni fa si'. Un piatto che ne consuma uno urgente vale fino a due volte e
+ * mezzo un piatto qualunque — abbastanza da vincere spesso, non abbastanza da
+ * vincere sempre: la varieta' del menu' vale piu' di cento grammi di ricotta.
+ *
+ * Conta l'ingrediente PIU' urgente, non la media di tutti: la domanda e'
+ * «questo piatto si porta via la mozzarella che sta scadendo?», e la risposta
+ * non deve dipendere da quanti altri ingredienti ha la ricetta. Facendo la
+ * media, una parmigiana da otto ingredienti veniva punita rispetto a un piatto
+ * da due, a parita' di mozzarella consumata.
+ *
+ * @param {object} piatto
+ * @param {Map<string, {grammi:number, fretta:number}>} scorte
+ */
+export function pesoDispensa(piatto, scorte) {
+  if (!scorte?.size) return 1;
+
+  let spinta = 0;
+  for (const i of piatto.ingredienti || []) {
+    const s = scorte.get(i.a);
+    if (!s || !(s.grammi > 0) || !(i.g > 0) || !(s.fretta > 0)) continue;
+    // Quanto del fabbisogno del piatto la scorta copre, per quanto urge.
+    spinta = Math.max(spinta, Math.min(1, s.grammi / i.g) * s.fretta);
+  }
+  if (spinta <= 0) return 1;
+  return 1 + BONUS_DISPENSA * spinta;
+}
+
+/**
+ * Toglie dalla dispensa quello che il piatto scelto si porta via.
+ *
+ * Senza, il bonus resterebbe acceso per tutta la settimana e duecento grammi di
+ * riso avanzato produrrebbero sette piatti di riso. Il conto e' su una porzione
+ * — la calibrazione le cambia dopo — ma per decidere l'ordine dei piatti basta.
+ */
+function consumaScorte(piatto, scorte, consumate) {
+  for (const i of piatto.ingredienti || []) {
+    const s = scorte.get(i.a);
+    if (!s || !(s.grammi > 0)) continue;
+    const usato = Math.min(s.grammi, i.g || 0);
+    if (usato <= 0) continue;
+    consumate.set(i.a, (consumate.get(i.a) || 0) + usato);
+    if (usato >= s.grammi) scorte.delete(i.a);
+    else s.grammi -= usato;
+  }
 }
 
 /**
