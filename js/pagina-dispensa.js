@@ -10,10 +10,10 @@
    settimana userà e nient'altro: chiedere di censire centoquaranta alimenti per
    usarne quaranta è il modo più sicuro di far abbandonare il censimento a metà. */
 
-import { $, $$, avvia, icona, num, euro } from './guscio.js';
+import { $, $$, avvia, icona, num } from './guscio.js';
 import { montaBarraPercorso } from './barra-percorso.js';
 import { profiloAttivo } from './store.js';
-import { caricaDispensa, salvaScorta } from './dati.js';
+import { caricaDispensa, salvaScorta, svuotaDispensa } from './dati.js';
 import { riferimentoDi, settimanaPer, settimaneDellaTavola } from './famiglia.js';
 import { caricaRicettario } from './piatti-utente.js';
 import { daAvereInCasa, costruisciLista } from './spesa.js';
@@ -59,59 +59,44 @@ export async function inizializza() {
 /* --- Il conto, che è poi il motivo per cui uno lo fa ------------------------ */
 
 /**
- * Quanto costa la lista con e senza quello che hai già.
+ * Quante cose resterebbero da comprare, con e senza quello che hai già.
  *
- * Il risparmio si misura in confezioni intere, non in grammi: mezzo pacco di
- * pasta in casa non toglie mezzo pacco dal conto — toglie il pacco solo se
- * quello che resta basta. Per non riscrivere quella matematica, e per non
- * rischiare che le due strade dicano numeri diversi, la lista si costruisce due
- * volte con la stessa funzione e si guarda la differenza.
+ * Si contano le COSE, non gli euro: i prezzi sono stime e una stima sbagliata
+ * confonde più di quanto informi — è la ragione per cui il costo è sparito
+ * anche dalla lista della spesa.
+ *
+ * Il conto si fa costruendo la lista due volte con la stessa funzione, invece
+ * di riscriverne la matematica: mezzo pacco di pasta in casa non toglie una
+ * riga dalla lista, la toglie solo se quello che resta basta.
  */
 function conti() {
   const opz = { commensali, membri: membri?.length > 1 ? membri : null };
   const senza = costruisciLista(settimana, { ...opz, dispensa: [] });
   const con = costruisciLista(settimana, { ...opz, dispensa });
-  return {
-    senza,
-    con,
-    risparmio: Math.round((senza.costo - con.costo) * 100) / 100,
-    inMeno: senza.voci.length - con.voci.length,
-  };
+  return { senza, con, inMeno: senza.voci.length - con.voci.length };
 }
 
 function rendiConto() {
-  const { senza, con, risparmio, inMeno } = conti();
+  const { senza, con, inMeno } = conti();
 
   if (!quadro.segnati) {
     $('#conto').innerHTML = `
       <p class="occhiello">La lista, per ora</p>
-      <p class="dato-grande num" style="margin: var(--sp-2) 0">${euro(senza.costo)}</p>
-      <p class="piccolo morbido" style="margin:0">${senza.voci.length} cose da comprare,
-        come se la cucina fosse vuota. Segna qui sotto quello che hai già e questo
-        numero scende.</p>`;
+      <p class="dato-grande num" style="margin: var(--sp-2) 0">${senza.voci.length} cose</p>
+      <p class="piccolo morbido" style="margin:0">da comprare, come se la cucina fosse
+        vuota. Segna qui sotto quello che hai già e questo numero scende.</p>`;
     return;
   }
-
-  // «La spesa scende di», non «risparmiati»: sono due numeri diversi e sulla
-  // pagina Spesa c'è già l'altro — «dalla dispensa arrivano X € di roba che non
-  // serve ricomprare», che è il valore di quello che possiedi, grammo per
-  // grammo. Questo qui è quanto pagherai in meno alla cassa, e sale a scatti
-  // perché si compra a confezioni intere. Chiamarli tutti e due «risparmio»
-  // farebbe sembrare che uno dei due sia sbagliato.
-  const guadagno = [
-    inMeno > 0 ? `<strong>${inMeno} ${inMeno === 1 ? 'cosa' : 'cose'} in meno</strong> da comprare` : '',
-    risparmio > 0 ? `la spesa scende di <strong>${euro(risparmio)}</strong>` : '',
-  ].filter(Boolean).join(', ');
 
   $('#conto').innerHTML = `
     <p class="occhiello">La lista, con quello che hai già</p>
     <p style="margin: var(--sp-2) 0">
-      <span class="dato-grande num">${euro(con.costo)}</span>
-      <span class="piccolo tenue" style="text-decoration: line-through; margin-left: var(--sp-3)">${euro(senza.costo)}</span>
+      <span class="dato-grande num">${con.voci.length} cose</span>
+      <span class="piccolo tenue" style="text-decoration: line-through; margin-left: var(--sp-3)">${senza.voci.length}</span>
     </p>
-    <p class="piccolo morbido" style="margin:0">${guadagno ? `${guadagno}. ` : ''}Hai
-      segnato ${quadro.segnati} ${quadro.segnati === 1 ? 'alimento' : 'alimenti'}
-      su ${quadro.quanti}.</p>`;
+    <p class="piccolo morbido" style="margin:0">${inMeno > 0
+    ? `<strong>${inMeno} in meno</strong> da comprare. ` : ''}Hai segnato
+      ${quadro.segnati} ${quadro.segnati === 1 ? 'alimento' : 'alimenti'} su ${quadro.quanti}.</p>`;
 }
 
 /* --- L'elenco, reparto per reparto ------------------------------------------ */
@@ -202,11 +187,31 @@ async function segnaLeBasi() {
     </div>`);
 }
 
-/** Riparte da cucina vuota. Tocca solo gli alimenti di questa settimana. */
+/**
+ * Svuota la dispensa per intero, non solo gli alimenti di questa settimana.
+ *
+ * Dentro ci finiscono anche gli avanzi delle settimane passate, che in questo
+ * elenco non compaiono: azzerare solo quello che si vede lascerebbe scorte
+ * invisibili a sottrarsi dalla lista, e nessun modo di accorgersene. Quindi si
+ * dice quante sono e si cancella tutto — ma solo dopo aver chiesto, perché è
+ * l'unica cosa in questa pagina che non si disfa con un secondo tocco.
+ */
 async function azzera() {
-  for (const v of quadro.voci) {
-    if (v.hoGia > 0) await salvaScorta(profilo.id, v.alimentoId, 0);
-  }
+  const quante = dispensa.length;
+  if (!quante) return;
+
+  const fuoriSettimana = quante - quadro.segnati;
+  const dettaglio = fuoriSettimana > 0
+    ? `
+
+Di ${quante}, ${fuoriSettimana} ${fuoriSettimana === 1 ? 'è un avanzo' : 'sono avanzi'}`
+      + ' di settimane passate: qui sotto non si vedono, ma dalla lista si tolgono.'
+    : '';
+
+  if (!window.confirm(`Svuoto la dispensa? ${quante} ${quante === 1 ? 'scorta sparisce' : 'scorte spariscono'}`
+    + ` e la lista tornerà a comprare tutto.${dettaglio}`)) return;
+
+  await svuotaDispensa(profilo.id);
   dispensa = await caricaDispensa(profilo.id);
   disegna();
 }

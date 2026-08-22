@@ -1,11 +1,12 @@
 /* Equilibrio — pagina Spesa: la lista per reparto, la dispensa, l'antispreco. */
 
-import { avvia, icona, $, $$, num, euro, condividiTesto } from './guscio.js';
+import { avvia, icona, $, $$, num, condividiTesto } from './guscio.js';
 import { montaBarraPercorso } from './barra-percorso.js';
 import { profiloAttivo } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import {
-  caricaSettimana, caricaDispensa, salvaScorta, caricaSpesa, salvaSpesa, segnaAvanzi,
+  caricaSettimana, caricaDispensa, salvaScorta, svuotaDispensa, caricaSpesa, salvaSpesa,
+  segnaAvanzi,
 } from './dati.js';
 import { costruisciLista, quantitaLeggibile, comeTesto, residuiInDispensa } from './spesa.js';
 import { suggerimentiAntispreco } from './packaging.js';
@@ -68,6 +69,7 @@ export async function inizializza() {
     disegna();
   });
 
+  $('#svuota-dispensa').addEventListener('click', svuota);
   $('#pubblica').addEventListener('click', pubblicaLista);
   $('#apri-codice').addEventListener('click', () => $('#dialogo-remota').showModal());
   $('#chiudi-remota').addEventListener('click', () => $('#dialogo-remota').close());
@@ -233,26 +235,43 @@ function ricostruisci() {
 function disegna() {
   const fatte = lista.voci.filter((v) => spunte.get(v.alimentoId)?.spuntato).length;
 
+  // Niente euro: i prezzi sono stime, e «92,80 €» su uno scontrino che ne farà
+  // 71 fa dubitare anche dei grammi, che invece sono giusti. Quello che serve
+  // davvero mentre si spinge il carrello è quante cose restano.
   $('#riepilogo').innerHTML = `
     <div class="griglia-2">
       <div><p class="dato-grande num">${num(lista.articoli)}</p><p class="unita">articoli</p></div>
-      <div><p class="dato-grande num">${euro(lista.costo)}</p><p class="unita">spesa stimata</p></div>
       <div><p class="dato-grande num">${num(fatte)}</p><p class="unita">già nel carrello</p></div>
     </div>
-    ${lista.risparmiato > 0 ? `
+    ${lista.coperti > 0 ? `
       <p class="piccolo morbido" style="margin-top:var(--sp-3)">
-        Dalla dispensa arrivano ${euro(lista.risparmiato)} di roba che non serve ricomprare.</p>` : ''}`;
+        ${lista.coperti} ${lista.coperti === 1 ? 'cosa' : 'cose'} non ${lista.coperti === 1 ? 'la' : 'le'}
+        compri: ${lista.coperti === 1 ? 'ce l’hai' : 'ce le hai'} già in dispensa.</p>` : ''}`;
 
   $('#reparti').innerHTML = lista.reparti.map(rendiReparto).join('');
 
   $$('#reparti input[type="checkbox"]').forEach((c) => c.addEventListener('change', async () => {
     spunte.set(c.dataset.id, {
+      ...spunte.get(c.dataset.id),
       alimentoId: c.dataset.id,
       spuntato: c.checked,
       spuntatoIl: new Date().toISOString(),
     });
     await persisti();
     aggiornaConteggio();
+  }));
+
+  $$('#reparti [data-presi]').forEach((i) => i.addEventListener('change', async () => {
+    const g = Number(i.value);
+    const id = i.dataset.presi;
+    spunte.set(id, {
+      ...spunte.get(id),
+      alimentoId: id,
+      // Vuoto vuol dire «quello che c'era scritto»: non è zero, è «non l'ho
+      // corretto». Zero lo si scrive, e vuol dire che non l'hai trovato.
+      acquistato: i.value === '' ? undefined : Math.max(0, g || 0),
+    });
+    await persisti();
   }));
 
   disegnaAntispreco();
@@ -268,21 +287,39 @@ function rendiReparto(r) {
     </section>`;
 }
 
+/**
+ * Una riga della lista, con quanto ne hai preso DAVVERO.
+ *
+ * La lista dice «1 mazzo (500 g)», ma al banco il mazzo era da 700. Prima
+ * quella differenza si perdeva: gli avanzi di fine settimana si calcolavano
+ * sulla confezione teorica, e i 200 g in più non esistevano per nessuno.
+ * Adesso la casella si corregge, e quei grammi la settimana prossima ci sono.
+ */
 function rigaVoce(v) {
-  const stato = spunte.get(v.alimentoId)?.spuntato ? 'checked' : '';
+  const segno = spunte.get(v.alimentoId);
+  const stato = segno?.spuntato ? 'checked' : '';
   const nota = [];
   if (v.inCasa > 0) nota.push(`${num(v.inCasa)} g già in casa`);
   if (v.residuoDaSegnalare) nota.push(`ne avanzano ${num(v.residuo)} g`);
 
   return `
-    <label class="voce-spesa">
-      <input type="checkbox" data-id="${v.alimentoId}" ${stato}>
-      <span class="spunta"></span>
-      <span class="nome">${v.nome}
-        ${nota.length ? `<br><span class="piccolo tenue">${nota.join(' · ')}</span>` : ''}
-      </span>
+    <div class="voce-spesa">
+      <label class="presa">
+        <input type="checkbox" data-id="${v.alimentoId}" ${stato}>
+        <span class="spunta"></span>
+        <span class="nome">${v.nome}
+          ${nota.length ? `<br><span class="piccolo tenue">${nota.join(' · ')}</span>` : ''}
+        </span>
+      </label>
       <span class="qta num">${quantitaLeggibile(v)}</span>
-    </label>`;
+      <span class="presi">
+        <input class="num" type="number" inputmode="numeric" min="0" step="10"
+               data-presi="${v.alimentoId}" placeholder="${v.acquistato}"
+               value="${segno?.acquistato ?? ''}"
+               aria-label="Quanti grammi di ${v.nome} hai preso davvero">
+        <span class="piccolo tenue">g presi</span>
+      </span>
+    </div>`;
 }
 
 function aggiornaConteggio() {
@@ -362,6 +399,22 @@ function disegnaDispensa() {
 }
 
 /**
+ * Svuota la dispensa. Si chiede prima: è l'unica cosa in questa pagina che non
+ * si disfa con un secondo tocco, e cancella anche gli avanzi delle settimane
+ * passate.
+ */
+async function svuota() {
+  const quante = dispensa.length;
+  if (!quante) return;
+  if (!window.confirm(`Svuoto la dispensa? ${quante} ${quante === 1 ? 'scorta sparisce' : 'scorte spariscono'}`
+    + ', e la lista tornerà a comprare tutto.')) return;
+
+  await svuotaDispensa(profilo.id);
+  dispensa = await caricaDispensa(profilo.id);
+  ricostruisci();
+}
+
+/**
  * Mettere gli avanzi in dispensa CHIUDE la settimana, e si fa una volta sola.
  *
  * Premendolo due volte, prima, la lista impazziva: gli avanzi si ricalcolavano
@@ -372,7 +425,12 @@ function disegnaDispensa() {
 async function metteInDispensa() {
   if (avanziIl) return rendiAvanzi();
 
-  const scorte = residuiInDispensa(lista, profilo.id);
+  // Quello che hai corretto a mano vince su quello che la confezione prevedeva.
+  const comprato = new Map();
+  for (const s of spunte.values()) {
+    if (s?.acquistato !== undefined && s.acquistato !== null) comprato.set(s.alimentoId, s.acquistato);
+  }
+  const scorte = residuiInDispensa(lista, profilo.id, { comprato });
   for (const s of scorte) await salvaScorta(profilo.id, s.alimentoId, s.grammi);
   await segnaAvanzi(profilo.id, settimana.inizio);
   avanziIl = new Date().toISOString().slice(0, 10);

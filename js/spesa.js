@@ -73,6 +73,10 @@ export function costruisciLista(settimana, { commensali = 1, dispensa = [], memb
   const residui = [];
   let costo = 0;
   let risparmiato = 0;
+  // Quante cose la dispensa copre per intero. È il numero che si mostra al
+  // posto degli euro: i prezzi sono stime, e una stima sbagliata confonde più
+  // di quanto informi.
+  let coperti = 0;
 
   for (const [id, grammiTotali] of necessario) {
     const a = alimento(id);
@@ -85,7 +89,10 @@ export function costruisciLista(settimana, { commensali = 1, dispensa = [], memb
     // Quello che c'e' in dispensa non si ricompra: sparisce dalla lista.
     // Sotto il grammo non e' una spesa, e' un resto di divisione: lasciandolo
     // passare la lista scriveva «Miele — 0 g, 1 vasetto».
-    if (daComprare < 1) continue;
+    if (daComprare < 1) {
+      if (inCasa > 0) coperti += 1;
+      continue;
+    }
 
     const conf = confezioniNecessarie(id, daComprare);
     const spesa = (conf.acquistato / 1000) * (a.prezzo || 0);
@@ -129,6 +136,11 @@ export function costruisciLista(settimana, { commensali = 1, dispensa = [], memb
     voci,
     residui,
     sprecoG: sprecoTotale(residui),
+    coperti,
+    // `costo` e `risparmiato` restano calcolati ma NON si mostrano da nessuna
+    // parte: i prezzi in `alimenti.json` sono stime, e vedere «92,80 €» su uno
+    // scontrino che ne farà 71 fa dubitare di tutto il resto. Il conto vero lo
+    // fa la cassa. Chi volesse rimetterli deve prima sistemare i prezzi.
     costo: Math.round(costo * 100) / 100,
     risparmiato: Math.round(risparmiato * 100) / 100,
     articoli: voci.length,
@@ -258,16 +270,31 @@ export function fondiSpunte(locale, remota) {
  * Cio' che avanza dopo la spesa entra in dispensa e verra' sottratto
  * alla lista della settimana successiva.
  */
-export function residuiInDispensa(lista, profiloId, minimoG = 25) {
+export function residuiInDispensa(lista, profiloId, opzioni = 25) {
+  // Firma vecchia `(lista, id, minimoG)` ancora accettata: era un numero.
+  const { minimoG = 25, comprato = null } = typeof opzioni === 'number'
+    ? { minimoG: opzioni }
+    : (opzioni || {});
+
   return lista.voci
+    .map((v) => {
+      // Quanto ne è entrato in casa davvero. Il mazzo di bietole era da 500 g e
+      // ne hai preso uno da 700: l'avanzo è 200 g in più di quello previsto, e
+      // la settimana prossima quei 200 g esistono per davvero.
+      const preso = comprato?.get?.(v.alimentoId);
+      const grammi = preso === undefined || preso === null
+        ? v.residuo
+        : Math.max(0, Math.round(preso - v.grammi));
+      return { voce: v, grammi };
+    })
     // Sotto una ventina di grammi tenerne conto e' rumore: la dispensa
     // diventerebbe un elenco di sessanta voci inutili.
-    .filter((v) => v.residuo >= minimoG)
-    .map((v) => ({
-      id: `${profiloId}:${v.alimentoId}`,
+    .filter((x) => x.grammi >= minimoG)
+    .map((x) => ({
+      id: `${profiloId}:${x.voce.alimentoId}`,
       profiloId,
-      alimentoId: v.alimentoId,
-      grammi: v.residuo,
+      alimentoId: x.voce.alimentoId,
+      grammi: x.grammi,
       dal: new Date().toISOString().slice(0, 10),
     }));
 }
@@ -280,7 +307,7 @@ export function comeTesto(lista) {
     for (const v of r.voci) righe.push(`  · ${v.nome} — ${quantitaLeggibile(v)}`);
     righe.push('');
   }
-  righe.push(`${lista.articoli} articoli · circa ${lista.costo.toFixed(2).replace('.', ',')} €`);
+  righe.push(`${lista.articoli} ${lista.articoli === 1 ? 'articolo' : 'articoli'}`);
   return righe.join('\n');
 }
 

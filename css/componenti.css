@@ -526,8 +526,35 @@
 }
 
 .voce-spesa:hover { background: var(--sfondo-alt); }
+.voce-spesa { cursor: auto; flex-wrap: wrap; }
 
-.voce-spesa input { position: absolute; opacity: 0; width: 0; height: 0; }
+.voce-spesa input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
+
+/* La parte che si tocca per spuntare. Il resto della riga non è cliccabile:
+   dentro c'è una casella da compilare, e un click che spunta mentre provi a
+   scriverci sarebbe una trappola. */
+.voce-spesa .presa {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+/* Quanto ne hai preso davvero: la confezione dice 500 g, il mazzo era da 700. */
+.voce-spesa .presi {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: none;
+}
+
+.voce-spesa .presi input {
+  width: 4.75rem;
+  text-align: right;
+  padding: var(--sp-1) var(--sp-2);
+}
 
 .voce-spesa .spunta {
   position: relative;
@@ -564,10 +591,15 @@
 .voce-spesa .nome { flex: 1; min-width: 0; }
 .voce-spesa .qta { color: var(--testo-morbido); font-size: var(--t-sm); }
 
-.voce-spesa input:checked ~ .nome,
-.voce-spesa input:checked ~ .qta {
+.voce-spesa:has(input:checked) .nome,
+.voce-spesa:has(input:checked) .qta {
   color: var(--testo-tenue);
   text-decoration: line-through;
+}
+
+@media (max-width: 30rem) {
+  .voce-spesa .presa { flex-basis: 100%; }
+  .voce-spesa .presi { margin-left: auto; }
 }
 
 /* --- Carta del piatto ----------------------------------------------------- */

@@ -3,7 +3,9 @@
  * Fino a qui la dispensa si riempiva solo con gli avanzi, a fine settimana —
  * quindi la PRIMA spesa comprava tutto da zero, olio e sale compresi. */
 import { describe, it, expect } from 'vitest';
-import { daAvereInCasa, costruisciLista, aggregaSettimana } from '../js/spesa.js';
+import {
+  daAvereInCasa, costruisciLista, aggregaSettimana, residuiInDispensa, comeTesto,
+} from '../js/spesa.js';
 import { generaSettimana, inizioSettimana } from '../js/planner.js';
 import { vuote } from '../js/preferenze.js';
 
@@ -108,5 +110,69 @@ describe('quello che c\u2019e\u0300 in casa si vede per intero', () => {
     const q = daAvereInCasa(s, { dispensa: [{ alimentoId: 'non-esiste-affatto', grammi: 900 }] });
     expect(q.voci.some((v) => v.alimentoId === 'non-esiste-affatto')).toBe(false);
     expect(q.segnati).toBe(0);
+  });
+});
+
+describe('quanto ne hai preso davvero', () => {
+  const s = settimana();
+
+  /** La lista, e una voce che si compra a confezioni. */
+  function conVoce() {
+    const lista = costruisciLista(s, { dispensa: [] });
+    const v = lista.voci.find((x) => x.acquistato > x.grammi + 50);
+    return { lista, v };
+  }
+
+  it('senza correzioni l\u2019avanzo resta quello della confezione', () => {
+    const { lista } = conVoce();
+    const vecchio = residuiInDispensa(lista, 'p');
+    const nuovo = residuiInDispensa(lista, 'p', {});
+    expect(nuovo).toEqual(vecchio);
+  });
+
+  it('il mazzo era piu\u0300 grande: l\u2019avanzo cresce di quello che hai preso in piu\u0300', () => {
+    const { lista, v } = conVoce();
+    expect(v).toBeDefined();
+    const comprato = new Map([[v.alimentoId, v.acquistato + 200]]);
+    const scorte = residuiInDispensa(lista, 'p', { comprato });
+    const riga = scorte.find((x) => x.alimentoId === v.alimentoId);
+
+    expect(riga.grammi).toBe(v.residuo + 200);
+  });
+
+  it('ne hai preso meno del necessario: non avanza niente, e non va sotto zero', () => {
+    const { lista, v } = conVoce();
+    const comprato = new Map([[v.alimentoId, Math.floor(v.grammi / 2)]]);
+    const scorte = residuiInDispensa(lista, 'p', { comprato });
+    expect(scorte.some((x) => x.alimentoId === v.alimentoId)).toBe(false);
+  });
+
+  it('la correzione vale solo per la voce corretta', () => {
+    const { lista, v } = conVoce();
+    const comprato = new Map([[v.alimentoId, v.acquistato + 500]]);
+    const scorte = residuiInDispensa(lista, 'p', { comprato });
+    const altri = residuiInDispensa(lista, 'p').filter((x) => x.alimentoId !== v.alimentoId);
+    for (const a of altri) {
+      expect(scorte.find((x) => x.alimentoId === a.alimentoId)?.grammi).toBe(a.grammi);
+    }
+  });
+});
+
+describe('i soldi non si mostrano piu\u0300', () => {
+  const s = settimana();
+
+  it('la lista da mandare su WhatsApp non porta un prezzo', () => {
+    const testo = comeTesto(costruisciLista(s, { dispensa: [] }));
+    expect(testo).not.toMatch(/€/);
+    expect(testo).toMatch(/\d+ articoli/);
+  });
+
+  it('al posto degli euro c\u2019e\u0300 quante cose non servono', () => {
+    const q = daAvereInCasa(s);
+    const dispensa = q.voci.slice(0, 3).map((v) => ({ alimentoId: v.alimentoId, grammi: v.serve }));
+    const lista = costruisciLista(s, { dispensa });
+
+    expect(lista.coperti).toBe(3);
+    expect(costruisciLista(s, { dispensa: [] }).coperti).toBe(0);
   });
 });
