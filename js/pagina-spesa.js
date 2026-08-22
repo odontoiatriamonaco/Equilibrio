@@ -5,8 +5,7 @@ import { montaBarraPercorso } from './barra-percorso.js';
 import { profiloAttivo } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import {
-  caricaSettimana, caricaDispensa, salvaScorta, svuotaDispensa, caricaSpesa, salvaSpesa,
-  segnaAvanzi,
+  caricaSettimana, caricaDispensa, salvaScorta, caricaSpesa, salvaSpesa, segnaAvanzi,
 } from './dati.js';
 import { costruisciLista, quantitaLeggibile, comeTesto, residuiInDispensa } from './spesa.js';
 import { suggerimentiAntispreco } from './packaging.js';
@@ -69,7 +68,6 @@ export async function inizializza() {
     disegna();
   });
 
-  $('#svuota-dispensa').addEventListener('click', svuota);
   $('#pubblica').addEventListener('click', pubblicaLista);
   $('#apri-codice').addEventListener('click', () => $('#dialogo-remota').showModal());
   $('#chiudi-remota').addEventListener('click', () => $('#dialogo-remota').close());
@@ -275,7 +273,6 @@ function disegna() {
   }));
 
   disegnaAntispreco();
-  disegnaDispensa();
   rendiAvanzi();
 }
 
@@ -298,7 +295,12 @@ function rendiReparto(r) {
 function rigaVoce(v) {
   const segno = spunte.get(v.alimentoId);
   const stato = segno?.spuntato ? 'checked' : '';
-  const nota = [];
+  // Prima quanto ne chiede la dieta, poi il resto. È il numero che si va a
+  // cercare davanti allo scaffale: la quantità a destra dice quanto se ne
+  // COMPRA — un mazzo, una confezione — e non è la stessa cosa. Fra «1 mazzo
+  // (500 g)» e «ne avanzano 400 g» mancava proprio il dato di mezzo: che di
+  // bietola, questa settimana, ne servono cento grammi.
+  const nota = [`servono ${num(v.serve)} g`];
   if (v.inCasa > 0) nota.push(`${num(v.inCasa)} g già in casa`);
   if (v.residuoDaSegnalare) nota.push(`ne avanzano ${num(v.residuo)} g`);
 
@@ -364,55 +366,14 @@ function disegnaAntispreco() {
     </div>`).join('');
 }
 
-/* --- Dispensa -------------------------------------------------------------- */
-
-function disegnaDispensa() {
-  if (!dispensa.length) {
-    $('#dispensa-elenco').innerHTML = `
-      <div class="vuoto">
-        ${icona('dispensa', 'icona icona-lg')}
-        <p>La dispensa è vuota.<br>Quello che avanza dalla spesa finisce qui,
-           e la settimana dopo non lo ricompri.</p>
-      </div>`;
-    return;
-  }
-
-  $('#dispensa-elenco').innerHTML = dispensa
-    .sort((a, b) => (alimento(a.alimentoId)?.nome || '').localeCompare(alimento(b.alimentoId)?.nome || '', 'it'))
-    .map((s) => `
-      <div class="riga-tra" style="padding-block: var(--sp-2); border-bottom:1px solid var(--bordo)">
-        <span>${alimento(s.alimentoId)?.nome || s.alimentoId}
-          <br><span class="piccolo tenue">dal ${formatta(s.dal)}</span></span>
-        <span class="riga" style="gap: var(--sp-2)">
-          <span class="num morbido">${num(s.grammi)} g</span>
-          <button class="bottone-icona" data-togli="${s.alimentoId}" aria-label="Togli dalla dispensa">
-            ${icona('cestino', 'icona icona-sm')}
-          </button>
-        </span>
-      </div>`).join('');
-
-  $$('#dispensa-elenco [data-togli]').forEach((b) => b.addEventListener('click', async () => {
-    await salvaScorta(profilo.id, b.dataset.togli, 0);
-    dispensa = await caricaDispensa(profilo.id);
-    ricostruisci();
-  }));
-}
-
-/**
- * Svuota la dispensa. Si chiede prima: è l'unica cosa in questa pagina che non
- * si disfa con un secondo tocco, e cancella anche gli avanzi delle settimane
- * passate.
- */
-async function svuota() {
-  const quante = dispensa.length;
-  if (!quante) return;
-  if (!window.confirm(`Svuoto la dispensa? ${quante} ${quante === 1 ? 'scorta sparisce' : 'scorte spariscono'}`
-    + ', e la lista tornerà a comprare tutto.')) return;
-
-  await svuotaDispensa(profilo.id);
-  dispensa = await caricaDispensa(profilo.id);
-  ricostruisci();
-}
+/* --- Dispensa ---------------------------------------------------------------
+   Qui c'era l'elenco della dispensa, con la cancellazione voce per voce e lo
+   svuotamento. Era di prima che la dispensa avesse una pagina sua: adesso e'
+   un doppione, e due posti dove fare la stessa cosa sono due posti dove
+   chiedersi se siano davvero la stessa cosa. Di questa pagina resta il
+   passaggio che le appartiene — quello che avanza dalla spesa entra in
+   dispensa — e per il resto c'e' il pulsante «Dispensa» in cima.
+   -------------------------------------------------------------------------- */
 
 /**
  * Mettere gli avanzi in dispensa CHIUDE la settimana, e si fa una volta sola.
@@ -513,10 +474,6 @@ async function copia() {
 async function persisti() {
   await salvaSpesa(profilo.id, settimana.inizio, [...spunte.values()]);
   allineaCondivisa();
-}
-
-function formatta(iso) {
-  return new Date(iso).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
 }
 
 export { gruppi };

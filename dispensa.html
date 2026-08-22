@@ -97,6 +97,17 @@
       </div>
 
       <div class="pila" id="elenco"></div>
+
+      <!-- Quello che c'è in casa ma questa settimana non serve: senza, sparirebbe
+           dalla vista pur continuando a togliersi dalla lista della spesa. -->
+      <section class="scheda" id="fuori-piano" hidden style="margin-top: var(--sp-5)">
+        <h3>
+          <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#scorte"/></svg>
+          In casa, ma non in questo menù
+        </h3>
+        <p class="piccolo morbido" id="fuori-piano-perche"></p>
+        <div id="fuori-piano-elenco"></div>
+      </section>
     </div>
   </main>
 

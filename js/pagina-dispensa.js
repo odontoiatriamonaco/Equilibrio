@@ -161,6 +161,49 @@ function disegna() {
   $$('#elenco [data-quanti]').forEach((i) => i.addEventListener('change', async () => {
     await scriviScorta(i.dataset.quanti, Math.max(0, Number(i.value) || 0));
   }));
+
+  rendiFuoriPiano();
+}
+
+/**
+ * Quello che hai in casa e questa settimana non serve.
+ *
+ * L'elenco qui sopra è tarato sul menù: mostra solo gli alimenti che i piatti
+ * di questi sette giorni useranno. Ma in dispensa ci resta anche il resto — gli
+ * avanzi di settimane passate, una cosa comprata e non usata — che continua a
+ * togliersi dalla lista della spesa senza comparire da nessuna parte. Invisibile
+ * e attivo insieme è il modo peggiore di tenere un dato.
+ */
+function rendiFuoriPiano() {
+  const nelPiano = new Set(quadro.voci.map((v) => v.alimentoId));
+  const fuori = perFretta(dispensa.filter((s) => !nelPiano.has(s.alimentoId)));
+
+  const sez = $('#fuori-piano');
+  sez.hidden = !fuori.length;
+  if (!fuori.length) return;
+
+  $('#fuori-piano-perche').textContent = fuori.length === 1
+    ? 'Una cosa che hai in casa e che i piatti di questa settimana non usano. Rigenerando la settimana, il piano proverà a consumarla.'
+    : `${fuori.length} cose che hai in casa e che i piatti di questa settimana non usano. Rigenerando la settimana, il piano proverà a consumarle.`;
+
+  $('#fuori-piano-elenco').innerHTML = fuori.map((s) => {
+    const m = comeStaMessa(s);
+    const fretta = m.stato === 'calma' ? ''
+      : ` · <span class="fretta" data-fretta="${m.stato}">${m.testo}</span>`;
+    return `
+      <div class="riga-avere">
+        <span class="nome">${nomeAlimento(s.alimentoId)}
+          <br><span class="piccolo tenue">${num(s.grammi)} g in casa${fretta}</span></span>
+        <button class="bottone-icona" data-butta="${s.alimentoId}"
+                aria-label="Togli ${nomeAlimento(s.alimentoId)} dalla dispensa">
+          ${icona('cestino', 'icona icona-sm')}
+        </button>
+      </div>`;
+  }).join('');
+
+  $$('#fuori-piano-elenco [data-butta]').forEach((b) => b.addEventListener('click', async () => {
+    await scriviScorta(b.dataset.butta, 0);
+  }));
 }
 
 /**

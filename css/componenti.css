@@ -2096,3 +2096,17 @@ body:has(.barra-passo) .guscio {
 .fretta[data-fretta='presto']    { color: var(--testo-morbido); }
 .fretta[data-fretta='urgente'],
 .fretta[data-fretta='scaduta']   { color: var(--sgarro-testo); }
+
+
+/* Sulla barra stretta «Spesa/Dispensa» va a capo dopo la barra invece di
+   allargare la sua cella: cinque voci larghe uguale si leggono di colpo, una
+   più larga delle altre fa sembrare che sia un'altra cosa. */
+@media (max-width: 64rem) {
+  .barra-nav .voci { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+  .barra-nav a span {
+    line-height: 1.15;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+}

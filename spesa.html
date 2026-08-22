@@ -150,19 +150,22 @@
         </div>
       </section>
 
+      <!-- Chiudere la settimana: quello che avanza dalle confezioni passa in
+           dispensa, e la settimana prossima non si ricompra. L'elenco della
+           dispensa non sta qui — sta nella sua pagina, a un tocco da sopra. -->
       <section class="sezione non-stampare">
-        <header>
-          <h2>Dispensa</h2>
-          <button class="bottone bottone-fantasma" id="svuota-dispensa">
-            <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#cestino"/></svg>
-            Svuota la dispensa
-          </button>
-          <button class="bottone bottone-fantasma" id="in-dispensa">
+        <header><h2>Finita la spesa</h2></header>
+        <div class="scheda">
+          <p class="piccolo morbido" style="margin-top:0">
+            Quello che avanza dalle confezioni — mezzo pacco di ricotta, il pane in più —
+            passa in dispensa, e la settimana prossima si toglie dalla lista da solo.
+            Se hai corretto i grammi presi qui sopra, il conto usa quelli.
+          </p>
+          <button class="bottone" id="in-dispensa">
             <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#scorte"/></svg>
-            Metti gli avanzi
+            Metti gli avanzi in dispensa
           </button>
-        </header>
-        <div class="scheda" id="dispensa-elenco"></div>
+        </div>
       </section>
     </div>
   </main>
