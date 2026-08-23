@@ -12,6 +12,7 @@ import {
 import {
   costruisciLista, quantitaLeggibile, comeTesto, residuiInDispensa, avanzoDi,
 } from './spesa.js';
+import { settimanaACasa } from './presenze.js';
 import { suggerimentiAntispreco, residuoDaSegnalare } from './packaging.js';
 import { caricaPreferenze } from './preferenze.js';
 import { alimento, gruppi } from './alimenti.js';
@@ -228,8 +229,12 @@ function ricostruisci() {
   if (aTavola.length > 1) {
     lista = costruisciLista(settimana, { membri: aTavola, dispensa });
   } else {
+    // Anche da solo si può pranzare fuori tutti i giorni, e allora quei pranzi
+    // non vanno comprati. Qui la lista non passa dai membri — passa dal
+    // moltiplicatore — quindi la settimana va sfrondata prima di entrarci,
+    // altrimenti le assenze varrebbero solo in famiglia.
     const commensali = Number($('#commensali').value) || 1;
-    lista = costruisciLista(settimana, { commensali, dispensa });
+    lista = costruisciLista(settimanaACasa(settimana, profilo), { commensali, dispensa });
   }
   disegna();
   allineaCondivisa();

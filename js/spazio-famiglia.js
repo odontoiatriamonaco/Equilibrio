@@ -21,6 +21,7 @@ import { caricaSettimana, salvaSettimana } from './dati.js';
 import { settimanaPer, salvaPersonalizzazione } from './famiglia.js';
 import { riepilogo as riepilogoEnergia } from './energia.js';
 import { vociConChiave, kcalGiorno, inizioSettimana, iso } from './planner.js';
+import { mangiaACasa, fuoriCasaDi } from './presenze.js';
 
 const API = '/api/famiglia';
 const CHIAVE_LOCALE = 'spazioFamiglia';
@@ -470,6 +471,23 @@ function trovaCapo(spazio) {
  * Le porzioni pubblicate da ciascuno vincono su quelle ricalcolate in casa:
  * sono quelle vere, comprese le correzioni fatte a mano con la bilancia.
  */
+/**
+ * Toglie dalle porzioni i pasti che questa persona mangia fuori.
+ *
+ * Serve anche dopo aver fuso quelle pubblicate: dall'altro telefono arrivano
+ * tutte le porzioni della settimana, comprese quelle dei pasti che qui non si
+ * cucinano, e senza questo filtro rientrerebbero dalla finestra.
+ */
+function soloACasa(porzioni, profilo) {
+  if (!fuoriCasaDi(profilo).length) return porzioni;
+  const fuori = {};
+  for (const [chiave, valore] of Object.entries(porzioni)) {
+    const [giorno, pasto] = chiave.split('|');
+    if (mangiaACasa(profilo, giorno, pasto)) fuori[chiave] = valore;
+  }
+  return fuori;
+}
+
 export function porzioniDellaTavola(spazio, membriLocali) {
   const pubblicati = new Map(Object.entries(spazio?.membri || {}));
   const fuori = [];
@@ -485,10 +503,13 @@ export function porzioniDellaTavola(spazio, membriLocali) {
       nome: m.profilo?.nome || dallaRete?.nome || 'Senza nome',
       // Quelle pubblicate vincono su quelle ricalcolate qui: sono le vere,
       // comprese le correzioni fatte a mano sulla bilancia dell'altro telefono.
-      porzioni: {
-        ...(m.settimana ? porzioniDaSettimana(m.settimana) : {}),
+      // Dalla vista della cucina, non dal piano intero: chi il martedì pranza
+      // fuori non deve comparire fra le dosi del pranzo di martedì — chi
+      // cucina metterebbe in pentola la sua parte per niente.
+      porzioni: soloACasa({
+        ...(m.settimana ? porzioniDaSettimana(m.aCasa || m.settimana) : {}),
         ...(dallaRete?.porzioni || {}),
-      },
+      }, m.profilo),
       aggiornatoIl: dallaRete?.aggiornatoIl || null,
       senzaProfilo: false,
     });

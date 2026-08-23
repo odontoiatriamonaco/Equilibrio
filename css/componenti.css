@@ -2341,3 +2341,74 @@ body:has(.barra-passo) .guscio {
 
 .riga-classe input:checked + .spunta::after { transform: rotate(45deg) scale(1); }
 .riga-classe input:focus-visible + .spunta { box-shadow: var(--anello-fuoco); }
+
+
+/* --- Chi mangia a casa, e quando -------------------------------------------
+   Sette colonne per cinque righe. Le intestazioni sono pulsanti: toccarle
+   accende o spegne la riga intera o la colonna intera, perche' le frasi vere —
+   «il pranzo lo faccio sempre fuori», «il sabato ci sono» — non si dicono
+   casella per casella.
+   -------------------------------------------------------------------------- */
+
+.griglia-presenze {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.griglia-presenze th,
+.griglia-presenze td { padding: 2px; }
+
+.griglia-presenze thead th { width: 2.5rem; }
+
+.griglia-presenze tbody th {
+  text-align: left;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.griglia-presenze thead button,
+.griglia-presenze tbody th button {
+  width: 100%;
+  min-height: 2rem;
+  padding: var(--sp-1) var(--sp-2);
+  border: none;
+  border-radius: var(--r-1);
+  background: none;
+  color: var(--testo-morbido);
+  font: inherit;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--ls-caps);
+  cursor: pointer;
+}
+
+.griglia-presenze thead button:hover,
+.griglia-presenze tbody th button:hover {
+  background: var(--sfondo-alt);
+  color: var(--testo);
+}
+
+.casella {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.25rem;
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-1);
+  background: var(--sfondo-alt);
+  color: var(--testo-tenue);
+  cursor: pointer;
+  transition: background-color var(--d-veloce) var(--e-standard),
+              border-color var(--d-veloce) var(--e-standard);
+}
+
+.casella[aria-pressed='true'] {
+  background: var(--verde-tenue);
+  border-color: var(--verde);
+  color: var(--verde-testo);
+}
+
+.casella:hover { border-color: var(--bordo-forte); }
+.casella:focus-visible { box-shadow: var(--anello-fuoco); }

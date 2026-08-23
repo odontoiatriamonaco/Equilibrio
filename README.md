@@ -98,6 +98,7 @@ js/store.js               IndexedDB partizionato per profilo
 js/profilo-file.js        export/import del profilo in file cifrato
 js/planner.js             generatore della settimana a vincoli, calibrazione porzioni
 js/allergeni.js           le classi dell’etichettatura europea, e cosa contiene ogni alimento
+js/presenze.js            chi mangia a casa e quando: riguarda la spesa, non la dieta
 js/conservazione.js       quanto tiene quello che hai in casa, e quanto urge consumarlo
 js/tutor.js               la guida che illumina un riquadro alla volta
 js/tutor-passi.js         cosa dice il tutor, pagina per pagina

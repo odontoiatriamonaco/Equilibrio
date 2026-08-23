@@ -48,7 +48,11 @@ export function aggregaSettimana(settimana, commensali = 1) {
 export function aggregaFamiglia(membri) {
   const somma = new Map();
   for (const m of membri) {
-    for (const [id, g] of aggregaSettimana(m.settimana, 1)) {
+    // `aCasa` quando c'è: chi pranza fuori non fa comprare cinque pranzi.
+    // Senza il ripiego su `settimana`, un membro costruito a mano — nei test,
+    // o da una vecchia versione — sparirebbe dal carrello invece di entrarci
+    // per intero, che è l'errore peggiore dei due.
+    for (const [id, g] of aggregaSettimana(m.aCasa || m.settimana, 1)) {
       somma.set(id, (somma.get(id) || 0) + g);
     }
   }

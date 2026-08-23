@@ -1,6 +1,10 @@
 /* Equilibrio — pagina del profilo: raccolta dati, riepilogo dal vivo, salvataggio. */
 
-import { $, num, avvia } from './guscio.js';
+import { $, $$, num, avvia, icona } from './guscio.js';
+import {
+  PASTI, GIORNI_BREVI, mangiaACasa, alternaPresenza, alternaPasto, alternaGiorno,
+  raccontaPresenze, quantiFuori,
+} from './presenze.js';
 import { montaTutor } from './tutor.js';
 import { PASSI_PROFILO } from './tutor-passi.js';
 import { montaBarraPercorso } from './barra-percorso.js';
@@ -46,6 +50,84 @@ function montaRitmi() {
     $('#ritmi').querySelectorAll('button').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
     aggiorna();
   });
+}
+
+/* --- Chi mangia a casa, e quando --------------------------------------------
+   Una griglia sette per cinque: i giorni in colonna, i pasti in riga. Trentacinque
+   caselle sono tante da toccare una per una, ma le due frasi vere — «il pranzo lo
+   faccio sempre fuori», «il sabato ci sono» — si dicono con un tocco sull'intestazione
+   della riga o della colonna. Il caso del marito che pranza fuori in settimana e sta
+   a casa nel fine settimana viene via in tre tocchi.
+   -------------------------------------------------------------------------- */
+
+function montaPresenze() {
+  const nodo = $('#presenze');
+  if (!nodo) return;
+
+  nodo.innerHTML = `
+    <table class="griglia-presenze">
+      <caption class="solo-lettori">Quali pasti mangi a casa, giorno per giorno</caption>
+      <thead>
+        <tr>
+          <td></td>
+          ${GIORNI_BREVI.map((g) => `
+            <th scope="col">
+              <button type="button" data-giorno="${g.id}" title="Tutto il ${g.nome}">${g.corto}</button>
+            </th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${PASTI.map((p) => `
+          <tr>
+            <th scope="row">
+              <button type="button" data-pasto="${p.id}" title="${p.nome} tutti i giorni">${p.nome}</button>
+            </th>
+            ${GIORNI_BREVI.map((g) => {
+    const casa = mangiaACasa(profilo, g.id, p.id);
+    return `<td>
+                <button type="button" class="casella" data-casa="${g.id}|${p.id}"
+                        aria-pressed="${casa}"
+                        aria-label="${p.nome} di ${g.nome}: ${casa ? 'a casa' : 'fuori'}">
+                  ${casa ? icona('spunta', 'icona icona-sm') : ''}
+                </button>
+              </td>`;
+  }).join('')}
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  $$('#presenze [data-casa]').forEach((b) => b.addEventListener('click', () => {
+    const [g, p] = b.dataset.casa.split('|');
+    profilo = alternaPresenza(profilo, g, p);
+    salvaPresenze();
+  }));
+
+  // Toccare l'intestazione accende tutta la riga o tutta la colonna, e se era
+  // gia' tutta accesa la spegne: un interruttore, non un pulsante che fa una
+  // cosa sola e poi non si sa come disfarla.
+  $$('#presenze [data-pasto]').forEach((b) => b.addEventListener('click', () => {
+    const p = b.dataset.pasto;
+    const tuttiACasa = GIORNI_BREVI.every((g) => mangiaACasa(profilo, g.id, p));
+    profilo = alternaPasto(profilo, p, !tuttiACasa);
+    salvaPresenze();
+  }));
+
+  $$('#presenze [data-giorno]').forEach((b) => b.addEventListener('click', () => {
+    const g = b.dataset.giorno;
+    const tuttiACasa = PASTI.every((p) => mangiaACasa(profilo, g, p.id));
+    profilo = alternaGiorno(profilo, g, !tuttiACasa);
+    salvaPresenze();
+  }));
+
+  const fuori = quantiFuori(profilo);
+  $('#presenze-riassunto').textContent = fuori
+    ? `${raccontaPresenze(profilo)} Quei pasti restano nel tuo piano — li mangi lo stesso — ma non entrano nella lista della spesa di casa.`
+    : raccontaPresenze(profilo);
+}
+
+async function salvaPresenze() {
+  if (profilo?.id) await scrivi('profili', profilo);
+  montaPresenze();
 }
 
 function montaBandiere() {
@@ -390,6 +472,7 @@ export async function inizializza() {
 
   profilo = await quale();
   scriviModulo(profilo);
+  montaPresenze();
   aggiornaIntestazione();
 
   $('#modulo').addEventListener('input', aggiorna);

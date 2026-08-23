@@ -382,6 +382,13 @@ export const PASSI_PROFILO = [
       + 'minimo l’app non scende, e te lo dice invece di farlo.',
   },
   {
+    sel: '#presenze',
+    titolo: 'Quali pasti fai a casa',
+    testo: 'Se pranzi in mensa, quel pranzo non deve uscire da questa cucina. Tocca il '
+      + 'nome del pasto per toglierlo tutta la settimana, o quello del giorno per '
+      + 'rimetterlo. Il pasto resta nel tuo piano: lo mangi lo stesso, altrove.',
+  },
+  {
     sel: '#bandiere',
     titolo: 'Le condizioni dichiarate',
     testo: 'Entrano nella scelta dei piatti, non solo in un avviso: con la pressione '

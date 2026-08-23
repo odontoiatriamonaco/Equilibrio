@@ -19,6 +19,7 @@ import {
   conteggiSettimana,
 } from './planner.js';
 import { applicaSgarri, elencoSgarri } from './sgarro.js';
+import { settimanaACasa } from './presenze.js';
 
 /* --- Il legame ------------------------------------------------------------- */
 
@@ -314,7 +315,11 @@ export async function settimaneDellaTavola(profiloRiferimento, data = new Date()
   const fuori = [];
   for (const m of membri) {
     const { settimana } = await settimanaPer(m, data);
-    if (settimana) fuori.push({ profilo: m, settimana });
+    // Due viste dello stesso piano. `settimana` è la sua dieta, intera: il
+    // pranzo lo mangia comunque, anche se lo mangia in mensa. `aCasa` è
+    // quello che deve uscire da QUESTA cucina, ed è l'unica che va nella spesa
+    // e nella divisione delle dosi.
+    if (settimana) fuori.push({ profilo: m, settimana, aCasa: settimanaACasa(settimana, m) });
   }
   return fuori;
 }
