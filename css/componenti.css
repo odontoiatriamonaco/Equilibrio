@@ -2242,3 +2242,43 @@ body:has(.barra-passo) .guscio {
 @media (prefers-reduced-motion: reduce) {
   .tutor-faro { transition: none; }
 }
+
+
+/* --- Un'icona con la sua parola --------------------------------------------
+   Un libro da solo può essere la guida, le ricette o il diario. La parola
+   accanto toglie il dubbio; su schermo stretto però l'intestazione è già
+   piena — lì il libro resta solo, e il nome lo dice il lettore di schermo.
+   -------------------------------------------------------------------------- */
+
+.bottone-icona.con-parola {
+  width: auto;
+  gap: var(--sp-2);
+  padding-inline: var(--sp-3);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+/* Sparisce dagli occhi, non dal lettore di schermo: con `display: none` il
+   collegamento resterebbe senza nome, e chi naviga a voce sentirebbe soltanto
+   «collegamento». */
+.bottone-icona.con-parola span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (min-width: 34rem) {
+  .bottone-icona.con-parola span {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+  }
+}
