@@ -213,11 +213,30 @@ export function montaTutor(passi) {
   b.type = 'button';
   b.innerHTML = `
     <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#domanda"/></svg>
-    <span class="lungo">Tutor: cosa c’è in questa pagina</span><span class="corto">Tutor: cosa c’è qui</span>`;
+    <span class="dice">
+      <span class="forte">Premi qui</span>
+      <span class="piano">per saperne di più</span>
+    </span>`;
+
+  // «Premi qui» dice il gesto, non l'argomento: sulla pagina va benissimo,
+  // perché il pulsante sta a tutta larghezza sotto il titolo e il contesto ce
+  // l'ha addosso. Ma chi naviga a lista di pulsanti col lettore di schermo
+  // quel contesto non ce l'ha, e si troverebbe cinque «Premi qui» identici.
+  // Quindi il nome accessibile dice di quale pagina si parla, preso dal titolo.
+  const titolo = document.querySelector('.intestazione h1')?.textContent.trim();
+  b.setAttribute('aria-label', titolo
+    ? `Per saperne di più su ${titolo}: una guida riquadro per riquadro`
+    : 'Per saperne di più su questa pagina: una guida riquadro per riquadro');
+
   b.addEventListener('click', () => apriTutor(passi));
 
   riga.appendChild(b);
-  testa.insertAdjacentElement('afterend', riga);
+
+  // Sotto la scelta Spesa/Dispensa, dove c'è: quella è navigazione e deve
+  // restare la prima cosa sotto il titolo. Il tutor viene dopo — spiega la
+  // pagina, non ci si sposta.
+  const scelta = document.querySelector('.scelta-pagina');
+  (scelta || testa).insertAdjacentElement('afterend', riga);
   return b;
 }
 

@@ -435,17 +435,21 @@
       <header><h2>Il tutor</h2></header>
       <p class="piccolo morbido">
         Un pulsante pieno d'accento, su una riga sua sotto l'intestazione, apre una guida
-        che illumina un riquadro alla volta e lo spiega. Ogni passo chiede il suo bersaglio
-        alla pagina: se non c'è — un avviso che non compare, una sezione vuota — quel passo
-        non esiste, e la numerazione si conta sui passi rimasti. Su schermo stretto
-        l'etichetta si accorcia e la carta si aggancia in basso, sopra la navigazione.
+        che illumina un riquadro alla volta e lo spiega. «Premi qui» dice il gesto e la
+        riga piccola dice a che serve: separate non basterebbero, insieme fanno una frase.
+        Il nome per i lettori di schermo nomina invece la pagina, perché chi naviga a
+        lista di pulsanti non ha il contesto sotto gli occhi. Ogni passo chiede il suo
+        bersaglio alla pagina: se non c'è — un avviso che non compare, una sezione vuota —
+        quel passo non esiste, e la numerazione si conta sui passi rimasti.
       </p>
 
       <div class="riga-tutor" style="margin-top: var(--sp-4)">
-        <button class="bottone bottone-tutor">
+        <button class="bottone bottone-tutor" aria-label="Per saperne di più su questa pagina">
           <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#domanda"/></svg>
-          <span class="lungo">Tutor: cosa c’è in questa pagina</span>
-          <span class="corto">Tutor: cosa c’è qui</span>
+          <span class="dice">
+            <span class="forte">Premi qui</span>
+            <span class="piano">per saperne di più</span>
+          </span>
         </button>
       </div>
 

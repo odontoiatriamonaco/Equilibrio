@@ -2207,14 +2207,26 @@ body:has(.barra-passo) .guscio {
   flex: none;
 }
 
-/* Due etichette, una corta e una lunga: a 360 px «Tutor: cosa c'è in questa
-   pagina» va a capo e il pulsante diventa un mattone alto ottanta pixel. */
-.bottone-tutor .lungo { display: none; }
-.bottone-tutor .corto { display: inline; }
+/* Due righe: l'invito grande, la spiegazione sotto in piccolo. Da soli non
+   direbbero abbastanza — «Premi qui» non dice per cosa, «per saperne di più»
+   non sembra un pulsante — e insieme fanno una frase. */
+.bottone-tutor .dice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+  text-align: left;
+}
 
-@media (min-width: 30rem) {
-  .bottone-tutor .lungo { display: inline; }
-  .bottone-tutor .corto { display: none; }
+.bottone-tutor .forte {
+  font-size: var(--t-md);
+  font-weight: 700;
+}
+
+.bottone-tutor .piano {
+  font-size: var(--t-sm);
+  font-weight: 500;
+  opacity: 0.88;
 }
 
 .bottone-tutor:hover {
