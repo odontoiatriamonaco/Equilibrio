@@ -2114,3 +2114,91 @@ body:has(.barra-passo) .guscio {
     overflow-wrap: anywhere;
   }
 }
+
+
+/* --- Il tutor --------------------------------------------------------------
+   Il velo non è un rettangolo scuro con un buco ritagliato: è l'ombra del faro,
+   spinta fuori per tutto lo schermo. Un solo elemento invece di quattro, e il
+   buco segue il riquadro senza calcoli.
+   -------------------------------------------------------------------------- */
+
+.tutor {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+
+/* Sta sotto al faro e prende i click: chiudere toccando fuori è la via di
+   fuga che tutti provano per prima. */
+.tutor-velo {
+  position: absolute;
+  inset: 0;
+}
+
+.tutor-faro {
+  position: fixed;
+  border-radius: var(--r-3);
+  box-shadow: 0 0 0 9999px rgb(20 14 8 / 0.62);
+  outline: 2px solid var(--accento);
+  outline-offset: 2px;
+  pointer-events: none;
+  transition: top var(--d-media, 220ms) var(--e-standard),
+              left var(--d-media, 220ms) var(--e-standard),
+              width var(--d-media, 220ms) var(--e-standard),
+              height var(--d-media, 220ms) var(--e-standard);
+}
+
+.tutor-carta {
+  position: fixed;
+  width: min(24rem, calc(100vw - 2rem));
+  padding: var(--sp-4);
+  background: var(--superficie);
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-3);
+  box-shadow: var(--ombra-3, 0 18px 40px -18px rgb(0 0 0 / 0.45));
+}
+
+.tutor-carta[data-dove='basso'] {
+  left: var(--sp-4);
+  right: var(--sp-4);
+  bottom: calc(var(--barra-h) + env(safe-area-inset-bottom) + var(--sp-3));
+  width: auto;
+  top: auto;
+}
+
+.tutor-carta h2 {
+  margin: var(--sp-1) 0 var(--sp-2);
+  font-size: var(--t-md);
+}
+
+.tutor-carta p { margin: 0; }
+.tutor-carta > p:last-of-type { color: var(--testo-morbido); }
+
+.tutor-azioni {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+}
+
+/* Il pulsante che lo apre: colorato, perché deve trovarsi senza cercarlo. */
+.bottone-tutor {
+  flex: none;
+  gap: var(--sp-2);
+  background: var(--accento-tenue);
+  color: var(--accento-testo, var(--accento));
+  border: 1px solid color-mix(in srgb, var(--accento) 30%, transparent);
+}
+
+.bottone-tutor:hover {
+  background: color-mix(in srgb, var(--accento-tenue) 70%, var(--accento));
+}
+
+@media (max-width: 26rem) {
+  .bottone-tutor span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .bottone-tutor { padding-inline: var(--sp-3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutor-faro { transition: none; }
+}

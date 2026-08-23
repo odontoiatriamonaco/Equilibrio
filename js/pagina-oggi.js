@@ -1,6 +1,8 @@
 /* Equilibrio — la home: i pasti di oggi, la spunta, l'acqua, la settimana. */
 
 import { avvia, alternaTema, icona, $, $$, num } from './guscio.js';
+import { montaTutor } from './tutor.js';
+import { PASSI_OGGI } from './tutor-passi.js';
 import { profiloAttivo, scrivi } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import { riepilogo as riepilogoEnergia } from './energia.js';
@@ -210,6 +212,10 @@ export async function inizializza() {
   collegaPercorso();
   await rendiPercorso();
   disegna(i);
+
+  // Dopo il disegno, sempre: il tutor chiede i suoi bersagli alla pagina, e
+  // prima che sia disegnata non ne troverebbe nessuno.
+  montaTutor(PASSI_OGGI);
 }
 
 function disegna(indice) {

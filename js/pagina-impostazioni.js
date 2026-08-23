@@ -1,6 +1,8 @@
 /* Equilibrio — impostazioni: profili, export/import cifrato, tema. */
 
 import { $, avvia, applicaTema, temaSalvato, num, condividiTesto } from './guscio.js';
+import { montaTutor } from './tutor.js';
+import { PASSI_ALTRO } from './tutor-passi.js';
 import {
   profili, profiloAttivo, impostaProfiloAttivo, eliminaProfilo,
   esportaFascicolo, importaFascicolo, leggi, scrivi, gemelloDi,
@@ -614,4 +616,8 @@ export async function inizializza() {
   }
   collegaRipristino();
   collegaSpazio();
+
+  // Dopo il disegno, sempre: il tutor chiede i suoi bersagli alla pagina, e
+  // prima che sia disegnata non ne troverebbe nessuno.
+  montaTutor(PASSI_ALTRO);
 }

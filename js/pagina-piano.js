@@ -1,6 +1,8 @@
 /* Equilibrio — pagina Piano: la settimana, gli scambi, lo sgarro. */
 
 import { avvia, icona, $, $$, num } from './guscio.js';
+import { montaTutor } from './tutor.js';
+import { PASSI_PIANO } from './tutor-passi.js';
 import { montaBarraPercorso } from './barra-percorso.js';
 import { profiloAttivo, profili, origineDi } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
@@ -153,6 +155,9 @@ export async function inizializza() {
   // Il filo verso il passo dopo: c'e' solo finche' il percorso e' aperto.
   await montaBarraPercorso(profilo, 'settimana');
 
+  // Dopo il disegno, sempre: il tutor chiede i suoi bersagli alla pagina, e
+  // prima che sia disegnata non ne troverebbe nessuno.
+  montaTutor(PASSI_PIANO);
 }
 
 /* --- Generazione ----------------------------------------------------------- */

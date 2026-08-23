@@ -98,6 +98,8 @@ js/store.js               IndexedDB partizionato per profilo
 js/profilo-file.js        export/import del profilo in file cifrato
 js/planner.js             generatore della settimana a vincoli, calibrazione porzioni
 js/conservazione.js       quanto tiene quello che hai in casa, e quanto urge consumarlo
+js/tutor.js               la guida che illumina un riquadro alla volta
+js/tutor-passi.js         cosa dice il tutor, pagina per pagina
 js/sgarro.js              redistribuzione degli sgarri, retroattiva e preventiva
 js/spesa.js               aggregazione, dispensa, formati di vendita, condivisione
 js/packaging.js           residui delle confezioni e proposte antispreco

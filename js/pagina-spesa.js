@@ -1,6 +1,8 @@
 /* Equilibrio — pagina Spesa: la lista per reparto, la dispensa, l'antispreco. */
 
 import { avvia, icona, $, $$, num, condividiTesto } from './guscio.js';
+import { montaTutor } from './tutor.js';
+import { PASSI_SPESA } from './tutor-passi.js';
 import { montaBarraPercorso } from './barra-percorso.js';
 import { profiloAttivo } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
@@ -80,6 +82,9 @@ export async function inizializza() {
   // Il filo verso il passo dopo: c'e' solo finche' il percorso e' aperto.
   await montaBarraPercorso(profilo, 'spesa');
 
+  // Dopo il disegno, sempre: il tutor chiede i suoi bersagli alla pagina, e
+  // prima che sia disegnata non ne troverebbe nessuno.
+  montaTutor(PASSI_SPESA);
 }
 
 /* --- Condivisione col codice ----------------------------------------------- */

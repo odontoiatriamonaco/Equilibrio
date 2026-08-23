@@ -11,6 +11,8 @@
    usarne quaranta è il modo più sicuro di far abbandonare il censimento a metà. */
 
 import { $, $$, avvia, icona, num } from './guscio.js';
+import { montaTutor } from './tutor.js';
+import { PASSI_DISPENSA } from './tutor-passi.js';
 import { montaBarraPercorso } from './barra-percorso.js';
 import { profiloAttivo } from './store.js';
 import { caricaDispensa, salvaScorta, svuotaDispensa } from './dati.js';
@@ -56,6 +58,10 @@ export async function inizializza() {
 
   disegna();
   await montaBarraPercorso(profilo, 'dispensa');
+
+  // Dopo il disegno, sempre: il tutor chiede i suoi bersagli alla pagina, e
+  // prima che sia disegnata non ne troverebbe nessuno.
+  montaTutor(PASSI_DISPENSA);
 }
 
 /* --- Il conto, che è poi il motivo per cui uno lo fa ------------------------ */

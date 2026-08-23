@@ -2,6 +2,8 @@
    scala le dosi sui commensali, modifica gli ingredienti. */
 
 import { avvia, icona, $, $$, num } from './guscio.js';
+import { montaTutor } from './tutor.js';
+import { PASSI_PIETANZE } from './tutor-passi.js';
 import { profiloAttivo } from './store.js';
 import {
   piatti, piatto, valoriPiatto, ingredientiScalati, diStagione,
@@ -65,6 +67,10 @@ export async function inizializza() {
 
   disegna();
   vaiAlPiatto();
+
+  // Dopo il disegno, sempre: il tutor chiede i suoi bersagli alla pagina, e
+  // prima che sia disegnata non ne troverebbe nessuno.
+  montaTutor(PASSI_PIETANZE);
 }
 
 /**
