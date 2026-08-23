@@ -2182,21 +2182,49 @@ body:has(.barra-passo) .guscio {
 }
 
 /* Il pulsante che lo apre: colorato, perché deve trovarsi senza cercarlo. */
+/* Su una riga sua, sotto l'intestazione: nell'angolo in alto non ci stava
+   senza troncare il titolo, e comunque un pulsante che spiega tutta la pagina
+   merita più spazio di un'icona in mezzo ad altre tre. */
+.riga-tutor {
+  margin-bottom: var(--sp-5);
+}
+
 .bottone-tutor {
+  width: 100%;
+  min-height: 3rem;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--accento);
+  color: var(--su-accento);
+  border: 1px solid transparent;
+  font-size: var(--t-md);
+  box-shadow: var(--ombra-2);
+}
+
+.bottone-tutor .icona {
+  width: 1.375rem;
+  height: 1.375rem;
   flex: none;
-  gap: var(--sp-2);
-  background: var(--accento-tenue);
-  color: var(--accento-testo, var(--accento));
-  border: 1px solid color-mix(in srgb, var(--accento) 30%, transparent);
+}
+
+/* Due etichette, una corta e una lunga: a 360 px «Tutor: cosa c'è in questa
+   pagina» va a capo e il pulsante diventa un mattone alto ottanta pixel. */
+.bottone-tutor .lungo { display: none; }
+.bottone-tutor .corto { display: inline; }
+
+@media (min-width: 30rem) {
+  .bottone-tutor .lungo { display: inline; }
+  .bottone-tutor .corto { display: none; }
 }
 
 .bottone-tutor:hover {
-  background: color-mix(in srgb, var(--accento-tenue) 70%, var(--accento));
+  background: color-mix(in srgb, var(--accento) 88%, #000);
 }
 
-@media (max-width: 26rem) {
-  .bottone-tutor span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .bottone-tutor { padding-inline: var(--sp-3); }
+/* Su schermo largo non si stira per tutta la colonna: un pulsante da 800 px
+   non sembra un pulsante. */
+@media (min-width: 42rem) {
+  .bottone-tutor { width: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

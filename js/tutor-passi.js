@@ -29,9 +29,34 @@ export const PASSI_OGGI = [
   {
     sel: '#pasti-oggi',
     titolo: 'I pasti di oggi',
-    testo: 'Ogni pasto ha il suo colore. Sotto ai piatti trovi le grammature già '
-      + 'calcolate sul tuo fabbisogno, e le icone accanto servono a cambiare la '
-      + 'quantità, scambiare il piatto o aprire la ricetta.',
+    testo: 'Ogni pasto ha il suo colore, e sotto ai piatti ci sono le grammature già '
+      + 'calcolate sul tuo fabbisogno. Su ogni riga ci sono tre icone: adesso te le '
+      + 'faccio vedere una per volta.',
+  },
+  {
+    sel: '#pasti-oggi .spunta',
+    titolo: 'Il cerchietto: l’ho mangiato',
+    testo: 'Toccalo quando hai finito quel piatto. L’anello in cima si riempie e le '
+      + 'calorie che restano scendono. Ripremendolo torni indietro.',
+  },
+  {
+    sel: '#pasti-oggi [data-quantita]',
+    titolo: 'La matita: ne ho mangiato di più (o di meno)',
+    testo: 'Cambia la quantità di quel piatto soltanto. Serve quando la porzione vera '
+      + 'non è quella scritta: i conti del giorno si rifanno su quello che hai messo.',
+  },
+  {
+    sel: '#pasti-oggi [data-scambia]',
+    titolo: 'Le due frecce: cambio piatto',
+    testo: 'Mette un altro piatto al posto di questo, scelto fra quelli che ti vanno e '
+      + 'che pesano uguale. C’è anche il filtro del tempo, per quando la serata si è '
+      + 'accorciata.',
+  },
+  {
+    sel: '#pasti-oggi a[href^="/ricette.html"]',
+    titolo: 'L’icona del piatto: la ricetta',
+    testo: 'Apre la scheda con ingredienti, procedimento e valori, già riscalata sul '
+      + 'numero di commensali. L’icona cambia col tipo di piatto.',
   },
   {
     sel: '#acqua',
@@ -65,8 +90,27 @@ export const PASSI_PIANO = [
   {
     sel: '#settimana',
     titolo: 'I giorni, uno per uno',
-    testo: 'Ogni giorno si apre e mostra i pasti con le grammature. «Rendi rigido» '
-      + 'protegge un giorno dai tagli: se sabato hai una cena fuori, il recupero di '
+    testo: 'Ogni giorno si apre e mostra i suoi pasti. Anche le singole righe si '
+      + 'aprono: dentro ci sono tutti gli ingredienti con i grammi, quelli da mettere '
+      + 'sulla bilancia.',
+  },
+  {
+    sel: '#settimana .pillola-dato',
+    titolo: 'La pillola coi grammi',
+    testo: 'L’ingrediente che fa il piatto, in grammi: la pasta di un primo, la carne '
+      + 'di un secondo. È il numero che si va a cercare, perché un moltiplicatore di '
+      + 'porzioni non si pesa.',
+  },
+  {
+    sel: '#settimana [data-scambia]',
+    titolo: 'Le due frecce: cambio piatto',
+    testo: 'Sostituisce quel piatto con un altro che ti va e che pesa uguale. Le '
+      + 'porzioni si riadattano da sole, così il conto del giorno non cambia.',
+  },
+  {
+    sel: '#settimana [data-rigido]',
+    titolo: 'Rendi rigido: non toccare questo giorno',
+    testo: 'Protegge un giorno dai tagli. Se sabato hai una cena fuori, il recupero di '
       + 'uno sgarro non andrà a prendere le calorie da lì.',
   },
   {

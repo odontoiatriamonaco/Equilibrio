@@ -188,7 +188,13 @@ export function apriTutor(passi) {
 }
 
 /**
- * Mette il pulsante nell'intestazione della pagina.
+ * Mette il pulsante subito sotto l'intestazione, su una riga sua.
+ *
+ * Nell'intestazione non ci sta, e non è una questione di gusto: su Oggi a 360 px
+ * quella riga è larga 328 e i pulsanti che c'erano già — tema, guida, profilo —
+ * ne occupano 281 coi distanziatori. Al titolo ne restavano 47 per i 63 che gli
+ * servono, e «Oggi» usciva troncato. Su una riga propria il pulsante è anche più
+ * grande e più visibile, che è poi quello che deve essere.
  *
  * Non compare se in questa pagina non c'è niente da mostrare: un pulsante che
  * apre il vuoto insegna solo a non premerlo più.
@@ -199,14 +205,19 @@ export function montaTutor(passi) {
   const testa = document.querySelector('.intestazione');
   if (!testa) return null;
 
+  const riga = document.createElement('div');
+  riga.className = 'riga-tutor non-stampare';
+
   const b = document.createElement('button');
-  b.className = 'bottone bottone-tutor non-stampare';
+  b.className = 'bottone bottone-tutor';
   b.type = 'button';
   b.innerHTML = `
-    <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#domanda"/></svg>
-    <span>Guida</span>`;
+    <svg class="icona" aria-hidden="true"><use href="/assets/icons.svg#domanda"/></svg>
+    <span class="lungo">Tutor: cosa c’è in questa pagina</span><span class="corto">Tutor: cosa c’è qui</span>`;
   b.addEventListener('click', () => apriTutor(passi));
-  testa.appendChild(b);
+
+  riga.appendChild(b);
+  testa.insertAdjacentElement('afterend', riga);
   return b;
 }
 

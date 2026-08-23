@@ -264,6 +264,12 @@ body {
 .intestazione h1 {
   flex: 1;
   min-width: 0;
+  /* Una parola sola non si spezza: i titoli qui sono corti — Oggi, Piano,
+     Spesa — e con i pulsanti accanto il contenitore li stringeva fino a
+     mandarli a capo, alzando l'intestazione per niente. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sezione {
