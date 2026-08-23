@@ -6,6 +6,7 @@ import { avvia, icona, $, $$, num } from './guscio.js';
 import { montaTutor } from './tutor.js';
 import { PASSI_PREFERENZE } from './tutor-passi.js';
 import { montaBarraPercorso } from './barra-percorso.js';
+import { CLASSI, alternaClasse, quantiTocca, PER_CLASSE } from './allergeni.js';
 import { profiloAttivo } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import {
@@ -54,6 +55,7 @@ export async function inizializza() {
   }));
 
   disegnaTetti();
+  disegnaClassi();
   disegnaElenco();
   disegnaRiepilogo();
   // Il filo verso il passo dopo: c'e' solo finche' il percorso e' aperto.
@@ -88,6 +90,46 @@ function disegnaElenco() {
     disegnaElenco();
     disegnaRiepilogo();
   }));
+}
+
+/* --- Le classi di allergene -------------------------------------------------
+   Un interruttore per classe, con scritto sopra quanti alimenti tocca e quali.
+   Il nome della classe da solo non basta: «frutta a guscio» sono le noci e le
+   mandorle, ma qualcuno ci mette dentro anche le castagne, e sapere cosa toglie
+   davvero e' l'unico modo per accorgersi che manca qualcosa.
+   -------------------------------------------------------------------------- */
+
+function disegnaClassi() {
+  const attive = pref.classiAllergeni || [];
+
+  $('#classi-allergeni').innerHTML = CLASSI.map((c) => {
+    const su = attive.includes(c.id);
+    return `
+      <label class="riga-classe" data-attiva="${su}">
+        <input type="checkbox" data-classe="${c.id}" ${su ? 'checked' : ''}>
+        <span class="spunta"></span>
+        <span class="nome">
+          <strong>${c.nome}</strong>
+          <br><span class="piccolo tenue">${c.esempio} · ${quantiTocca(c.id)} ${quantiTocca(c.id) === 1 ? 'alimento' : 'alimenti'}</span>
+        </span>
+      </label>`;
+  }).join('');
+
+  $$('#classi-allergeni [data-classe]').forEach((i) => i.addEventListener('change', () => {
+    pref = alternaClasse(pref, i.dataset.classe);
+    salva();
+    disegnaClassi();
+    disegnaElenco();
+    disegnaRiepilogo();
+  }));
+
+  // Quanti alimenti spariscono in tutto. Le classi si sovrappongono — le
+  // tagliatelle all'uovo stanno nel glutine E nelle uova — quindi si contano
+  // gli alimenti, non la somma delle classi.
+  const tolti = new Set(attive.flatMap((c) => PER_CLASSE[c] || []));
+  $('#conta-esclusi').textContent = tolti.size
+    ? `${tolti.size} alimenti esclusi, e con loro ogni piatto che li contiene.`
+    : 'Nessuna classe segnata: il ricettario è intero.';
 }
 
 function vociPiatti() {

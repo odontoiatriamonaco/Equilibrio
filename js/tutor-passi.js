@@ -313,6 +313,13 @@ export const PASSI_PREFERENZE = [
       + 'restano, con le calorie ricalcolate.',
   },
   {
+    sel: '#classi-allergeni',
+    titolo: 'Allergie e intolleranze',
+    testo: 'Qui si segna la classe, non l’alimento uno per uno: «glutine» toglie tutti e '
+      + 'tredici i cereali che lo contengono. Sono le categorie dell’etichettatura europea, '
+      + 'le stesse che leggi sulle confezioni.',
+  },
+  {
     sel: '#tetti',
     titolo: 'Quante volte a settimana',
     testo: 'Un tetto parla della settimana, non del singolo piatto: «formaggi al '

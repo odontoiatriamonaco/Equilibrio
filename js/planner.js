@@ -104,6 +104,8 @@ export function generaSettimana(opzioni) {
   // consumare la ricotta» a cui la ricotta viene poi tolta — un antispreco che
   // non spreca niente perche' non consuma niente.
   const daNonUsare = new Set(omessi(preferenze));
+  // Serve anche agli alimenti fissi dello schema, non solo alla dispensa.
+  const daOmettere = daNonUsare;
   const scorte = new Map();
   for (const s of dispensa) {
     if (!(s?.grammi > 0)) continue;
@@ -136,8 +138,19 @@ export function generaSettimana(opzioni) {
 
     for (const pasto of ['pranzo', 'cena']) {
       for (const slot of schemaPasto(pasto, rnd)) {
+        // Gli alimenti fissi dello schema — il pane della cena — passavano
+        // dritti, senza chiedere niente a nessuno: erano l'unica voce del piano
+        // che non attraversava `scegli()`, e quindi l'unica che non
+        // guardava le preferenze. Misurato: con l'allergia dichiarata sul pane,
+        // il pane compariva lo stesso 86 volte su 20 settimane.
+        //
+        // Un alimento vietato si salta e basta: la calibrazione ridistribuisce
+        // le calorie sulle voci che restano, e una cena senza pane è una cena,
+        // mentre una cena col pane per un celiaco non lo è.
+        const vietato = slot.alimento
+          && (eAllergene(preferenze, slot.alimento) || daOmettere.has(slot.alimento));
         const voce = slot.alimento
-          ? { tipo: 'alimento', id: slot.alimento, porzioni: 1 }
+          ? (vietato ? null : { tipo: 'alimento', id: slot.alimento, porzioni: 1 })
           : scegli(slot, g, { disponibili, usati, conteggi, tetti, preferenze, mese, rnd, vincoli, scorte, consumate });
         if (voce) pasti[pasto].push(voce);
       }

@@ -2282,3 +2282,62 @@ body:has(.barra-passo) .guscio {
     clip-path: none;
   }
 }
+
+
+/* --- Una classe di allergene -----------------------------------------------
+   Come la voce di spesa — stessa spunta, stesso tocco — perche' e' lo stesso
+   gesto: dire si' o no a una riga. Da attiva si tinge di rosso, che in questa
+   app e' riservato ai vincoli di sicurezza, e un'allergia lo e'.
+   -------------------------------------------------------------------------- */
+
+.riga-classe {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--tocco-min);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-2);
+  cursor: pointer;
+  transition: background-color var(--d-veloce) var(--e-standard),
+              border-color var(--d-veloce) var(--e-standard);
+}
+
+.riga-classe:hover { background: var(--sfondo-alt); }
+.riga-classe input { position: absolute; opacity: 0; width: 0; height: 0; }
+.riga-classe .nome { flex: 1; min-width: 0; }
+
+.riga-classe .spunta {
+  position: relative;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+  border: 1.75px solid var(--bordo-forte);
+  border-radius: var(--r-1);
+}
+
+.riga-classe .spunta::after {
+  content: '';
+  position: absolute;
+  left: 0.42rem;
+  top: 0.2rem;
+  width: 0.36rem;
+  height: 0.66rem;
+  border: solid var(--su-pericolo, #fff);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform var(--d-veloce) var(--e-standard);
+}
+
+.riga-classe[data-attiva='true'] {
+  border-color: var(--pericolo);
+  background: var(--pericolo-tenue);
+}
+
+.riga-classe input:checked + .spunta {
+  background: var(--pericolo);
+  border-color: var(--pericolo);
+}
+
+.riga-classe input:checked + .spunta::after { transform: rotate(45deg) scale(1); }
+.riga-classe input:focus-visible + .spunta { box-shadow: var(--anello-fuoco); }

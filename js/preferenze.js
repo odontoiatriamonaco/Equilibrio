@@ -4,6 +4,7 @@
 
 import { leggi, scrivi } from './store.js';
 import { alimento } from './alimenti.js';
+import { inClasse } from './allergeni.js';
 
 /** Quante volte a settimana, al massimo. Sono tetti, non obiettivi. */
 export const TETTI_PREDEFINITI = {
@@ -125,7 +126,13 @@ export function tettiSforati(conteggi = {}, pref) {
 }
 
 export function eAllergene(pref, id) {
-  return (pref.allergie || []).includes(id);
+  if ((pref.allergie || []).includes(id)) return true;
+  // Le classi arrivano dopo il singolo alimento ma valgono uguale: chi segna
+  // «glutine» non deve poi ricordarsi anche il pangrattato. Il controllo sta
+  // qui e SOLO qui, perché di qui passano tutti — `motivoEsclusione`, il
+  // generatore, la lente del ricettario. Una seconda strada sarebbe una strada
+  // da tenere allineata, e prima o poi non lo sarebbe più.
+  return inClasse(id, pref.classiAllergeni);
 }
 
 /**
