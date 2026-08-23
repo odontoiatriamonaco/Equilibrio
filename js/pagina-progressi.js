@@ -1,6 +1,8 @@
 /* Equilibrio — pagina Progressi: peso di tendenza, aderenza, TDEE adattivo. */
 
 import { avvia, icona, $, num } from './guscio.js';
+import { montaTutor } from './tutor.js';
+import { PASSI_PROGRESSI } from './tutor-passi.js';
 import { profiloAttivo, scrivi } from './store.js';
 import {
   riepilogo as riepilogoEnergia, pesoDiTendenza, tdeeAdattivo,
@@ -28,6 +30,9 @@ export async function inizializza() {
   $('#adotta-tdee').addEventListener('click', cambiaFabbisogno);
 
   await disegna();
+
+  // Dopo il disegno, sempre: il tutor chiede i suoi bersagli alla pagina.
+  montaTutor(PASSI_PROGRESSI);
 }
 
 async function disegna() {

@@ -21,20 +21,62 @@
 const CHIUSO = { attivo: false };
 let stato = { ...CHIUSO };
 
-/** Il bersaglio esiste, ha una forma e non è nascosto? */
+/**
+ * Nessun pannello chiuso, salendo fino alla radice, lo tiene nascosto.
+ *
+ * Per ogni `<details>` chiuso che lo contiene, l'elemento deve stare nel
+ * sommario DI QUEL pannello: è l'unica parte che resta in vista.
+ */
+function chiaroFinoInFondo(el) {
+  for (let d = el.closest('details'); d; d = d.parentElement?.closest('details')) {
+    if (d.open) continue;
+    const sommario = d.querySelector(':scope > summary');
+    if (!sommario || !sommario.contains(el)) return false;
+  }
+  return true;
+}
+
+/**
+ * Il bersaglio esiste, ha una forma, e si vede DAVVERO?
+ *
+ * Il controllo su `<details>` chiuso non è teoria: sul Piano i giorni sono
+ * pannelli richiusi, e il browser continua a dare ai loro contenuti una
+ * posizione e una dimensione anche da chiusi. Senza questa riga il tutor
+ * illuminava la pillola dei grammi dentro lunedì — un rettangolo acceso su un
+ * pannello chiuso, cioè su niente, mentre la spiegazione parlava di una cosa
+ * che non si vedeva.
+ */
 function visibile(el) {
   if (!el) return false;
   if (el.hidden || el.closest('[hidden]')) return false;
+
+  // Dentro un pannello chiuso non si vede niente — tranne il suo sommario, che
+  // è la riga sempre in vista su cui si preme per aprirlo. Sul Piano è lì che
+  // stanno la pillola dei grammi e le frecce dello scambio.
+  //
+  // Si risale TUTTA la catena, non solo il pannello più vicino: i piatti sono
+  // pannelli dentro i giorni, che sono pannelli a loro volta. La pillola di
+  // lunedì sta nel sommario del suo piatto — quindi visibile, per il pannello
+  // vicino — ma lunedì è chiuso, e lì dentro non si vede un bel niente.
+  if (!chiaroFinoInFondo(el)) return false;
+
   const r = el.getBoundingClientRect();
   if (r.width < 1 || r.height < 1) return false;
   return getComputedStyle(el).visibility !== 'hidden';
 }
 
-/** I passi che in QUESTA pagina, adesso, hanno davvero un bersaglio. */
+/**
+ * I passi che in QUESTA pagina, adesso, hanno davvero un bersaglio.
+ *
+ * Si guardano TUTTI i nodi che il selettore trova, non solo il primo: su una
+ * pagina fatta di pannelli il primo è quasi sempre dentro uno chiuso, e
+ * fermarsi lì vorrebbe dire buttare via il passo — o peggio, illuminare il
+ * vuoto. Vince il primo che si vede.
+ */
 function passiVeri(passi) {
   return passi
-    .map((p) => ({ ...p, nodo: document.querySelector(p.sel) }))
-    .filter((p) => visibile(p.nodo));
+    .map((p) => ({ ...p, nodo: [...document.querySelectorAll(p.sel)].find(visibile) }))
+    .filter((p) => p.nodo);
 }
 
 function guscioTutor() {

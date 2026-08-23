@@ -13,6 +13,7 @@ import {
 import { passiVeri } from '../js/tutor.js';
 import {
   PASSI_OGGI, PASSI_PIANO, PASSI_PIETANZE, PASSI_SPESA, PASSI_DISPENSA, PASSI_ALTRO,
+  PASSI_PREFERENZE, PASSI_PROGRESSI, PASSI_PROFILO,
 } from '../js/tutor-passi.js';
 
 const SEZIONI = {
@@ -22,6 +23,9 @@ const SEZIONI = {
   Spesa: PASSI_SPESA,
   Dispensa: PASSI_DISPENSA,
   Altro: PASSI_ALTRO,
+  Preferenze: PASSI_PREFERENZE,
+  Progressi: PASSI_PROGRESSI,
+  Profilo: PASSI_PROFILO,
 };
 
 /* --- Un DOM finto, giusto quello che il tutor tocca ------------------------ */
@@ -31,13 +35,14 @@ function nodo({ w = 100, h = 40, hidden = false, dentroHidden = false, visibilit
     hidden,
     getBoundingClientRect: () => ({ width: w, height: h, top: 0, left: 0, bottom: h, right: w }),
     closest: (sel) => (sel === '[hidden]' && dentroHidden ? {} : null),
+    parentElement: null,
     __visibility: visibility,
   };
   return el;
 }
 
 function fingiPagina(mappa) {
-  globalThis.document = { querySelector: (sel) => mappa[sel] || null };
+  globalThis.document = { querySelectorAll: (sel) => (mappa[sel] ? [mappa[sel]] : []) };
   globalThis.getComputedStyle = (el) => ({ visibility: el.__visibility || 'visible' });
 }
 
@@ -97,7 +102,7 @@ describe('la numerazione non ha buchi', () => {
 });
 
 describe('i testi della guida', () => {
-  it('tutte e sei le pagine hanno qualcosa da dire', () => {
+  it('tutte le pagine hanno qualcosa da dire', () => {
     for (const [nome, passi] of Object.entries(SEZIONI)) {
       expect(passi.length, nome).toBeGreaterThanOrEqual(3);
     }
@@ -135,5 +140,102 @@ describe('i testi della guida', () => {
         expect(p.titolo, `${nome} — ${p.titolo}`).not.toMatch(/^(premi|clicca|tocca)/i);
       }
     }
+  });
+});
+
+/* --- I pannelli chiusi ------------------------------------------------------
+   La regola che si è rotta due volte: prima non vedeva i pannelli chiusi e il
+   faro illuminava un comando dentro un giorno richiuso; poi li vedeva troppo e
+   scartava anche i sommari, che invece restano in vista. Qui si finge una
+   catena di `<details>` come quella vera del Piano: i piatti sono pannelli
+   dentro i giorni, che sono pannelli a loro volta.
+   -------------------------------------------------------------------------- */
+
+/** Un albero finto con `closest` che risale davvero i genitori. */
+function albero() {
+  const fai = (tag, attr = {}) => {
+    const el = {
+      tag,
+      open: attr.open,
+      figli: [],
+      parentElement: null,
+      hidden: false,
+      getBoundingClientRect: () => ({ width: 50, height: 20, top: 0, left: 0, bottom: 20, right: 50 }),
+      closest(sel) {
+        for (let n = el; n; n = n.parentElement) {
+          if (sel === 'details' && n.tag === 'details') return n;
+          if (sel === 'details:not([open])' && n.tag === 'details' && !n.open) return n;
+          if (sel === 'summary' && n.tag === 'summary') return n;
+          if (sel === '[hidden]' && n.hidden) return n;
+        }
+        return null;
+      },
+      querySelector: (sel) => (sel === ':scope > summary'
+        ? el.figli.find((f) => f.tag === 'summary') || null : null),
+      contains(altro) {
+        for (let n = altro; n; n = n.parentElement) if (n === el) return true;
+        return false;
+      },
+    };
+    return el;
+  };
+  const dentro = (padre, figlio) => { figlio.parentElement = padre; padre.figli.push(figlio); return figlio; };
+  return { fai, dentro };
+}
+
+describe('un comando dentro un pannello chiuso non si illumina', () => {
+  const { fai, dentro } = albero();
+
+  /** giorno > voce > summary > pillola, con giorno e voce apribili. */
+  function piano({ giornoAperto, voceAperta }) {
+    const giorno = fai('details', { open: giornoAperto });
+    const sommarioGiorno = dentro(giorno, fai('summary'));
+    const corpo = dentro(giorno, fai('div'));
+    const voce = dentro(corpo, fai('details', { open: voceAperta }));
+    const sommarioVoce = dentro(voce, fai('summary'));
+    const pillola = dentro(sommarioVoce, fai('span'));
+    const dose = dentro(dentro(voce, fai('ul')), fai('li'));
+    return { giorno, sommarioGiorno, pillola, dose };
+  }
+
+  function conNodo(nodo) {
+    globalThis.document = { querySelectorAll: () => [nodo] };
+    globalThis.getComputedStyle = () => ({ visibility: 'visible' });
+    return passiVeri([{ sel: '#x', titolo: 'T', testo: 'x' }]).length;
+  }
+
+  it('il sommario si vede anche a pannello chiuso: è la riga su cui premi', () => {
+    const { pillola } = piano({ giornoAperto: true, voceAperta: false });
+    expect(conNodo(pillola)).toBe(1);
+  });
+
+  it('ma non se il pannello che lo contiene è a sua volta chiuso', () => {
+    // È il difetto vero: la pillola sta nel sommario del piatto — visibile, a
+    // guardare solo lì — ma il giorno intorno è richiuso e non si vede niente.
+    const { pillola } = piano({ giornoAperto: false, voceAperta: false });
+    expect(conNodo(pillola)).toBe(0);
+  });
+
+  it('il contenuto oltre il sommario resta nascosto a pannello chiuso', () => {
+    const { dose } = piano({ giornoAperto: true, voceAperta: false });
+    expect(conNodo(dose)).toBe(0);
+  });
+
+  it('con tutto aperto si vede tutto', () => {
+    const { dose } = piano({ giornoAperto: true, voceAperta: true });
+    expect(conNodo(dose)).toBe(1);
+  });
+
+  it('fra più nodi uguali vince il primo che si vede, non il primo del documento', () => {
+    // Sul Piano il primo bersaglio in ordine di documento sta quasi sempre in
+    // un giorno richiuso: fermarsi lì buttava via il passo, o peggio lo faceva
+    // puntare nel vuoto.
+    const chiuso = piano({ giornoAperto: false, voceAperta: false }).pillola;
+    const aperto = piano({ giornoAperto: true, voceAperta: false }).pillola;
+    globalThis.document = { querySelectorAll: () => [chiuso, aperto] };
+    globalThis.getComputedStyle = () => ({ visibility: 'visible' });
+    const veri = passiVeri([{ sel: '#x', titolo: 'T', testo: 'x' }]);
+    expect(veri).toHaveLength(1);
+    expect(veri[0].nodo).toBe(aperto);
   });
 });

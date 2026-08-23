@@ -1,6 +1,8 @@
 /* Equilibrio — pagina del profilo: raccolta dati, riepilogo dal vivo, salvataggio. */
 
 import { $, num, avvia } from './guscio.js';
+import { montaTutor } from './tutor.js';
+import { PASSI_PROFILO } from './tutor-passi.js';
 import { montaBarraPercorso } from './barra-percorso.js';
 import {
   riepilogo, LAF, BANDIERE, RITMI, ritmoDi, AVVIO_SETTIMANE,
@@ -397,4 +399,6 @@ export async function inizializza() {
   // Il filo verso il passo dopo: c'e' solo finche' il percorso e' aperto.
   await montaBarraPercorso(profilo, 'profilo');
 
+  // Dopo il disegno, sempre: il tutor chiede i suoi bersagli alla pagina.
+  montaTutor(PASSI_PROFILO);
 }

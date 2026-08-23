@@ -291,3 +291,99 @@ export const PASSI_ALTRO = [
       + 'segue le impostazioni del telefono.',
   },
 ];
+
+export const PASSI_PREFERENZE = [
+  {
+    sel: '#viste',
+    titolo: 'Pietanze o alimenti',
+    testo: 'Due elenchi diversi. Sulle pietanze decidi se un piatto ti va; sugli '
+      + 'alimenti decidi su un ingrediente, e la differenza conta — vedi il passo dopo.',
+  },
+  {
+    sel: '#cerca',
+    titolo: 'Cerca quello che ti interessa',
+    testo: 'Cercare per nome funziona anche sui sinonimi. Non serve scorrere '
+      + 'centocinquanta righe per dire che il fegato non lo vuoi.',
+  },
+  {
+    sel: '#elenco',
+    titolo: 'Il cuore e la ics',
+    testo: 'Il cuore lo fa arrivare più spesso. La ics su una pietanza la fa sparire '
+      + 'dal menù; su un alimento no: quell’ingrediente viene tolto dai piatti, che '
+      + 'restano, con le calorie ricalcolate.',
+  },
+  {
+    sel: '#tetti',
+    titolo: 'Quante volte a settimana',
+    testo: 'Un tetto parla della settimana, non del singolo piatto: «formaggi al '
+      + 'massimo tre volte». Vale da adesso in avanti, non su un piano già scritto.',
+  },
+  {
+    sel: '#riepilogo',
+    titolo: 'Cosa resta proponibile',
+    testo: 'Quante pietanze restano dopo le tue scelte, e cosa è rimasto fuori. Se il '
+      + 'numero scende troppo il menù si ripete: qui te ne accorgi prima.',
+  },
+];
+
+export const PASSI_PROGRESSI = [
+  {
+    sel: '#grafico',
+    titolo: 'La linea, non i punti',
+    testo: 'Il peso di un giorno dice poco — acqua, sale, quando ti pesi. La linea '
+      + 'attraversa i punti e mostra la tendenza, che è l’unica cosa che si muove '
+      + 'davvero.',
+  },
+  {
+    sel: '#peso-nuovo',
+    titolo: 'Segna la pesata',
+    testo: 'Sempre alla stessa ora, appena sveglio, prima di colazione. Non serve ogni '
+      + 'giorno: più punti ci sono, più la linea dice la verità.',
+  },
+  {
+    sel: '#aderenza',
+    titolo: 'Il tuo fabbisogno reale',
+    testo: 'Dopo un paio di settimane l’app confronta quello che hai mangiato con '
+      + 'quanto sei calato, e ricava il fabbisogno vero — che quasi mai è quello della '
+      + 'formula.',
+  },
+  {
+    sel: '#nota-adattivo',
+    titolo: 'Adottare il numero misurato',
+    testo: 'Quando i dati bastano, puoi sostituire la stima con la misura. Lo decidi '
+      + 'tu: l’app non cambia il tuo bersaglio di nascosto.',
+  },
+];
+
+export const PASSI_PROFILO = [
+  {
+    sel: '#modulo',
+    titolo: 'I dati che servono ai conti',
+    testo: 'Altezza, peso e data di nascita bastano a calcolare il fabbisogno. Le '
+      + 'circonferenze sono facoltative e servono a stimare meglio la composizione.',
+  },
+  {
+    sel: '#attivita',
+    titolo: 'Quanto ti muovi',
+    testo: 'Non l’allenamento, la giornata: chi sta seduto otto ore e chi cammina per '
+      + 'lavoro hanno fabbisogni diversi a parità di peso.',
+  },
+  {
+    sel: '#ritmi',
+    titolo: 'Quanto in fretta',
+    testo: 'Il ritmo del calo. Più è deciso, più il piano taglia — ma sotto un certo '
+      + 'minimo l’app non scende, e te lo dice invece di farlo.',
+  },
+  {
+    sel: '#bandiere',
+    titolo: 'Le condizioni dichiarate',
+    testo: 'Entrano nella scelta dei piatti, non solo in un avviso: con la pressione '
+      + 'alta i piatti molto salati diventano rari, e i tetti si stringono.',
+  },
+  {
+    sel: '#riepilogo',
+    titolo: 'Cosa ne esce',
+    testo: 'Il fabbisogno calcolato, il bersaglio giornaliero e il minimo sotto cui il '
+      + 'piano non scende mai. Cambia mentre compili, così vedi l’effetto di ogni dato.',
+  },
+];
