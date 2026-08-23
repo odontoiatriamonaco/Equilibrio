@@ -1523,7 +1523,11 @@
   margin-bottom: var(--sp-3);
 }
 
-.targhetta-pasto .occhiello { color: inherit; }
+.targhetta-pasto .occhiello {
+  color: inherit;
+  font-size: var(--t-sm);
+  letter-spacing: 0.06em;
+}
 .targhetta-pasto .icona { color: inherit; }
 
 .targhetta-pasto[data-momento='colazione'] {

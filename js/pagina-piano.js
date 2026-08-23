@@ -39,6 +39,17 @@ const NOMI_PASTO = {
   cena: 'Cena',
 };
 
+/* Il momento della giornata: da qui vengono il colore e l'icona della
+   targhetta. Uguale a quella di Oggi — la stessa cosa deve avere lo stesso
+   aspetto nelle due pagine, o si legge due volte per capire che è la stessa. */
+const MOMENTO = {
+  colazione: 'colazione',
+  'spuntino-mattina': 'spuntino',
+  pranzo: 'pranzo',
+  'spuntino-pomeriggio': 'spuntino',
+  cena: 'cena',
+};
+
 let profilo = null;
 let energia = null;
 let pref = null;
@@ -558,7 +569,10 @@ function cartaGiorno(giorno, indice, eOggi) {
 
     return `
     <div class="pasto">
-      <p class="occhiello">${NOMI_PASTO[pasto]}</p>
+      <p class="targhetta-pasto" data-momento="${MOMENTO[pasto]}">
+        ${icona(MOMENTO[pasto], 'icona icona-sm')}
+        <span class="occhiello">${NOMI_PASTO[pasto]}</span>
+      </p>
       ${alPosto.map((x) => rigaSgarro(x, true)).join('')}
       ${alPosto.length ? '<p class="nota-sostituito">al posto di</p>' : ''}
       ${righe}
