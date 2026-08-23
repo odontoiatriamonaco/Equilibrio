@@ -685,8 +685,15 @@ function rigaVoce(voce, giorno, pasto, indice) {
 
   // La pillola resta corta per stare in riga, ma «73 g» da solo non dice di
   // cosa: il nome per esteso va a chi legge con lo schermo e a chi passa sopra.
+  // Un allergene si segna in rosso e si chiama col suo nome. In questa app il
+  // rosso è riservato ai vincoli di sicurezza, e un'allergia è l'unico caso in
+  // cui un piatto nel piano è un problema e non una preferenza: su un menù di
+  // famiglia con diciassette avvisi, «da cambiare» in ocra lo confonderebbe
+  // con «non mi va la scarola».
   const etichetta = voce.nonPerMe
-    ? `<span class="pillola pillola-sgarro" title="${voce.nonPerMe}">da cambiare</span>`
+    ? voce.nonPerMeTipo === 'allergia'
+      ? `<span class="pillola pillola-pericolo" title="${voce.nonPerMe}">allergene</span>`
+      : `<span class="pillola pillola-sgarro" title="${voce.nonPerMe}">da cambiare</span>`
     : guida
       ? `<span class="pillola pillola-dato num" title="${guida.alimento.nome}">
            ${num(guida.grammi)} g<span class="solo-lettori"> di ${guida.alimento.nome.toLowerCase()}</span>

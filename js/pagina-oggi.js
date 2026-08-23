@@ -333,7 +333,9 @@ function disegnaPasti() {
             <span class="nome">${nomeVoce(voce)}${voce.saltato
     ? ' <span class="pillola pillola-sgarro">sostituito</span>'
     : ''}${voce.nonPerMe && !voce.saltato
-    ? ` <span class="pillola pillola-sgarro" title="${voce.nonPerMe}">da cambiare</span>`
+    ? (voce.nonPerMeTipo === 'allergia'
+      ? ` <span class="pillola pillola-pericolo" title="${voce.nonPerMe}">allergene</span>`
+      : ` <span class="pillola pillola-sgarro" title="${voce.nonPerMe}">da cambiare</span>`)
     : ''}
               <br><span class="piccolo tenue">
                 ${voce.tipo === 'piatto' ? TIPI[oggetto?.tipo] || '' : 'Pane'}

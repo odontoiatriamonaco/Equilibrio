@@ -171,7 +171,12 @@ function segnalaNonGraditi(copia, lente) {
         : { tipo: 'assente', testo: 'non è più nel tuo ricettario' };
       if (!motivo) continue;
       x.voce.nonPerMe = motivo.testo;
+      // Il TIPO viaggia insieme al testo: un'allergia e un gusto si scrivono
+      // uguale — «contiene ricotta vaccina» — ma non vanno letti uguale, e chi
+      // disegna il piano deve poterli distinguere senza indovinare dal testo.
+      x.voce.nonPerMeTipo = motivo.tipo;
       avvisi.push({
+        tipo: motivo.tipo,
         chiave: `${giorno.etichetta}|${x.chiave}`,
         giorno: giorno.etichetta,
         nome: p?.nome || x.voce.id,
