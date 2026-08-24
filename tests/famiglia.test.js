@@ -323,8 +323,14 @@ describe('la spesa di famiglia', () => {
 
     // Le pagine hanno in mano ora il profilo, ora il suo id: entrambi devono
     // funzionare, o la spesa di famiglia resta vuota senza dirlo.
-    const daOggetto = await settimaneDellaTavola(c);
-    const daId = await settimaneDellaTavola(c.id);
+    //
+    // La data si passa sempre, anche quando sembra superflua: senza, la
+    // funzione cerca la settimana di OGGI mentre il menù è fissato al 17
+    // agosto. Ha retto finché le due date cadevano nella stessa settimana, poi
+    // ne è cominciata una nuova e il test è diventato rosso da solo — senza che
+    // nessuno avesse toccato il codice.
+    const daOggetto = await settimaneDellaTavola(c, LUNEDI);
+    const daId = await settimaneDellaTavola(c.id, LUNEDI);
 
     expect(daOggetto).toHaveLength(2);
     expect(daId).toHaveLength(2);

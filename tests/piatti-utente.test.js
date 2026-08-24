@@ -305,8 +305,14 @@ describe('omissione di un alimento in tutte le pietanze', () => {
     expect(dopo, 'la colazione non deve sparire').not.toBeNull();
     expect(dopo.ingredienti.some((i) => i.a === 'miele')).toBe(false);
     expect(valoriPiatto(dopo).kcal).toBeLessThan(prima);
-    // 15 g di miele a 304 kcal/100 g valgono circa 46 kcal.
-    expect(prima - valoriPiatto(dopo).kcal).toBeCloseTo(46, 0);
+    // 15 g di miele a 304 kcal/100 g valgono 45,6 kcal. La differenza fra due
+    // totali arrotondati cade quindi su 45 o su 46 a seconda della base: qui la
+    // base è cambiata correggendo le fette biscottate contro la tabella CREA
+    // (408 kcal e 82,3 g di carboidrati erano di un'altra fonte). Il margine sta
+    // nell'aritmetica, non nella tolleranza sul miele.
+    const tolto = prima - valoriPiatto(dopo).kcal;
+    expect(tolto, 'il miele vale 45,6 kcal, arrotondati').toBeGreaterThanOrEqual(45);
+    expect(tolto).toBeLessThanOrEqual(46);
   });
 
   it('dice a chi legge che il piatto arriva senza quella cosa', () => {

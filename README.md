@@ -308,11 +308,25 @@ API né dump, e in UE la tabella è protetta come banca dati. Quindi tre livelli
 
 1. **Nucleo curato** in `data/alimenti.json`: 142 materie prime italiane.
    Funziona offline, è il cuore. Ogni record porta `fonte: "CREA"`, che però è
-   un'etichetta e non un riferimento: **`fonteId` non c'è su nessuno dei 142**, e
-   `verificato` è `false` ovunque. Finché restano così, un valore sospetto non si
-   può riagganciare alla riga di origine — e ce n'è già uno che lo meriterebbe:
-   `fette-biscottate` ha i macro che sommano a 103,1 g su 100. Riempire
-   `fonteId` è il lavoro che rende possibili le correzioni in blocco.
+   un'etichetta e non un riferimento: `verificato` è `false` ovunque, e `fonteId`
+   **c'è su uno solo dei 142**. Finché restano così, un valore sospetto non si può
+   riagganciare alla riga di origine.
+
+   Quell'uno se l'è meritato: `fette-biscottate` dichiarava 103,1 g di macro su
+   100 g di prodotto, che è impossibile. Ricontrollata contro la scheda CREA
+   001500 — **387 kcal e 75,0 g di carboidrati**, non 408 e 82,3 — e agganciata
+   con `fonteId: "001500"`. I numeri sbagliati venivano evidentemente da una
+   fonte secondaria, con scritto sopra «CREA»: è esattamente il motivo per cui
+   l'etichetta non basta e serve il riferimento.
+
+   Resta `verificato: false`, e non per pigrizia: quella scheda **non riporta il
+   sodio**, quindi i 550 mg vengono da altrove e nessuno sa da dove. La regola
+   che ne esce è che `verificato` diventa `true` quando ogni valore del record
+   è agganciato alla fonte, non quando lo è la maggioranza.
+
+   Riempire `fonteId` sugli altri 141 è il lavoro che rende possibili le
+   correzioni in blocco. Intanto `tests/dati-alimenti.test.js` fa da rete: nessun
+   alimento può dichiarare più di 100 g di sostanza in 100 g di prodotto.
 2. **Open Food Facts** a runtime per i prodotti confezionati, via barcode, con
    risposta in cache. Licenza ODbL, attribuzione in pagina crediti.
 3. **USDA FoodData Central** (CC0) solo a tavolino, per verificare i valori del
