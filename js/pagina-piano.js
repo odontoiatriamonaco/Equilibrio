@@ -707,7 +707,13 @@ function rigaSgarro(sgarro, sostituisce) {
         <strong>${sgarro.etichetta || 'Sgarro'}</strong>
         <br><span class="piccolo">${sostituisce ? 'al posto del pasto' : 'in aggiunta al pasto'}</span>
       </span>
-      <span class="num">+${num(sgarro.kcal || 0)} kcal</span>
+      <!-- Senza il «+»: in questo elenco ogni riga dice quanto vale il suo
+           piatto, e le altre non hanno segno. Sulla pizza il più era anche
+           falso — non aggiunge 850 alla giornata, ne sostituisce 505 — e
+           sulla sfogliatella era ridondante, visto che accanto c’è già
+           scritto «in aggiunta al pasto». Il segno serve dove si descrive un
+           CAMBIAMENTO: la pillola in cima al giorno, non una riga di cibo. -->
+      <span class="num">${num(sgarro.kcal || 0)} kcal</span>
       <button class="bottone-icona" data-sgarro-modifica="${sgarro.id || ''}"
               aria-label="Modifica ${sgarro.etichetta || 'lo sgarro'}">
         ${icona('matita', 'icona icona-sm')}

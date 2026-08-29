@@ -291,7 +291,7 @@ function rigaSgarroOggi(sgarro, sostituisce) {
         <strong>${sgarro.etichetta || 'Sgarro'}</strong>
         <br><span class="piccolo">${sostituisce ? 'al posto del pasto' : 'in aggiunta al pasto'}</span>
       </span>
-      <span class="num">+${num(sgarro.kcal || 0)} kcal</span>
+      <span class="num">${num(sgarro.kcal || 0)} kcal</span>
     </div>`;
 }
 
