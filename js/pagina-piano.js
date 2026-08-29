@@ -8,7 +8,7 @@ import { profiloAttivo, profili, origineDi } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import { riepilogo as riepilogoEnergia } from './energia.js';
 import {
-  settimanaPer, salvaPersonalizzazione, salvaSgarriPersonali, salvaRigidiPersonali,
+  settimanaPer, frasePianoVuoto, salvaPersonalizzazione, salvaSgarriPersonali, salvaRigidiPersonali,
   recuperaSgarriOrfani, lenteDi, settimaneDellaTavola,
 } from './famiglia.js';
 import {
@@ -482,13 +482,31 @@ function etichettaChiave(chiave) {
   return `${giorno}, ${(NOMI_PASTO[pasto] || pasto).toLowerCase()}`;
 }
 
+/**
+ * Cosa si legge quando la settimana non c'è.
+ *
+ * Diceva a tutti «la costruisco sui tuoi gusti», ma a chi segue il menù di un
+ * altro il pulsante per generarla è nascosto — giustamente, o si cucinerebbe
+ * due volte. Restava quindi una promessa senza il modo di mantenerla, e un
+ * vicolo cieco che si riapre ogni lunedì mattina: la settimana nuova comincia,
+ * quella vecchia non vale più, e chi segue non può fare niente finché chi
+ * cucina non genera. Il minimo è dirglielo, con il nome di chi aspetta.
+ */
+function rendiVuoto() {
+  const testo = $('#testo-vuoto');
+  if (testo) testo.innerHTML = frasePianoVuoto(riferimento);
+}
+
 /* --- Disegno --------------------------------------------------------------- */
 
 function disegna() {
   $('#vuoto').hidden = Boolean(settimana);
   $('#settimana').hidden = !settimana;
   $('#barra-azioni').hidden = !settimana;
-  if (!settimana) return;
+  if (!settimana) {
+    rendiVuoto();
+    return;
+  }
 
   const oggi = indiceOggi(settimana);
 
@@ -589,7 +607,7 @@ function cartaGiorno(giorno, indice, eOggi) {
   // e ripeterlo qui vorrebbe dire dirlo due volte. Serve però a riconoscere il
   // giorno quando la scheda è chiusa.
   const marca = suoi.length
-    ? `<span class="pillola pillola-sgarro">+${num(suoi.reduce((a, x) => a + (x.kcal || 0), 0))} kcal</span>`
+    ? pillolaSgarro(giorno, suoi)
     : giorno.stato === 'recupero'
       ? `<span class="pillola pillola-verde">−${num(giorno.recuperoKcal || 0)} kcal</span>`
       : '';
@@ -624,6 +642,35 @@ function cartaGiorno(giorno, indice, eOggi) {
         ${pasti}
       </div>
     </details>`;
+}
+
+/**
+ * La pillola in cima al giorno: di quanto è salito, non quanto pesa lo sgarro.
+ *
+ * Diceva sempre il LORDO — «+850 kcal» per una pizza da 850 — anche quando quella
+ * pizza prendeva il posto di una cena da 379. Il conto sotto era giusto (la cena
+ * sostituita non si somma), ma accanto al totale del giorno «+850» si legge come
+ * «questo giorno è salito di 850», e il giorno era salito di 471. Un'etichetta
+ * che contraddice il numero che le sta accanto fa dubitare del numero, non
+ * dell'etichetta.
+ *
+ * Quando lo sgarro si aggiunge, lordo e netto coincidono e non cambia niente.
+ */
+function pillolaSgarro(giorno, suoi) {
+  const lordo = suoi.reduce((a, x) => a + (x.kcal || 0), 0);
+
+  // Quello che il giorno NON mangia più: i pasti marcati come sostituiti.
+  const tolto = Object.values(giorno.pasti || {})
+    .flat()
+    .filter((v) => v?.saltato)
+    .reduce((a, v) => a + valoriVoce(v).kcal, 0);
+
+  const netto = Math.round(lordo - tolto);
+  if (!tolto) return `<span class="pillola pillola-sgarro">+${num(lordo)} kcal</span>`;
+
+  const segno = netto >= 0 ? '+' : '−';
+  const titolo = `${num(lordo)} kcal di sgarro al posto di ${num(tolto)} kcal in piano`;
+  return `<span class="pillola pillola-sgarro" title="${titolo}">${segno}${num(Math.abs(netto))} kcal</span>`;
 }
 
 /**

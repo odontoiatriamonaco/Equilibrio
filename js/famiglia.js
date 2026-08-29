@@ -21,6 +21,29 @@ import {
 import { applicaSgarri, elencoSgarri } from './sgarro.js';
 import { settimanaACasa } from './presenze.js';
 
+/**
+ * Cosa si legge quando la settimana non c'è.
+ *
+ * Sta qui e non nella pagina perché è una frase che può mentire: diceva a tutti
+ * «la costruisco sui tuoi gusti», ma a chi segue il menù di un altro il pulsante
+ * per generarla è nascosto — giustamente, o si cucinerebbe due volte. Restava
+ * una promessa senza il modo di mantenerla, e un vicolo cieco che si riapre ogni
+ * lunedì: comincia la settimana nuova, quella vecchia non vale più, e chi segue
+ * non può fare niente finché chi cucina non genera.
+ *
+ * @param {object|null} riferimento  chi decide il menù, o null se decidi tu
+ */
+export function frasePianoVuoto(riferimento) {
+  if (!riferimento) {
+    return 'Nessuna settimana ancora.<br>La costruisco sui tuoi gusti e su quello '
+      + 'che è di stagione.';
+  }
+  const chi = riferimento.nome || 'chi guida la dieta';
+  return `Il menù di questa settimana non c’è ancora.<br>`
+    + `Lo decide <strong>${chi}</strong>: appena lo genera, arriva anche a te `
+    + 'con le tue porzioni.';
+}
+
 /* --- Il legame ------------------------------------------------------------- */
 
 export function segue(profilo) {
