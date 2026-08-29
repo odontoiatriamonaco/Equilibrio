@@ -286,3 +286,28 @@ describe('lo sgarro in aggiunta o al posto di un pasto', () => {
     expect(due.giorni[0].pasti.pranzo.every((v) => v.saltato)).toBe(true);
   });
 });
+
+describe('il tratteggio della fascia dice un fatto, non un sospetto', () => {
+  /* Il disegno lo accende `ui-budget.js` guardando `stato === 'recupero'`.
+     Prima lo indovinava dalla quota — «piu' di 1 kcal sotto il target» — e su
+     una settimana senza nemmeno uno sgarro ne tratteggiava tre. Questi due test
+     tengono ferme le due meta' della correzione: lo stato c'e' quando il giorno
+     e' stato davvero alleggerito, e non c'e' quando non lo e' stato. */
+  const sett = () => ({ inizio: '2026-08-24', target: TARGET, floor: FLOOR, giorni: giorni() });
+
+  it('applicaRecupero marca i giorni che ha alleggerito', () => {
+    const s = sett();
+    const r = calcolaRecupero({
+      giorni: s.giorni, target: TARGET, floor: FLOOR, extra: 600, indiceEvento: 5, modo: 'prima',
+    });
+    const dopo = applicaRecupero(s, r, { extra: 600, indiceEvento: 5, etichettaSgarro: 'Pizza' });
+
+    const tagliati = dopo.giorni.filter((g) => (g.recuperoKcal || 0) > 0);
+    expect(tagliati.length).toBeGreaterThan(0);
+    for (const g of tagliati) expect(g.stato).toBe('recupero');
+  });
+
+  it('un giorno mai toccato non porta lo stato, comunque cada la sua quota', () => {
+    for (const g of sett().giorni) expect(g.stato).toBeUndefined();
+  });
+});

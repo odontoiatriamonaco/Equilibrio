@@ -4,7 +4,9 @@
  * sicurezza. Un numero sbagliato qui è peggio di nessun numero, perché ha
  * l'aria di essere stato controllato. */
 import { describe, it, expect } from 'vitest';
-import { perchePavimento, percheAvvio, percheRipescati } from '../js/spiegazioni.js';
+import {
+  perchePavimento, percheAvvio, percheRipescati, percheFascia,
+} from '../js/spiegazioni.js';
 import {
   quoteAvvio, giorniAggiuntiDallAvvio, AVVIO_SETTIMANE,
   floorCalorico, FLOOR_DONNA, FLOOR_UOMO,
@@ -110,5 +112,94 @@ describe('tutte le spiegazioni', () => {
       const parole = t.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
       expect(parole.length, parole.slice(0, 60)).toBeLessThan(1000);
     }
+  });
+});
+
+describe('come si legge la fascia del budget', () => {
+  const g = (etichetta, quota, stato) => ({ etichetta, quota, stato });
+  const TARGET = 1657;
+
+  it('nomina i giorni per esteso: «lun, mar» si decifra, «lunedì e martedì» si legge', () => {
+    const t = percheFascia({
+      target: TARGET,
+      giorni: [
+        g('lun', 1500, 'recupero'), g('mar', 1500, 'recupero'),
+        g('mer', 1657), g('gio', 1500, 'recupero'),
+        g('ven', 2100, 'sgarro'), g('sab', 2000, 'sgarro'), g('dom', 1657),
+      ],
+    });
+    expect(t).toContain('venerdì e sabato');
+    expect(t).toContain('lunedì, martedì e giovedì');
+    expect(t).not.toMatch(/\bven\b|\bsab\b/);
+  });
+
+  it('dice il bersaglio vero, non uno di esempio', () => {
+    const t = percheFascia({ target: TARGET, giorni: [g('lun', 1657)] });
+    expect(t).toContain('1657 kcal');
+  });
+
+  it('parla di ocra solo se un giorno ocra c’è', () => {
+    const senza = percheFascia({ target: TARGET, giorni: [g('lun', 1657), g('mar', 1657)] });
+    expect(senza).not.toMatch(/ocra/);
+    expect(senza).toMatch(/nessuna colonna esce dalla riga/);
+  });
+
+  it('un giorno alleggerito senza sgarri in settimana viene comunque spiegato', () => {
+    // Capita: lo sgarro era la settimana scorsa, il recupero cade in questa.
+    const t = percheFascia({
+      target: TARGET, giorni: [g('lun', 1400, 'recupero'), g('mar', 1657)],
+    });
+    expect(t).toContain('lunedì');
+    expect(t).toMatch(/settimane scorse/);
+  });
+
+  it('il giorno rigido si spiega al singolare e al plurale', () => {
+    const uno = percheFascia({ target: TARGET, giorni: [g('mer', 1657, 'rigido')] });
+    expect(uno).toContain('La colonna blu è');
+    expect(uno).toContain('non lo tocca');
+
+    const due = percheFascia({
+      target: TARGET, giorni: [g('mer', 1657, 'rigido'), g('dom', 1657, 'rigido')],
+    });
+    expect(due).toContain('Le colonne blu sono');
+    expect(due).toContain('mercoledì e domenica');
+    expect(due).toContain('non li tocca');
+  });
+
+  it('un giorno solo sotto il bersaglio non è un recupero: è la calibrazione', () => {
+    // Il difetto vero, trovato guardando una settimana senza nemmeno uno sgarro
+    // che mostrava tre giorni tratteggiati: la soglia era «più di 1 kcal sotto»,
+    // mentre la calibrazione atterra di suo a cinquanta calorie dal bersaglio.
+    const t = percheFascia({
+      target: TARGET,
+      giorni: [g('lun', TARGET - 17), g('gio', TARGET - 8), g('dom', TARGET + 54)],
+    });
+    expect(t).not.toMatch(/tratteggio/);
+    expect(t).toMatch(/nessuna colonna esce dalla riga/);
+  });
+
+  it('senza giorni rigidi non nomina il blu, che non c’è nel disegno', () => {
+    const t = percheFascia({ target: TARGET, giorni: [g('lun', 1657)] });
+    expect(t).not.toMatch(/blu/);
+  });
+
+  it('dice sempre che a tornare è la settimana, non il giorno', () => {
+    const t = percheFascia({ target: TARGET, giorni: [g('lun', 1657)] });
+    expect(t).toMatch(/settimana<\/strong>, non ogni singolo giorno/);
+  });
+
+  it('senza dati non esplode: la fascia può essere vuota', () => {
+    expect(() => percheFascia()).not.toThrow();
+    expect(() => percheFascia({})).not.toThrow();
+    expect(percheFascia({ giorni: [], target: 0 })).toContain('<p>');
+  });
+
+  it('i paragrafi sono chiusi, come in tutte le altre', () => {
+    const t = percheFascia({
+      target: TARGET,
+      giorni: [g('lun', 1400, 'recupero'), g('ven', 2100, 'sgarro'), g('mer', 1657, 'rigido')],
+    });
+    expect((t.match(/<p>/g) || []).length).toBe((t.match(/<\/p>/g) || []).length);
+    expect((t.match(/<strong>/g) || []).length).toBe((t.match(/<\/strong>/g) || []).length);
   });
 });
