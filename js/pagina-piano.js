@@ -337,10 +337,43 @@ function rendiAvvio() {
 
   const { settimana: s, di } = energia.avvio;
   nota.hidden = false;
+  // «Il tuo bersaglio», non «il piano»: questo numero viene dal profilo di oggi,
+  // e il piano si porta dietro il suo. Dicendo «il piano è tarato su X» si
+  // affermava una cosa che il piano poteva smentire — e la smentiva davvero, per
+  // chi aveva generato la settimana prima che la rampa avanzasse. A dire se il
+  // piano è allineato ci pensa `rendiVecchia()`, che i due numeri li confronta.
   nota.querySelector('div').innerHTML = `<strong>Avvio graduale, settimana ${s} di ${di}.</strong>
-    Il piano di questi giorni è tarato su ${energia.fabbisogno.target} kcal invece di
+    Il tuo bersaglio di adesso è ${energia.fabbisogno.target} kcal invece di
     ${energia.fabbisogno.targetPieno}: si scende un poco alla volta.
     ${s === di ? 'Da lunedì si va a regime.' : `Ancora ${(di - s) * 7} giorni di salita.`}`;
+}
+
+/**
+ * Il piano è tarato su un bersaglio che non è più il tuo.
+ *
+ * Succede senza far rumore: cambi peso, avanzi di una settimana nella rampa,
+ * correggi l'attività — il bersaglio si sposta, ma la settimana già scritta
+ * resta quella di prima. Le porzioni continuano a puntare al vecchio numero, e
+ * chi legge non ha modo di accorgersene: vede giorni da 1668 e un avviso che
+ * parla di 1957.
+ *
+ * Trenta calorie di tolleranza perché la calibrazione atterra sempre a un
+ * pelo dal bersaglio, e segnalare quello sarebbe gridare al lupo ogni giorno.
+ */
+function rendiVecchia() {
+  const nota = $('#nota-vecchia');
+  const suo = settimana?.target;
+  const mio = energia?.fabbisogno?.target;
+  const scarto = suo && mio ? mio - suo : 0;
+
+  nota.hidden = !(Math.abs(scarto) > 30);
+  if (nota.hidden) return;
+
+  const verso = scarto > 0 ? 'più alto' : 'più basso';
+  nota.querySelector('div').innerHTML = `Questa settimana è tarata su <strong>${num(suo)} kcal</strong>
+    al giorno, ma il tuo bersaglio adesso è <strong>${num(mio)}</strong> — ${verso} di
+    ${num(Math.abs(scarto))}. Le porzioni che vedi puntano ancora al numero vecchio:
+    <strong>rigenera</strong> per allinearle, o lascia così e riparti da lunedì.`;
 }
 
 /**
@@ -528,6 +561,7 @@ function disegna() {
   }
 
   rendiDallaDispensa();
+  rendiVecchia();
   rendiAvvio();
   rendiRiferimento();
 
