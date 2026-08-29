@@ -310,6 +310,48 @@ describe('previsione del traguardo', () => {
   });
 });
 
+describe('il traguardo tiene conto degli sgarri che non sono rientrati', () => {
+  /* L'app diceva «il traguardo si sposta di due giorni» una volta sola, nel
+     momento dello sgarro, e poi se lo scordava: la data nel profilo restava
+     quella di prima anche dopo dieci volte. Adesso la data lo sa. */
+
+  it('i giorni degli sgarri si contano come quelli della rampa', () => {
+    const base = { pesoAttualeKg: 78, pesoObiettivoKg: 68, deficitGiornaliero: 500, da: OGGI };
+    expect(previsioneTraguardo({ ...base, giorniSgarri: 3 }).giorni)
+      .toBe(previsioneTraguardo(base).giorni + 3);
+  });
+
+  it('un numero storto non accorcia mai il traguardo', () => {
+    // La data per uno sgarro puo' solo allontanarsi, mai avvicinarsi.
+    const base = { pesoAttualeKg: 78, pesoObiettivoKg: 68, deficitGiornaliero: 500, da: OGGI };
+    expect(previsioneTraguardo({ ...base, giorniSgarri: -5 }).giorni)
+      .toBe(previsioneTraguardo(base).giorni);
+    expect(previsioneTraguardo({ ...base, giorniSgarri: 2.4 }).giorni)
+      .toBe(previsioneTraguardo(base).giorni + 2);
+  });
+
+  it('le kcal non rientrate allontanano la data del riepilogo', () => {
+    const senza = riepilogo(SEDENTARIA, AGOSTO).traguardo.giorni;
+    const deficit = riepilogo(SEDENTARIA, AGOSTO).fabbisogno.deficit;
+    const con = riepilogo(SEDENTARIA, AGOSTO, { kcalSgarri: 900 }).traguardo.giorni;
+    expect(con).toBe(senza + Math.ceil(900 / deficit));
+  });
+
+  it('senza arretrati la data resta identica: nessuno se ne accorge', () => {
+    expect(riepilogo(SEDENTARIA, AGOSTO, { kcalSgarri: 0 }).traguardo.giorni)
+      .toBe(riepilogo(SEDENTARIA, AGOSTO).traguardo.giorni);
+  });
+
+  it('si somma al costo della rampa invece di sostituirlo', () => {
+    const avvio = { attivo: true, dal: '2026-08-10', settimane: 4 };
+    const conRampa = riepilogo({ ...SEDENTARIA, avvioGraduale: avvio }, AGOSTO).traguardo.giorni;
+    const conTutto = riepilogo({ ...SEDENTARIA, avvioGraduale: avvio }, AGOSTO,
+      { kcalSgarri: 900 }).traguardo.giorni;
+    expect(conTutto).toBeGreaterThan(conRampa);
+  });
+});
+
+
 describe('peso di tendenza', () => {
   it('smorza il rumore giornaliero', () => {
     const misure = [

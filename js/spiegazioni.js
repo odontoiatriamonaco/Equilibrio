@@ -76,3 +76,28 @@ export function percheRipescati() {
     <p>Ora vivono dove devono, e restano dove li metti. Questi erano rimasti
       indietro: li ho rimessi al loro giorno una volta sola. Non ricapita.</p>`;
 }
+
+/**
+ * Perché gli sgarri non rientrati si pagano in tempo e non in fame.
+ *
+ * @param {object} a  quello che torna da arretrati()
+ * @returns {string} HTML
+ */
+export function percheArretrati(a) {
+  const g = a.giorni;
+  return `<p>Uno sgarro si riassorbe sui giorni della sua settimana. Quello che
+      non ci sta — perché sotto il pavimento calorico non si scende — non passa
+      alla settimana dopo, e non è una dimenticanza: <strong>cominciare il
+      lunedì già in debito</strong> è il modo in cui una dieta diventa una
+      rincorsa. Si mangia meno per rimediare, si regge tre giorni, si molla.</p>
+    <p>Si paga invece in tempo. ${g > 0
+    ? `Queste <strong>${a.totale} kcal</strong> valgono
+        <strong>${g} ${g === 1 ? 'giorno' : 'giorni'}</strong> di dieta in più,
+        e sono già dentro la data del traguardo che vedi nel profilo — non un
+        conto a parte da ricordarsi.`
+    : `Finora sono troppo poche per spostare la data del traguardo, ma il conto
+        resta aperto e si aggiorna da solo.`}</p>
+    <p>Serve a guardarlo, non a sentirsi in colpa: la riga per settimana dice se
+      è una storia vecchia o un'abitudine che sta prendendo piede, e sono due
+      cose diverse.</p>`;
+}

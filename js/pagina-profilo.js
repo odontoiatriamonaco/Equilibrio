@@ -17,8 +17,14 @@ import {
   profiloAttivo, creaProfilo, scrivi, leggi, impostaProfiloAttivo,
 } from './store.js';
 import { iso } from './planner.js';
+import { tutteLeSettimane } from './dati.js';
+import { arretrati } from './arretrati.js';
 
 let profilo = null;
+/* Le kcal degli sgarri che non sono rientrate, lette una volta all'apertura.
+   `aggiorna()` gira a ogni tasto premuto e non puo' andare in archivio; questo
+   numero intanto non cambia mentre si modifica il profilo. */
+let kcalSgarri = 0;
 
 /**
  * Da dove arriva il profilo che stiamo modificando.
@@ -243,7 +249,8 @@ function rendiRitmi(dati) {
   for (const b of $('#ritmi').querySelectorAll('button')) {
     // Il confronto e' fra i ritmi a regime: la rampa vale per tutti allo stesso
     // modo e qui confonderebbe soltanto.
-    const r = riepilogo({ ...dati, ritmo: b.dataset.ritmo, avvioGraduale: null });
+    const r = riepilogo({ ...dati, ritmo: b.dataset.ritmo, avvioGraduale: null },
+      new Date(), { kcalSgarri });
     const kg = kgSettimana(r.fabbisogno.deficit);
     b.querySelector('[data-effetto]').textContent = r.fabbisogno.deficit > 0
       ? `−${kg.toFixed(2).replace('.', ',')} kg/sett`
@@ -299,7 +306,7 @@ function aggiorna() {
     return;
   }
 
-  const r = riepilogo(dati);
+  const r = riepilogo(dati, new Date(), { kcalSgarri });
   $('#salva').disabled = false;
   rendiRitmi(dati);
   rendiMargine(dati, r);
@@ -471,6 +478,11 @@ export async function inizializza() {
   montaBandiere();
 
   profilo = await quale();
+  // Prima di `aggiorna()`: se arrivasse dopo, il traguardo si vedrebbe cambiare
+  // sotto gli occhi appena finito di caricare, e sembrerebbe un difetto.
+  kcalSgarri = profilo?.id
+    ? arretrati(await tutteLeSettimane(profilo.id)).totale
+    : 0;
   scriviModulo(profilo);
   montaPresenze();
   aggiornaIntestazione();

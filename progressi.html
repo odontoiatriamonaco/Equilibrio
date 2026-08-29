@@ -64,6 +64,26 @@
         </div>
       </section>
 
+      <!-- Quello che gli sgarri non hanno restituito. Il dato c'era gia' in ogni
+           settimana salvata; mancava chi lo guardasse. -->
+      <section class="sezione" id="sezione-arretrati" hidden>
+        <header><h2>Quello che non è rientrato</h2></header>
+        <div class="scheda scheda-alta">
+          <div id="arretrati-conto"></div>
+          <details class="avviso avviso-sgarro avviso-apre" style="margin-top: var(--sp-4)">
+            <summary>
+              <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#sgarro"/></svg>
+              <div>
+                <div class="testo"></div>
+                <span class="apri-spiega"><span class="apri">Perché?</span><span class="chiudi">Chiudi</span></span>
+              </div>
+            </summary>
+            <div class="spiega"></div>
+          </details>
+          <div id="arretrati-elenco" style="margin-top: var(--sp-4)"></div>
+        </div>
+      </section>
+
       <section class="sezione">
         <header><h2>Il tuo fabbisogno reale</h2></header>
         <div class="scheda scheda-alta">

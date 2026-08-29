@@ -29,9 +29,21 @@ export async function eliminaSettimana(profiloId, inizio) {
   return elimina('settimane', chiaveSettimana(profiloId, inizio));
 }
 
+/**
+ * Tutte le settimane del profilo, dalla piu' recente.
+ *
+ * Torna le SETTIMANE, non le righe d'archivio che le contengono: il nome dice
+ * settimane e chi la chiama si aspetta settimane. Prima tornava le righe —
+ * `{id, profiloId, inizio, settimana}` — e nessuno se n'era accorto perche'
+ * nessuno la chiamava; il primo che l'ha usata ha letto `recupero` un livello
+ * troppo in alto e ha trovato `undefined` senza che niente si lamentasse.
+ */
 export async function tutteLeSettimane(profiloId) {
   const righe = await tutti('settimane', profiloId);
-  return righe.sort((a, b) => b.inizio.localeCompare(a.inizio));
+  return righe
+    .sort((a, b) => b.inizio.localeCompare(a.inizio))
+    .map((r) => r.settimana)
+    .filter(Boolean);
 }
 
 /* --- Dispensa -------------------------------------------------------------- */

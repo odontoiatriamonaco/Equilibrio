@@ -9,7 +9,7 @@
    il possibile e restituisce il residuo, che l'app traduce in giorni in piu'
    sul traguardo. Dire la verita' e' una funzione, non una rinuncia. */
 
-import { KCAL_PER_KG } from './energia.js';
+import { KCAL_PER_KG, slittamentoTraguardo } from './energia.js';
 import { valoriVoce } from './alimenti.js';
 import {
   tutteLeVoci, kcalGiorno, riducibileGiorno, PORZIONE_MIN,
@@ -158,14 +158,10 @@ function esito(perGiorno, recuperato, residuo, scelti, motivo) {
   };
 }
 
-/**
- * Di quanti giorni si sposta il traguardo se una parte non si recupera.
- * Questa e' l'alternativa onesta al digiuno compensativo.
- */
-export function slittamentoTraguardo(residuo, deficitGiornaliero) {
-  if (!(residuo > 0) || !(deficitGiornaliero > 0)) return 0;
-  return Math.ceil(residuo / deficitGiornaliero);
-}
+/* Lo slittamento del traguardo vive in `energia.js`, che e' dove sta la data.
+   Qui si ri-esporta perche' e' da qui che lo cercano tutti — e perche' il giro
+   all'indietro sarebbe un ciclo: sgarro importa gia' da energia. */
+export { slittamentoTraguardo } from './energia.js';
 
 /** Quanto peso vale, in grammi, un'eccedenza non recuperata. */
 export function grammiEquivalenti(residuo) {

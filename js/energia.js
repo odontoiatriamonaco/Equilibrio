@@ -238,14 +238,29 @@ export function proteineMinime(pesoRiferimentoKg) {
  * Giorni stimati per arrivare all'obiettivo con un certo deficit giornaliero.
  * Restituisce null se il deficit è nullo: meglio nessuna previsione che una falsa.
  */
+/**
+ * Di quanti giorni si sposta il traguardo se una parte non si recupera.
+ * Questa e' l'alternativa onesta al digiuno compensativo.
+ */
+export function slittamentoTraguardo(residuo, deficitGiornaliero) {
+  if (!(residuo > 0) || !(deficitGiornaliero > 0)) return 0;
+  return Math.ceil(residuo / deficitGiornaliero);
+}
+
 export function previsioneTraguardo({
-  pesoAttualeKg, pesoObiettivoKg, deficitGiornaliero, giorniAvvio = 0, da = new Date(),
+  pesoAttualeKg, pesoObiettivoKg, deficitGiornaliero, giorniAvvio = 0,
+  giorniSgarri = 0, da = new Date(),
 }) {
   const daPerdere = pesoAttualeKg - pesoObiettivoKg;
   if (daPerdere <= 0 || deficitGiornaliero <= 0) return null;
   // L'avvio graduale costa giorni veri: contarli e' l'unico modo di non mentire
   // sulla data. Meglio un traguardo piu' lontano che uno che non arriva.
-  const giorni = Math.ceil((daPerdere * KCAL_PER_KG) / deficitGiornaliero) + giorniAvvio;
+  //
+  // Lo stesso vale per gli sgarri che non sono rientrati. L'app lo diceva una
+  // volta sola — «il traguardo si sposta di due giorni» — e poi se lo scordava:
+  // dopo dieci volte la data era quella del primo giorno, cioe' un ottimismo.
+  const giorni = Math.ceil((daPerdere * KCAL_PER_KG) / deficitGiornaliero)
+    + giorniAvvio + Math.max(0, Math.round(giorniSgarri));
   const data = new Date(da);
   data.setDate(data.getDate() + giorni);
   return { giorni, data };
@@ -503,7 +518,7 @@ export function valutaBandiere(risposte = {}) {
  * Calcola tutto in un colpo solo, a partire dal profilo salvato.
  * È la funzione che le pagine chiamano: le altre restano esposte per i test.
  */
-export function riepilogo(profilo, oggi = new Date()) {
+export function riepilogo(profilo, oggi = new Date(), { kcalSgarri = 0 } = {}) {
   const anni = eta(profilo.dataNascita, oggi);
   const valoreBmi = bmi(profilo.pesoKg, profilo.altezzaCm);
   const bmr = bmrMifflin({ sesso: profilo.sesso, pesoKg: profilo.pesoKg, altezzaCm: profilo.altezzaCm, anni });
@@ -571,6 +586,7 @@ export function riepilogo(profilo, oggi = new Date()) {
       pesoObiettivoKg: obiettivoKg,
       deficitGiornaliero: pieno.deficit,
       giorniAvvio: avvio.attivo ? giorniAggiuntiDallAvvio(avvio.di, avvio.settimana) : 0,
+      giorniSgarri: slittamentoTraguardo(kcalSgarri, pieno.deficit),
       da: oggi,
     }),
   };

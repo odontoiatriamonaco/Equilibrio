@@ -8,8 +8,12 @@ import {
   riepilogo as riepilogoEnergia, pesoDiTendenza, tdeeAdattivo,
   ADATTIVO_GIORNI_MIN,
 } from './energia.js';
-import { tutteLeMisure, aggiungiMisura, tuttoIlDiario, aderenza } from './dati.js';
+import {
+  tutteLeMisure, aggiungiMisura, tuttoIlDiario, aderenza, tutteLeSettimane,
+} from './dati.js';
 import { rendiGraficoPeso } from './grafico-peso.js';
+import { arretrati, raccontaArretrati } from './arretrati.js';
+import { percheArretrati } from './spiegazioni.js';
 
 let profilo = null;
 let energia = null;
@@ -48,7 +52,58 @@ async function disegna() {
   });
 
   disegnaTitolo(serie, esito);
+  await disegnaArretrati();
   await disegnaAdattivo(serie);
+}
+
+/**
+ * Gli sgarri che non sono rientrati, sommati su tutte le settimane.
+ *
+ * La sezione non c'e' quando non c'e' niente da dire: un riquadro che ripete
+ * «zero» ogni volta insegna a saltarlo, e il giorno che dice qualcosa non lo
+ * legge piu' nessuno.
+ */
+async function disegnaArretrati() {
+  const sezione = $('#sezione-arretrati');
+  const conto = arretrati(await tutteLeSettimane(profilo.id), {
+    deficitGiornaliero: energia.fabbisogno.deficit,
+    oggi: new Date(),
+  });
+
+  sezione.hidden = conto.totale <= 0;
+  if (sezione.hidden) return;
+
+  $('#arretrati-conto').innerHTML = `
+    <span class="dato-grande num">${num(conto.totale)}<span class="unita"> kcal</span></span>
+    <p style="margin-top: var(--sp-2)">${raccontaArretrati(conto, { conTotale: false })}</p>`;
+
+  const nota = sezione.querySelector('.avviso-apre');
+  nota.querySelector('.testo').innerHTML = conto.giorni > 0
+    ? `Il traguardo del profilo tiene già conto di
+       <strong>${conto.giorni} ${conto.giorni === 1 ? 'giorno' : 'giorni'}</strong> in più.`
+    : 'Troppo poco per spostare il traguardo, ma il conto resta aperto.';
+  nota.querySelector('.spiega').innerHTML = percheArretrati(conto);
+
+  // Una riga per settimana, dalla piu' recente: il totale dice quanto, l'elenco
+  // dice se e' una storia vecchia o un'abitudine che sta prendendo piede.
+  $('#arretrati-elenco').innerHTML = `
+    <table class="tabella">
+      <caption class="occhiello" style="text-align:left; padding-bottom: var(--sp-2)">
+        Settimana per settimana</caption>
+      <thead><tr><th>Settimana</th><th class="num">Non rientrate</th></tr></thead>
+      <tbody>${conto.righe.map((r) => `
+        <tr>
+          <td>${dataBreve(r.inizio)}${r.prenotata ? ' <span class="pillola">prenotata</span>' : ''}</td>
+          <td class="num">${num(r.residuo)} kcal</td>
+        </tr>`).join('')}</tbody>
+    </table>`;
+}
+
+/** «lun 24 ago», che in una tabella si legge meglio di una data intera. */
+function dataBreve(iso) {
+  return new Date(`${iso}T12:00:00`).toLocaleDateString('it-IT', {
+    weekday: 'short', day: 'numeric', month: 'short',
+  });
 }
 
 function disegnaTitolo(serie, esito) {
