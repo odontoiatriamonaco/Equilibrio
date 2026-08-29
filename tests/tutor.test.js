@@ -239,3 +239,47 @@ describe('un comando dentro un pannello chiuso non si illumina', () => {
     expect(veri[0].nodo).toBe(aperto);
   });
 });
+
+describe('il pannello stesso è il bersaglio', () => {
+  /* Il caso nuovo: l'avviso del recupero è diventato un `<details>`, e il passo
+     del tutor punta a lui, non a qualcosa che ha dentro. `closest` comprende sé
+     stesso, quindi la regola dei pannelli chiusi lo scartava in silenzio — e un
+     passo saltato non lascia traccia da nessuna parte. */
+  const { fai, dentro } = albero();
+
+  function avviso({ aperto }) {
+    const nota = fai('details', { open: aperto });
+    const sommario = dentro(nota, fai('summary'));
+    dentro(sommario, fai('div'));
+    const spiega = dentro(nota, fai('div'));
+    return { nota, spiega };
+  }
+
+  function conNodo(nodo) {
+    globalThis.document = { querySelectorAll: () => [nodo] };
+    globalThis.getComputedStyle = () => ({ visibility: 'visible' });
+    return passiVeri([{ sel: '#nota', titolo: 'T', testo: 'x' }]).length;
+  }
+
+  it('chiuso si vede: quello che si vede è la riga su cui si preme', () => {
+    expect(conNodo(avviso({ aperto: false }).nota)).toBe(1);
+  });
+
+  it('aperto pure', () => {
+    expect(conNodo(avviso({ aperto: true }).nota)).toBe(1);
+  });
+
+  it('ma la spiegazione dentro resta nascosta finché non si apre', () => {
+    expect(conNodo(avviso({ aperto: false }).spiega)).toBe(0);
+    expect(conNodo(avviso({ aperto: true }).spiega)).toBe(1);
+  });
+
+  it('un pannello chiuso dentro un pannello chiuso resta invisibile', () => {
+    // La regola vecchia non deve saltare: è sé stesso che si perdona, non i genitori.
+    const fuori = fai('details', { open: false });
+    dentro(fuori, fai('summary'));
+    const dentroChiuso = dentro(dentro(fuori, fai('div')), fai('details', { open: false }));
+    dentro(dentroChiuso, fai('summary'));
+    expect(conNodo(dentroChiuso)).toBe(0);
+  });
+});

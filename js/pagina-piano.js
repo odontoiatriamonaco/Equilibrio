@@ -6,7 +6,9 @@ import { PASSI_PIANO } from './tutor-passi.js';
 import { montaBarraPercorso } from './barra-percorso.js';
 import { profiloAttivo, profili, origineDi } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
-import { riepilogo as riepilogoEnergia } from './energia.js';
+import {
+  riepilogo as riepilogoEnergia, quoteAvvio, giorniAggiuntiDallAvvio,
+} from './energia.js';
 import {
   settimanaPer, frasePianoVuoto, salvaPersonalizzazione, salvaSgarriPersonali, salvaRigidiPersonali,
   recuperaSgarriOrfani, lenteDi, settimaneDellaTavola,
@@ -28,10 +30,29 @@ import {
 import { alternativePiatto, scambiaPiatto } from './scambi.js';
 import {
   calcolaRecupero, racconta, slittamentoTraguardo, extraNetto,
-  elencoSgarri, applicaSgarri,
+  elencoSgarri, applicaSgarri, TAGLIO_MAX,
 } from './sgarro.js';
 import { rendiFascia } from './ui-budget.js';
+import { perchePavimento, percheAvvio, percheRipescati } from './spiegazioni.js';
 import sgarriCatalogo from '../data/sgarri.json';
+
+/**
+ * Riempie un avviso che si apre: la riga breve e il perché.
+ *
+ * Vanno scritti insieme, sempre. Il riquadro del recupero porta due messaggi
+ * diversi — «ho ritrovato degli sgarri» e «non ho recuperato tutto» — e se il
+ * perché restasse quello di prima spiegherebbe la cosa sbagliata.
+ *
+ * @param {string} id       l'id del riquadro
+ * @param {string} testo    la riga breve, in HTML
+ * @param {string} perche   la spiegazione, in HTML
+ */
+function dilloE(id, testo, perche) {
+  const nota = $(`#${id}`);
+  nota.hidden = false;
+  nota.querySelector('.testo').innerHTML = testo;
+  nota.querySelector('.spiega').innerHTML = perche;
+}
 
 const NOMI_PASTO = {
   colazione: 'Colazione',
@@ -137,10 +158,10 @@ export async function inizializza() {
 
   disegna();
   if (ripescati.recuperati > 0) {
-    $('#nota-recupero').hidden = false;
-    $('#nota-recupero div').innerHTML = `Ho ritrovato <strong>${ripescati.recuperati} ${
+    dilloE('nota-recupero', `Ho ritrovato <strong>${ripescati.recuperati} ${
       ripescati.recuperati === 1 ? 'sgarro' : 'sgarri'}</strong> che si erano persi `
-      + 'al ricaricamento. Sono di nuovo nella settimana, al loro posto.';
+      + 'al ricaricamento. Sono di nuovo nella settimana, al loro posto.',
+    percheRipescati());
   }
   rendiArrivo(arrivo);
   if (arrivo.spazio) await rendiProposte(arrivo.spazio);
@@ -336,16 +357,22 @@ function rendiAvvio() {
   if (!energia.avvio?.attivo) { nota.hidden = true; return; }
 
   const { settimana: s, di } = energia.avvio;
-  nota.hidden = false;
   // «Il tuo bersaglio», non «il piano»: questo numero viene dal profilo di oggi,
   // e il piano si porta dietro il suo. Dicendo «il piano è tarato su X» si
   // affermava una cosa che il piano poteva smentire — e la smentiva davvero, per
   // chi aveva generato la settimana prima che la rampa avanzasse. A dire se il
   // piano è allineato ci pensa `rendiVecchia()`, che i due numeri li confronta.
-  nota.querySelector('div').innerHTML = `<strong>Avvio graduale, settimana ${s} di ${di}.</strong>
-    Il tuo bersaglio di adesso è ${energia.fabbisogno.target} kcal invece di
-    ${energia.fabbisogno.targetPieno}: si scende un poco alla volta.
-    ${s === di ? 'Da lunedì si va a regime.' : `Ancora ${(di - s) * 7} giorni di salita.`}`;
+  dilloE(
+    'nota-avvio',
+    `<strong>Avvio graduale, settimana ${s} di ${di}.</strong>
+      Il tuo bersaglio di adesso è ${energia.fabbisogno.target} kcal invece di
+      ${energia.fabbisogno.targetPieno}: si scende un poco alla volta.
+      ${s === di ? 'Da lunedì si va a regime.' : `Ancora ${(di - s) * 7} giorni di salita.`}`,
+    percheAvvio({
+      quote: quoteAvvio(di),
+      giorniAggiunti: giorniAggiuntiDallAvvio(di, s),
+    }),
+  );
 }
 
 /**
@@ -554,8 +581,21 @@ function disegna() {
   });
 
   if (settimana.recupero?.motivo) {
-    $('#nota-recupero').hidden = false;
-    $('#nota-recupero div').textContent = settimana.recupero.motivo;
+    // La riga era il motivo nudo — «oltre il recuperabile senza scendere sotto
+    // 1410 kcal» — che comincia a meta' frase e non dice quanto sia «oltre».
+    const residuo = Math.round(settimana.recupero.residuo || 0);
+    dilloE(
+      'nota-recupero',
+      residuo > 0
+        ? `<strong>${num(residuo)} kcal</strong> dello sgarro non sono rientrate:
+           ${settimana.recupero.motivo}.`
+        : `Lo sgarro è rientrato solo in parte: ${settimana.recupero.motivo}.`,
+      perchePavimento({
+        floor: settimana.floor || energia?.fabbisogno?.floor || 0,
+        residuo,
+        taglioMax: TAGLIO_MAX,
+      }),
+    );
   } else {
     $('#nota-recupero').hidden = true;
   }
@@ -1165,11 +1205,18 @@ async function confermaSgarro() {
   const residuo = settimana.recupero?.residuo || 0;
   if (residuo > 0) {
     const giorni = slittamentoTraguardo(residuo, energia.fabbisogno.deficit || 300);
-    $('#nota-recupero').hidden = false;
-    $('#nota-recupero div').innerHTML = `Recuperate ${num(settimana.recupero.recuperato)} kcal `
-      + `su ${num(settimana.recupero.recuperato + residuo)}. `
-      + `Il traguardo si sposta di <strong>${giorni} ${giorni === 1 ? 'giorno' : 'giorni'}</strong> — `
-      + 'meglio così che scendere sotto il minimo.';
+    dilloE(
+      'nota-recupero',
+      `Recuperate ${num(settimana.recupero.recuperato)} kcal `
+        + `su ${num(settimana.recupero.recuperato + residuo)}. `
+        + `Il traguardo si sposta di <strong>${giorni} ${giorni === 1 ? 'giorno' : 'giorni'}</strong> — `
+        + 'meglio così che scendere sotto il minimo.',
+      perchePavimento({
+        floor: settimana.floor || energia?.fabbisogno?.floor || 0,
+        residuo: Math.round(residuo),
+        taglioMax: TAGLIO_MAX,
+      }),
+    );
   }
 }
 

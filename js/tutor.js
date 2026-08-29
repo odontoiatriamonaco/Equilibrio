@@ -29,7 +29,11 @@ let stato = { ...CHIUSO };
  */
 function chiaroFinoInFondo(el) {
   for (let d = el.closest('details'); d; d = d.parentElement?.closest('details')) {
-    if (d.open) continue;
+    // `closest` comprende sé stesso, e un pannello chiuso NON è invisibile: si
+    // vede la sua riga, ed è quella che si preme per aprirlo. Invisibile è ciò
+    // che ha dentro. Senza questa riga il tutor saltava in silenzio l'avviso
+    // del recupero, diventato un pannello che si apre.
+    if (d.open || d === el) continue;
     const sommario = d.querySelector(':scope > summary');
     if (!sommario || !sommario.contains(el)) return false;
   }

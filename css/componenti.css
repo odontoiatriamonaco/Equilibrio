@@ -317,6 +317,84 @@
 .avviso-pericolo{ border-left-color: var(--pericolo);background: var(--pericolo-tenue); }
 .avviso-pericolo .icona { color: var(--pericolo-testo); }
 
+/* --- L'avviso che si apre ---------------------------------------------------
+   Certi avvisi dicono una cosa vera e incomprensibile: «oltre il recuperabile
+   senza scendere sotto 1410 kcal» e' esatto, ed e' esattamente quello che
+   nessuno capisce. La riga breve resta breve — chi ha gia' capito non deve
+   leggere un poema — e sotto ci sta il perche', per chi lo vuole.
+
+   Il richiamo e' scritto, non solo un chevron: «Perche'?» si vede, una
+   punta di freccia si scopre per caso. Tutto il riquadro e' il bersaglio del
+   tocco, che su un telefono e' l'unica misura che conta.
+   -------------------------------------------------------------------------- */
+.avviso-apre {
+  display: block;
+  padding: 0;
+}
+
+.avviso-apre > summary {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  padding: var(--sp-4);
+  min-height: var(--tocco-min);
+  cursor: pointer;
+  list-style: none;
+}
+
+.avviso-apre > summary::-webkit-details-marker { display: none; }
+
+/* Il testo si ferma prima del bordo come in ogni avviso, ma qui il figlio
+   diretto e' il summary: la regola di sopra non lo raggiungerebbe. */
+.avviso-apre > summary > div { max-width: 62ch; }
+
+.avviso-apre .apri-spiega {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-top: var(--sp-2);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--accento-testo);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.avviso-apre .apri-spiega::after {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-1px) rotate(45deg);
+  transition: transform var(--d-media) var(--e-standard);
+}
+
+.avviso-apre[open] .apri-spiega::after { transform: translateY(2px) rotate(-135deg); }
+
+/* Le parole cambiano con lo stato: chiuso chiede, aperto congeda. */
+.avviso-apre .apri-spiega .chiudi,
+.avviso-apre[open] .apri-spiega .apri { display: none; }
+.avviso-apre[open] .apri-spiega .chiudi { display: inline; }
+
+.avviso-apre .spiega {
+  max-width: 62ch;
+  padding: 0 var(--sp-4) var(--sp-4);
+  /* Allineata al testo, non all'icona: si legge come il seguito della riga. */
+  padding-left: calc(var(--sp-4) + 1.125rem + var(--sp-3));
+  color: var(--testo-morbido);
+  font-size: var(--t-sm);
+  line-height: var(--lh-base);
+}
+
+.avviso-apre .spiega p { margin: 0; }
+.avviso-apre .spiega p + p { margin-top: var(--sp-3); }
+
+@media (max-width: 30rem) {
+  /* Su schermo stretto il rientro costa piu' di quanto renda. */
+  .avviso-apre .spiega { padding-left: var(--sp-4); }
+}
+
 /* --- Fascia del budget settimanale (componente firma) ---------------------
    Sette segmenti, uno per giorno. La linea tratteggiata e' il target
    standard: sopra si vede lo sgarro, sotto si vede il recupero che lo
