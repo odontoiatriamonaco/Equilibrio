@@ -171,6 +171,16 @@ export function guidaPagina(stato, idPasso) {
   // può farli al posto tuo.
   const conferma = ultimo && !passo.fatto && passo.saltabile;
 
+  // Il contatore e «Ho finito» non possono stare accanto: «Passo 3 di 5» dice
+  // che ne mancano due, il pulsante dice che non ne manca nessuno, e chi legge
+  // pensa a un errore invece che a un traguardo. Dove il pulsante chiude, il
+  // posto del contatore lo prende una frase che dice la stessa cosa.
+  //
+  // Sono due situazioni diverse e vanno dette diversamente: se è tutto a posto
+  // hai finito davvero; se manca solo questo passo non hai finito ancora, e
+  // dirtelo sarebbe falso finché non premi.
+  const tuttoFatto = stato.passi.every((x) => x.fatto);
+
   return {
     id: idPasso,
     numero: indice + 1,
@@ -179,6 +189,16 @@ export function guidaPagina(stato, idPasso) {
     fatto: passo.fatto,
     ultimo,
     conferma,
+    tuttoFatto,
+    // Se l'occhiello e' un contatore lo dice qui: la barra non deve leggere le
+    // parole per capire se allineare le cifre.
+    contatore: !tuttoFatto && !conferma,
+    occhiello: (() => {
+      if (tuttoFatto) return 'Ci siamo';
+      if (conferma) return 'Ultimo passo';
+      return `Passo ${indice + 1} di ${stato.passi.length}`;
+    })(),
+    intestazione: tuttoFatto ? 'Hai finito i primi passi' : passo.titolo,
     etichetta: ultimo && (passo.fatto || conferma) ? 'Ho finito' : 'Avanti',
   };
 }

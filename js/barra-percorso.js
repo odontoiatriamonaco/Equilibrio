@@ -28,17 +28,18 @@ export async function montaBarraPercorso(profilo, idPasso) {
   const guida = guidaPagina(await statoPercorso(profilo), idPasso);
   if (!guida) return null;
 
-  // La spunta appare quando la sezione è a posto: dice che puoi andare, senza
-  // impedirti di andare comunque — tornare a Oggi non dev'essere mai bloccato.
-  const spunta = guida.fatto ? ` ${icona('spunta', 'icona icona-sm')}` : '';
+  // La spunta dice «questa sezione è a posto», senza impedirti di andare
+  // comunque: tornare a Oggi non dev’essere mai bloccato. A percorso finito lo
+  // dicono già le parole accanto, e ripeterlo sarebbe rumore.
+  const spunta = guida.fatto && !guida.tuttoFatto ? ` ${icona('spunta', 'icona icona-sm')}` : '';
   const dentro = `${guida.etichetta} ${icona('avanti', 'icona icona-sm')}`;
 
   const barra = document.createElement('div');
   barra.className = 'barra-passo non-stampare';
   barra.innerHTML = `
     <span class="dove">
-      <span class="conta num">Passo ${guida.numero} di ${guida.totale}</span>
-      <span class="titolo">${guida.titolo}${spunta}</span>
+      <span class="conta${guida.contatore ? ' num' : ''}">${guida.occhiello}</span>
+      <span class="titolo">${guida.intestazione}${spunta}</span>
     </span>
     ${guida.conferma
     ? `<button class="bottone" data-chiudi-passo>${dentro}</button>`

@@ -140,3 +140,64 @@ describe('l\u2019ultimo passo, e come si chiude', () => {
     expect(p.percorso.saltati).toBeUndefined();
   });
 });
+
+describe('a percorso finito la barra dice il traguardo, non il contatore', () => {
+  const tutto = stato(['profilo', 'gusti', 'settimana', 'dispensa', 'spesa'], { iniziato: true });
+
+  it('«Passo 3 di 5» accanto a «Ho finito» erano due frasi che si contraddicono', () => {
+    const g = guidaPagina(tutto, 'settimana');
+    expect(g.tuttoFatto).toBe(true);
+    expect(g.occhiello).toBe('Ci siamo');
+    expect(g.intestazione).toBe('Hai finito i primi passi');
+    expect(g.etichetta).toBe('Ho finito');
+  });
+
+  it('finché manca qualcosa il contatore resta, ed è quello che serve', () => {
+    const g = guidaPagina(stato(['profilo'], { iniziato: true }), 'gusti');
+    expect(g.tuttoFatto).toBe(false);
+    expect(g.occhiello).toBe('Passo 2 di 5');
+    expect(g.intestazione).toBe('Cosa ti piace');
+    expect(g.etichetta).toBe('Avanti');
+  });
+
+  it('il contatore conta i passi veri, non quelli scritti', () => {
+    const g = guidaPagina(stato(['profilo', 'gusti'], { iniziato: true }), 'settimana');
+    expect(g.occhiello).toBe('Passo 3 di 5');
+  });
+});
+
+describe('«Ho finito» non compare mai accanto a un contatore che lo smentisce', () => {
+  // La regola vale su tutte le combinazioni, non solo su quella vista a mano.
+  const ID = ['profilo', 'gusti', 'settimana', 'dispensa', 'spesa'];
+
+  for (let m = 0; m < 32; m += 1) {
+    const fatti = ID.filter((_, i) => (m >> i) & 1);
+    for (const dove of ID) {
+      it(`fatti [${fatti.join(',') || 'nessuno'}], sono su ${dove}`, () => {
+        const g = guidaPagina(stato(fatti, { iniziato: true }), dove);
+        if (!g) return;
+        if (g.etichetta === 'Ho finito') {
+          expect(g.occhiello, 'un contatore accanto a «Ho finito»').not.toMatch(/^Passo /);
+        } else {
+          expect(g.occhiello).toMatch(/^Passo \d+ di 5$/);
+        }
+      });
+    }
+  }
+
+  it('manca solo un passo saltabile: è l’ultimo, ma non hai ancora finito', () => {
+    const g = guidaPagina(stato(['profilo', 'settimana', 'dispensa', 'spesa'], { iniziato: true }), 'gusti');
+    expect(g.conferma).toBe(true);
+    expect(g.etichetta).toBe('Ho finito');
+    expect(g.occhiello).toBe('Ultimo passo');
+    // Il titolo resta: quel passo lo stai facendo adesso.
+    expect(g.intestazione).toBe('Cosa ti piace');
+  });
+});
+
+it('l’allineamento delle cifre lo dichiara la guida, non lo indovina la barra', () => {
+  // `num` è tabular-nums: serve alle cifre, e su una frase non ha senso.
+  expect(guidaPagina(stato(['profilo'], { iniziato: true }), 'gusti').contatore).toBe(true);
+  expect(guidaPagina(stato(PASSI.map((p) => p.id), { iniziato: true }), 'spesa').contatore).toBe(false);
+  expect(guidaPagina(stato(['profilo', 'settimana', 'dispensa', 'spesa'], { iniziato: true }), 'gusti').contatore).toBe(false);
+});
