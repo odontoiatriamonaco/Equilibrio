@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { piatti } from '../js/alimenti.js';
+import { readFileSync } from 'node:fs';
+import { piatti, lenteRicettario, registraPiattiUtente } from '../js/alimenti.js';
 import {
   vuote, gustoPiatto, gustoAlimento, eAllergene, motivoEsclusione, ammesso,
   peso, imposta, alternaAllergia, impostaTetto, riepilogo, omessi, tettiSforati,
@@ -168,5 +169,38 @@ describe('i tetti che il piano già scritto supera', () => {
   it('regge preferenze o conteggi mancanti', () => {
     expect(tettiSforati(undefined, undefined)).toEqual([]);
     expect(tettiSforati({ formaggi: 9 }, {})).toEqual([]);
+  });
+});
+
+describe('quanto costa un’esclusione, detto dove si sceglie', () => {
+  /* «Io non ho escluso nulla» — e invece sette segni messi settimane prima
+     avevano tolto quaranta pietanze su centocinquantatre. Il segno si chiama
+     «Non lo metto nei piatti», non dice che costo ha, e nessuno collega un
+     ricettario dimezzato a un tocco dato tempo prima. Ora il costo sta scritto
+     accanto alla scelta. */
+  it('non tutte le esclusioni pesano uguale: è per questo che va detto', () => {
+    const conta = (id) => lenteRicettario([], [id]).scartati.length;
+
+    // Una base della cucina italiana si porta via una fetta grossa.
+    expect(conta('pasta-semola')).toBeGreaterThan(20);
+    // Un'erba aromatica non toglie niente, per quanto sia in mezzo ovunque.
+    expect(conta('prezzemolo')).toBe(0);
+  });
+
+  it('la simulazione non tocca il ricettario in uso', () => {
+    // `lenteRicettario` è pura: la pagina la chiama per fare i conti mentre
+    // mostra l'elenco, e se sporcasse lo stato globale li sporcherebbe tutti.
+    registraPiattiUtente([], []);
+    const prima = piatti.length;
+    lenteRicettario([], ['pasta-semola']);
+    expect(piatti.length).toBe(prima);
+  });
+
+  it('la pagina scrive il costo accanto agli alimenti esclusi', () => {
+    const js = readFileSync(new URL('../js/pagina-preferenze.js', import.meta.url), 'utf8');
+    expect(js).toMatch(/function quantePietanzeCosta/);
+    expect(js).toMatch(/toglie \$\{quantePietanzeCosta\(a\.id\)\}/);
+    // Solo su quelli esclusi: su tutti sarebbe rumore su centoquarantadue righe.
+    expect(js).toMatch(/g === 'omesso' && quantePietanzeCosta\(a\.id\) > 0/);
   });
 });

@@ -11,7 +11,7 @@ import { profiloAttivo } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
 import {
   piatti, piattiScartati, alimenti, alimento, gruppi, iconaPiatto, TIPI,
-  iconaAlimento, famigliaCibo,
+  iconaAlimento, famigliaCibo, lenteRicettario,
 } from './alimenti.js';
 import { settimanaPer } from './famiglia.js';
 import {
@@ -183,6 +183,25 @@ function rigaPiatto(p) {
     </div>`;
 }
 
+/**
+ * Quante pietanze sparirebbero del tutto togliendo questo alimento.
+ *
+ * Non e' lo stesso numero per tutti: il prezzemolo non toglie niente, la pasta
+ * di semola trenta pietanze su centocinquantatre. Al momento del tocco quel
+ * costo non lo diceva nessuno, e chi si e' ritrovato il ricettario dimezzato
+ * non aveva modo di collegarlo a sette segni messi settimane prima.
+ *
+ * `lenteRicettario` e' pura: si puo' chiamare per una simulazione senza
+ * toccare il ricettario in uso.
+ */
+const costoDi = new Map();
+function quantePietanzeCosta(alimentoId) {
+  if (!costoDi.has(alimentoId)) {
+    costoDi.set(alimentoId, lenteRicettario([], [alimentoId]).scartati.length);
+  }
+  return costoDi.get(alimentoId);
+}
+
 function rigaAlimento(a) {
   const g = gustoAlimento(pref, a.id);
   const allergia = eAllergene(pref, a.id);
@@ -194,6 +213,11 @@ function rigaAlimento(a) {
       <span class="sigillo-mini" data-cibo="${famigliaCibo(ic)}">${icona(ic, 'icona icona-sm')}</span>
       <span class="nome">${a.nome}
         ${a.sinonimi?.length ? `<br><span class="piccolo tenue">${a.sinonimi.join(', ')}</span>` : ''}
+        ${g === 'omesso' && quantePietanzeCosta(a.id) > 0
+    ? `<br><span class="piccolo" style="color: var(--sgarro-testo)">
+        toglie ${quantePietanzeCosta(a.id)}
+        ${quantePietanzeCosta(a.id) === 1 ? 'pietanza' : 'pietanze'} dal ricettario</span>`
+    : ''}
       </span>
       <button class="bottone-icona" data-allergia="${a.id}"
               aria-pressed="${allergia}"
