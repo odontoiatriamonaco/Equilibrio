@@ -348,7 +348,7 @@
    diretto e' il summary: la regola di sopra non lo raggiungerebbe. */
 .avviso-apre > summary > div { max-width: 62ch; }
 
-.avviso-apre .apri-spiega {
+.apri-spiega {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-1);
@@ -360,7 +360,7 @@
   text-underline-offset: 3px;
 }
 
-.avviso-apre .apri-spiega::after {
+.apri-spiega::after {
   content: '';
   width: 0.4rem;
   height: 0.4rem;
@@ -370,12 +370,12 @@
   transition: transform var(--d-media) var(--e-standard);
 }
 
-.avviso-apre[open] .apri-spiega::after { transform: translateY(2px) rotate(-135deg); }
+details[open] .apri-spiega::after { transform: translateY(2px) rotate(-135deg); }
 
 /* Le parole cambiano con lo stato: chiuso chiede, aperto congeda. */
-.avviso-apre .apri-spiega .chiudi,
-.avviso-apre[open] .apri-spiega .apri { display: none; }
-.avviso-apre[open] .apri-spiega .chiudi { display: inline; }
+.apri-spiega .chiudi,
+details[open] .apri-spiega .apri { display: none; }
+details[open] .apri-spiega .chiudi { display: inline; }
 
 .avviso-apre .spiega {
   max-width: 62ch;
@@ -2490,3 +2490,53 @@ body:has(.barra-passo) .guscio {
 
 .casella:hover { border-color: var(--bordo-forte); }
 .casella:focus-visible { box-shadow: var(--anello-fuoco); }
+
+
+/* --- Il cruscotto -----------------------------------------------------------
+   Tre numeri sempre in vista, il resto a richiesta. Oggi risponde a «cosa
+   mangio adesso» venti volte a settimana; il quadro d'insieme una volta ogni
+   tanto, e messo sopra si pagherebbe un pedaggio ogni giorno per una risposta
+   che non si stava cercando.
+   -------------------------------------------------------------------------- */
+.cruscotto > summary {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  cursor: pointer;
+  list-style: none;
+  min-height: var(--tocco-min);
+}
+
+.cruscotto > summary::-webkit-details-marker { display: none; }
+
+.cruscotto .occhiello { margin: 0; }
+
+.cruscotto-dentro {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--bordo);
+}
+
+/* Etichetta a sinistra, numero a destra: la riga sottile fra l'una e l'altro
+   tiene insieme l'occhio quando lo schermo e' stretto e lo spazio tanto. */
+.cruscotto-dentro .riga-tra {
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--bordo);
+}
+
+.cruscotto-dentro .riga-tra:last-child { border-bottom: none; }
+
+/* Tre numeri in fila, sempre: `.riga` impila su schermo stretto e la striscia
+   diventava alta tre volte, cioe' esattamente il pedaggio che si voleva
+   evitare. Una griglia a tre colonne non discute. */
+.cruscotto-numeri {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.cruscotto-numeri > div { min-width: 0; }

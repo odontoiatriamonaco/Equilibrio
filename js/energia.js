@@ -259,11 +259,16 @@ export function previsioneTraguardo({
   // Lo stesso vale per gli sgarri che non sono rientrati. L'app lo diceva una
   // volta sola — «il traguardo si sposta di due giorni» — e poi se lo scordava:
   // dopo dieci volte la data era quella del primo giorno, cioe' un ottimismo.
-  const giorni = Math.ceil((daPerdere * KCAL_PER_KG) / deficitGiornaliero)
-    + giorniAvvio + Math.max(0, Math.round(giorniSgarri));
+  const base = Math.ceil((daPerdere * KCAL_PER_KG) / deficitGiornaliero);
+  const perAvvio = Math.max(0, Math.round(giorniAvvio));
+  const perSgarri = Math.max(0, Math.round(giorniSgarri));
+  const giorni = base + perAvvio + perSgarri;
   const data = new Date(da);
   data.setDate(data.getDate() + giorni);
-  return { giorni, data };
+  // Le tre parti separate, non solo la somma: «307 giorni» non dice niente su
+  // cosa lo sposta, e chi vuole avvicinarlo deve sapere quale pezzo puo'
+  // toccare — la rampa finisce da sola, gli sgarri no.
+  return { giorni, data, parti: { base, avvio: perAvvio, sgarri: perSgarri } };
 }
 
 /* --- Avvio graduale --------------------------------------------------------

@@ -5,11 +5,12 @@ import { montaTutor } from './tutor.js';
 import { PASSI_OGGI } from './tutor-passi.js';
 import { profiloAttivo, scrivi } from './store.js';
 import { caricaRicettario } from './piatti-utente.js';
-import { riepilogo as riepilogoEnergia } from './energia.js';
+import { riepilogo as riepilogoEnergia, pesoDiTendenza } from './energia.js';
 import {
   caricaSettimana, salvaSettimana, caricaDiario, salvaDiario,
+  tutteLeSettimane, tutteLeMisure,
 } from './dati.js';
-import { settimanaPer, lenteDi, salvaPersonalizzazione } from './famiglia.js';
+import { settimanaPer, lenteDi, salvaPersonalizzazione, tavola } from './famiglia.js';
 import {
   allinea, spazioLocale, proponiScambio, raccontaArrivo,
 } from './spazio-famiglia.js';
@@ -28,6 +29,9 @@ import {
   dosePrincipale, porzioniPerGrammi, piatto,
 } from './alimenti.js';
 import { rendiFascia } from './ui-budget.js';
+import { cruscotto } from './cruscotto.js';
+import { rendiCruscotto } from './ui-cruscotto.js';
+import { arretrati } from './arretrati.js';
 import {
   cercaBarcode, valoriUtilizzabili, kcalPer, scansiona, scansioneDisponibile,
   ATTRIBUZIONE,
@@ -184,7 +188,12 @@ export async function inizializza() {
   $('#giornata').hidden = false;
 
   await caricaRicettario(profilo.id);
-  energia = riepilogoEnergia(profilo, oggi);
+
+  // Le kcal degli sgarri mai rientrati entrano nel riepilogo prima di tutto:
+  // servono al traguardo, e un traguardo diverso qui e nel profilo sarebbe
+  // l'app che si contraddice da una schermata all'altra.
+  const conto = arretrati(await tutteLeSettimane(profilo.id), { oggi });
+  energia = riepilogoEnergia(profilo, oggi, { kcalSgarri: conto.totale });
 
   // Se dallo spazio famiglia e' arrivato un menu' nuovo va messo in casa
   // adesso, o si guarderebbe la cena della settimana scorsa.
@@ -206,6 +215,8 @@ export async function inizializza() {
 
   pref = await caricaPreferenze(profilo.id);
 
+  await disegnaCruscotto(conto);
+
   collegaProdotto();
   collegaQuantita();
   collegaScambio();
@@ -226,6 +237,34 @@ function disegna(indice) {
   disegnaPasti();
   disegnaExtra();
   disegnaAcqua();
+}
+
+/**
+ * Il quadro d'insieme, sotto la scheda di oggi.
+ *
+ * Non calcola: raduna. I numeri stavano gia' tutti da qualche parte — il
+ * basale nel profilo, la velocita' in progressi, gli arretrati in fondo — e
+ * per farsi un'idea bisognava girare l'app.
+ */
+async function disegnaCruscotto(conto) {
+  const scheda = $('#cruscotto');
+  const misure = await tutteLeMisure(profilo.id);
+  const serie = misure.length
+    ? misure
+    : [{ data: (profilo.creatoIl || new Date().toISOString()).slice(0, 10), peso: profilo.pesoKg }];
+
+  const miSeguono = (await tavola(profilo.id)).filter((p) => p.id !== profilo.id);
+
+  rendiCruscotto(scheda, cruscotto({
+    profilo,
+    energia,
+    tendenza: pesoDiTendenza(serie),
+    arretrati: conto,
+    preferenze: pref,
+    riferimento,
+    seguaci: miSeguono,
+  }));
+  scheda.hidden = false;
 }
 
 function disegnaFascia(indice, target) {

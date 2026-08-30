@@ -13,6 +13,7 @@ import {
 } from './dati.js';
 import { rendiGraficoPeso } from './grafico-peso.js';
 import { arretrati, raccontaArretrati } from './arretrati.js';
+import { andamentoPeso } from './cruscotto.js';
 import { percheArretrati } from './spiegazioni.js';
 
 let profilo = null;
@@ -107,14 +108,10 @@ function dataBreve(iso) {
 }
 
 function disegnaTitolo(serie, esito) {
-  const tendenza = pesoDiTendenza(serie);
-  const ultimo = tendenza[tendenza.length - 1];
-  const primo = tendenza[0];
-  const delta = ultimo.tendenza - primo.tendenza;
-
-  const settimane = Math.max(1,
-    (new Date(ultimo.data) - new Date(primo.data)) / (1000 * 60 * 60 * 24 * 7));
-  const perSettimana = delta / settimane;
+  // La stessa funzione che usa il cruscotto su Oggi: due copie della formula
+  // sarebbero due velocita' diverse nella stessa app, il giorno che divergono.
+  const a = andamentoPeso(pesoDiTendenza(serie));
+  const { primo, ultimo, delta } = a;
 
   $('#titolo-peso').innerHTML = `
     <p class="occhiello">Peso di tendenza</p>
@@ -124,9 +121,9 @@ function disegnaTitolo(serie, esito) {
       <p class="piccolo ${delta < 0 ? 'verde-testo' : 'morbido'}" style="margin-top:var(--sp-1)">
         ${delta <= 0 ? '−' : '+'}${Math.abs(delta).toFixed(1).replace('.', ',')} kg
         da ${new Date(primo.data).toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })}
-        ${Math.abs(perSettimana) > 0.05
-          ? ` · ${Math.abs(perSettimana).toFixed(1).replace('.', ',')} kg a settimana`
-          : ''}
+        ${a.abbastanza
+    ? ` · ${Math.abs(a.perSettimana).toFixed(1).replace('.', ',')} kg a settimana`
+    : ''}
       </p>` : ''}
     ${esito ? `
       <p class="piccolo tenue" style="margin-top:var(--sp-2)">
