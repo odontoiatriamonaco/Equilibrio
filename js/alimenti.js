@@ -6,6 +6,7 @@
 import datiAlimenti from '../data/alimenti.json';
 import datiPiatti from '../data/piatti.json';
 import datiGruppi from '../data/gruppi.json';
+import { elenca } from './lingua.js';
 
 const INDICE = new Map(datiAlimenti.alimenti.map((a) => [a.id, a]));
 
@@ -70,16 +71,24 @@ export function applicaOmissioni(p, omessi) {
   const kcalTolte = somma(dentro, 'kcal');
   const proTolte = somma(dentro, 'pro');
   const nomi = dentro.map((i) => INDICE.get(i.a)?.nome?.toLowerCase() || i.a);
-  const esse = dentro.length === 1 ? "e'" : 'sono';
+  // Questi motivi finiscono sotto gli occhi di chi legge, nel riquadro delle
+  // pietanze nascoste: «e'» al posto di «è» era un ripiego che li' si vede.
+  const esse = dentro.length === 1 ? 'è' : 'sono';
+  const chi = elenca(nomi);
 
   if (totali.kcal > 0 && kcalTolte / totali.kcal > OMISSIONE_MAX) {
-    return { piatto: null, motivo: `${nomi.join(' e ')} ${esse} il cuore del piatto` };
+    return { piatto: null, motivo: `${chi} ${esse} il cuore del piatto` };
   }
 
   // La prova delle proteine: se sparisce la fonte proteica, non resta un
-  // secondo alleggerito — resta un contorno.
+  // secondo alleggerito — resta un contorno. E' un motivo DIVERSO dal
+  // precedente, e detto uguale non aiutava nessuno: «il pollo è la fonte
+  // proteica» si capisce, «è il cuore del piatto» lascia indovinare.
   if (totali.pro > 1 && proTolte / totali.pro > OMISSIONE_PRO_MAX) {
-    return { piatto: null, motivo: `${nomi.join(' e ')} ${esse} il cuore del piatto` };
+    return {
+      piatto: null,
+      motivo: `${chi} ${esse} la fonte proteica: senza, resta un contorno`,
+    };
   }
 
   const ingredienti = (p.ingredienti || []).filter((i) => !omessi.has(i.a));

@@ -8,7 +8,7 @@ import { PASSI_PIETANZE } from './tutor-passi.js';
 import { profiloAttivo } from './store.js';
 import {
   piatti, piatto, valoriPiatto, ingredientiScalati, diStagione,
-  etichette, iconaPiatto, alimento, TIPI,
+  etichette, iconaPiatto, alimento, TIPI, piattiScartati,
 } from './alimenti.js';
 import { caricaRicettario } from './piatti-utente.js';
 import { apriEditor, collegaEditor } from './editor-pietanza.js';
@@ -134,6 +134,48 @@ function creaNuova() {
   });
 }
 
+/**
+ * Le pietanze che le esclusioni hanno fatto sparire.
+ *
+ * Il ricettario si accorciava in silenzio. Chi aveva escluso il pane vedeva
+ * centotredici pietanze invece di centocinquantatre e non aveva modo di
+ * sapere perche' — l'unica spiegazione plausibile, dal di fuori, e' che
+ * qualcuno le abbia cancellate. Un'app che toglie roba senza dirlo insegna a
+ * non fidarsi, e la sfiducia costa piu' di quaranta piatti.
+ *
+ * Un'esclusione non fa sparire tutto: quasi sempre il piatto arriva senza
+ * quell'ingrediente. Sparisce solo quando toglierlo lo snatura, ed e' per
+ * questo che il motivo va scritto accanto al nome.
+ */
+function rendiNascoste() {
+  const dove = $('#nascoste');
+  const scartate = piattiScartati;
+
+  if (!scartate.length) { dove.innerHTML = ''; return; }
+
+  dove.innerHTML = `
+    <details class="avviso avviso-apre" style="margin-bottom: var(--sp-4)">
+      <summary>
+        ${icona('info', 'icona icona-sm')}
+        <div>
+          <div class="testo"><strong>${scartate.length}
+            ${scartate.length === 1 ? 'pietanza non compare' : 'pietanze non compaiono'}</strong>
+            per via di quello che hai escluso in Preferenze.</div>
+          <span class="apri-spiega"><span class="apri">Quali?</span><span class="chiudi">Chiudi</span></span>
+        </div>
+      </summary>
+      <div class="spiega">
+        <p>Un'esclusione di solito non fa sparire il piatto: te lo fa arrivare
+          senza quell'ingrediente, coi valori rifatti. Queste invece spariscono
+          perché toglierlo le snatura.</p>
+        <ul style="margin: var(--sp-3) 0 0; padding-left: var(--sp-5)">
+          ${scartate.map((x) => `<li><strong>${x.nome}</strong> — ${x.motivo}</li>`).join('')}
+        </ul>
+        <p><a href="/preferenze.html">Cambia le esclusioni</a> e torneranno.</p>
+      </div>
+    </details>`;
+}
+
 /* --- Elenco ---------------------------------------------------------------- */
 
 /** I filtri accesi adesso, detti come si direbbero a voce. */
@@ -193,6 +235,8 @@ function disegna() {
 
   $('#conteggio').textContent = (elenco.length === 1 ? '1 pietanza' : `${elenco.length} pietanze`)
     + (diCasa ? ` · ${diCasa} ${diCasa === 1 ? 'tua' : 'tue'}` : '');
+
+  rendiNascoste();
 
   if (!elenco.length) {
     // Dire quali filtri stanno tagliando, e offrire di toglierli: «prova ad

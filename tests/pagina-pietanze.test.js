@@ -57,3 +57,23 @@ describe('lo stato vuoto', () => {
     }
   });
 });
+
+describe('il ricettario dice quando si accorcia', () => {
+  /* Il conto scendeva da 153 a 113 senza una parola. Dal di fuori l'unica
+     spiegazione plausibile è che qualcuno abbia cancellato dei piatti — ed è
+     esattamente quello che è stato chiesto. Un'app che toglie roba in silenzio
+     insegna a non fidarsi, e la sfiducia costa più di quaranta piatti. */
+  it('c’è un posto dove dirlo, e lo si riempie a ogni disegno', () => {
+    expect(HTML).toMatch(/id="nascoste"/);
+    expect(JS).toMatch(/function rendiNascoste/);
+    expect(JS).toMatch(/rendiNascoste\(\);/);
+  });
+
+  it('porta al posto dove si cambia idea', () => {
+    expect(JS).toMatch(/preferenze\.html/);
+  });
+
+  it('quando non nasconde niente non lascia un riquadro vuoto', () => {
+    expect(JS).toMatch(/if \(!scartate\.length\) \{ dove\.innerHTML = ''; return; \}/);
+  });
+});

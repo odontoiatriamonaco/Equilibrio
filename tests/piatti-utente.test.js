@@ -353,7 +353,10 @@ describe('omissione di un alimento in tutte le pietanze', () => {
 
     const scartato = piattiScartati.find((x) => x.id === 'polpo-patate');
     expect(scartato).toBeTruthy();
-    expect(scartato.motivo).toContain('cuore del piatto');
+    // Il motivo dice QUALE dei due controlli ha morso: il polpo porta la
+    // quasi totalita' delle proteine, e senza resta un contorno di patate.
+    expect(scartato.motivo).toMatch(/cuore del piatto|fonte proteica/);
+    expect(scartato.motivo, 'niente ripieghi ASCII sotto gli occhi').not.toContain("e'");
   });
 
   it('la soglia è sulle calorie, non sul numero di ingredienti', () => {
@@ -391,5 +394,35 @@ describe('omissione di un alimento in tutte le pietanze', () => {
     await azzeraPreferenze(P);
     await caricaRicettario(P);
     expect(piatto(colazione.id).ingredienti.some((i) => i.a === 'miele')).toBe(true);
+  });
+});
+
+describe('i motivi dell’esclusione si leggono, perché ora si vedono', () => {
+  /* Finiscono nel riquadro delle pietanze nascoste, sotto gli occhi di chi
+     legge. Finché stavano solo in memoria potevano permettersi «e'» al posto
+     di «è» e due controlli diversi detti con la stessa frase. */
+
+  it('sono scritti in italiano, senza ripieghi ASCII', () => {
+    registraPiattiUtente([], ['pane']);
+    expect(piattiScartati.length).toBeGreaterThan(0);
+    for (const s of piattiScartati) {
+      expect(s.motivo, s.nome).not.toContain("e'");
+      expect(s.motivo, s.nome).not.toMatch(/undefined|null/);
+    }
+  });
+
+  it('due controlli diversi non si dicono con la stessa frase', () => {
+    // Uno guarda le calorie, l'altro le proteine: «il pollo è la fonte
+    // proteica» si capisce, «è il cuore del piatto» lascia indovinare.
+    registraPiattiUtente([], ['polpo']);
+    const polpo = piattiScartati.find((x) => x.id === 'polpo-patate');
+    expect(polpo.motivo).toMatch(/cuore del piatto|fonte proteica/);
+  });
+
+  it('con più ingredienti esclusi li elenca con la e, non con le virgole', () => {
+    registraPiattiUtente([], ['pane', 'ricotta', 'miele']);
+    const conTre = piattiScartati.find((x) => (x.motivo.match(/ e /g) || []).length >= 1);
+    expect(conTre, 'nessun piatto con più esclusioni insieme').toBeTruthy();
+    expect(conTre.motivo).not.toMatch(/,\s*\w+\s+(è|sono)\s+il cuore/);
   });
 });
