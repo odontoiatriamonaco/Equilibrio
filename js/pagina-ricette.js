@@ -160,7 +160,8 @@ function rendiNascoste() {
         <div>
           <div class="testo"><strong>${scartate.length}
             ${scartate.length === 1 ? 'pietanza non compare' : 'pietanze non compaiono'}</strong>
-            per via di quello che hai escluso in Preferenze.</div>
+            per via di quello che hai escluso in Preferenze — ne vedi
+            ${piatti.length} di ${piatti.length + scartate.length}.</div>
           <span class="apri-spiega"><span class="apri">Quali?</span><span class="chiudi">Chiudi</span></span>
         </div>
       </summary>
