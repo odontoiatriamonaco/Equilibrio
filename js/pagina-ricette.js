@@ -2,6 +2,7 @@
    scala le dosi sui commensali, modifica gli ingredienti. */
 
 import { avvia, icona, $, $$, num } from './guscio.js';
+import { elenca } from './lingua.js';
 import { montaTutor } from './tutor.js';
 import { PASSI_PIETANZE } from './tutor-passi.js';
 import { profiloAttivo } from './store.js';
@@ -14,7 +15,7 @@ import { apriEditor, collegaEditor } from './editor-pietanza.js';
 
 const MESE = new Date().getMonth() + 1;
 
-const filtri = { testo: '', tipo: 'tutti', stagione: false, casa: false, tempo: 0 };
+const filtri = { testo: '', tipo: 'tutti', stagione: false, casa: false };
 let commensali = 1;
 let aperto = null;
 let profilo = null;
@@ -43,12 +44,6 @@ export async function inizializza() {
 
   $('#solo-casa').addEventListener('change', (e) => {
     filtri.casa = e.target.checked;
-    disegna();
-  });
-
-  $('#tempo').addEventListener('input', (e) => {
-    filtri.tempo = Number(e.target.value);
-    $('#tempo-valore').textContent = filtri.tempo ? `entro ${filtri.tempo} min` : 'qualsiasi';
     disegna();
   });
 
@@ -141,12 +136,36 @@ function creaNuova() {
 
 /* --- Elenco ---------------------------------------------------------------- */
 
+/** I filtri accesi adesso, detti come si direbbero a voce. */
+function attivi() {
+  return [
+    filtri.testo && `la ricerca «${filtri.testo}»`,
+    filtri.tipo !== 'tutti' && `il tipo «${TIPI[filtri.tipo] || filtri.tipo}»`,
+    filtri.stagione && 'solo di stagione',
+    filtri.casa && 'solo le mie',
+  ].filter(Boolean);
+}
+
+/** Toglie tutto, moduli compresi: spegnere un filtro che si vede ancora acceso
+    sarebbe peggio di non spegnerlo. */
+function azzeraFiltri() {
+  filtri.testo = '';
+  filtri.tipo = 'tutti';
+  filtri.stagione = false;
+  filtri.casa = false;
+
+  $('#cerca').value = '';
+  $('#solo-stagione').checked = false;
+  $('#solo-casa').checked = false;
+  $$('#tipi button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tipo === 'tutti')));
+  disegna();
+}
+
 function selezionati() {
   return piatti.filter((p) => {
     if (filtri.tipo !== 'tutti' && p.tipo !== filtri.tipo) return false;
     if (filtri.stagione && !diStagione(p, MESE)) return false;
     if (filtri.casa && p.origine !== 'casa') return false;
-    if (filtri.tempo && (p.tempo || 0) > filtri.tempo) return false;
     if (filtri.testo) {
       const cerca = [p.nome, ...(p.ingredienti || []).map((i) => alimento(i.a)?.nome || '')]
         .join(' ').toLowerCase();
@@ -157,19 +176,38 @@ function selezionati() {
 }
 
 function disegna() {
-  const elenco = selezionati();
   const dove = $('#elenco');
   const diCasa = piatti.filter((p) => p.origine === 'casa').length;
+
+  // «Solo le mie» esiste solo per chi ne ha: sul ricettario di partenza, che di
+  // proprie non ne ha nessuna, saprebbe fare una cosa sola — svuotare la lista.
+  // Se sparisce mentre e' acceso (hai appena cancellato l'ultima tua ricetta) si
+  // spegne da se', o resteresti con un elenco vuoto e nessun comando per capire.
+  $('#filtro-mie').hidden = diCasa === 0;
+  if (!diCasa && filtri.casa) {
+    filtri.casa = false;
+    $('#solo-casa').checked = false;
+  }
+
+  const elenco = selezionati();
 
   $('#conteggio').textContent = (elenco.length === 1 ? '1 pietanza' : `${elenco.length} pietanze`)
     + (diCasa ? ` · ${diCasa} ${diCasa === 1 ? 'tua' : 'tue'}` : '');
 
   if (!elenco.length) {
+    // Dire quali filtri stanno tagliando, e offrire di toglierli: «prova ad
+    // allargare la ricerca» lascia il lavoro a chi legge, che pero' non vede
+    // quanti filtri ha addosso — le linguette del tipo stanno in cima e ci si
+    // dimentica di averne premuta una.
     dove.innerHTML = `
       <div class="scheda"><div class="vuoto">
         ${icona('cerca', 'icona icona-lg')}
-        <p>Nessuna pietanza con questi filtri.<br>Prova ad allargare la ricerca.</p>
+        <p>Nessuna pietanza${attivi().length ? ` con ${elenca(attivi())}` : ''}.</p>
+        ${attivi().length
+    ? '<button class="bottone" id="azzera-filtri">Togli i filtri</button>'
+    : ''}
       </div></div>`;
+    $('#azzera-filtri')?.addEventListener('click', azzeraFiltri);
     return;
   }
 

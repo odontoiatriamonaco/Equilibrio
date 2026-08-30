@@ -72,19 +72,14 @@
           <span>Solo di stagione</span>
         </label>
 
-        <label class="interruttore">
+        <!-- Compare solo a chi ha almeno una ricetta sua: il ricettario di
+             partenza non ne ha nessuna, e su quello questo interruttore
+             saprebbe fare una cosa sola — svuotare la lista. -->
+        <label class="interruttore" id="filtro-mie" hidden>
           <input type="checkbox" id="solo-casa">
           <span class="leva"></span>
           <span>Solo le mie</span>
         </label>
-
-        <div class="campo" style="flex:1; min-width:12rem">
-          <label for="tempo">Tempo in cucina — <span id="tempo-valore">qualsiasi</span></label>
-          <input id="tempo" type="range" min="0" max="90" step="15" value="0">
-          <span class="aiuto">Filtra solo quello che vedi qui, e si azzera quando esci.
-            Per limitare il tempo <strong>nel piano</strong>, usa lo scambio su una riga:
-            lì scegli i minuti e ti propone solo quello che ci sta.</span>
-        </div>
       </div>
     </div>
 
@@ -96,7 +91,10 @@
       <svg class="icona icona-sm" aria-hidden="true"><use href="/assets/icons.svg#info"/></svg>
       <div>Questo è il ricettario di partenza, tutto di tradizione campana. Il pezzo che
         conta davvero — <strong>i piatti che cucini tu</strong> — si aggiunge dopo: sono quelli
-        che tengono in piedi una dieta nel tempo.</div>
+        che tengono in piedi una dieta nel tempo.
+        <br><br>I minuti in cucina sono scritti su ogni scheda. Per <strong>escludere</strong> i
+        piatti troppo lunghi da quello che cucinerai davvero, il posto è lo scambio su una
+        riga del piano: lì scegli i minuti e ti propone solo quello che ci sta.</div>
     </div>
   </main>
 

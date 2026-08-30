@@ -12,6 +12,8 @@
    Stanno in un modulo a parte perché sono testo, non marcatura: si provano
    senza aprire una pagina, e cambiarli non vuol dire toccare la pagina. */
 
+import { elenca } from './lingua.js';
+
 /**
  * Perché una parte dello sgarro non si è riassorbita.
  *
@@ -107,12 +109,6 @@ const PER_ESTESO = {
   lun: 'lunedì', mar: 'martedì', mer: 'mercoledì', gio: 'giovedì',
   ven: 'venerdì', sab: 'sabato', dom: 'domenica',
 };
-
-/** «lunedì, martedì e giovedì» — con la e al posto dell'ultima virgola. */
-function elenca(nomi) {
-  if (nomi.length <= 1) return nomi[0] || '';
-  return `${nomi.slice(0, -1).join(', ')} e ${nomi[nomi.length - 1]}`;
-}
 
 function nomiDi(giorni) {
   return elenca(giorni.map((g) => PER_ESTESO[String(g.etichetta).toLowerCase()] || g.etichetta));
